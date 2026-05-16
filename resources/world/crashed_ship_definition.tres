@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="WorldObjectDefinition" format=3 uid="uid://bd6nbojsl37fv"]
+
+[ext_resource type="PackedScene" uid="uid://cudbwyrx4k8yw" path="res://scenes/structures/crashed_ship.tscn" id="1_6puwl"]
+[ext_resource type="Script" uid="uid://6ug4kkngdy8f" path="res://systems/world_objects/world_object_definition.gd" id="1_s475q"]
+
+[resource]
+script = ExtResource("1_s475q")
+scene = ExtResource("1_6puwl")
+metadata/_custom_type_script = "uid://6ug4kkngdy8f"

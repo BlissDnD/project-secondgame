@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cudbwyrx4k8yw"]
+
+[ext_resource type="Texture2D" uid="uid://b2q614www0exb" path="res://assets/images/structures/crashed_ship.png" id="1_ui48l"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1gvfc"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ui48l")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="CrashedShip" type="StaticBody2D" unique_id=548393820]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1897827885]
+position = Vector2(18, -114)
+scale = Vector2(0.4576408, 0.4576408)
+sprite_frames = SubResource("SpriteFrames_1gvfc")

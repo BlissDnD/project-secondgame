@@ -255,10 +255,11 @@ animations = [{
 [node name="TreeObject" type="StaticBody2D" unique_id=673718410]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1301101861]
-position = Vector2(-25, 0)
+position = Vector2(-23, -77)
 shape = SubResource("RectangleShape2D_m3m1y")
 disabled = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1938758383]
+position = Vector2(0, -169)
 sprite_frames = SubResource("SpriteFrames_qf0n2")
 animation = &"idle"

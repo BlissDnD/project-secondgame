@@ -3,7 +3,10 @@
 [ext_resource type="Texture2D" uid="uid://cqcvq5yptbk1q" path="res://assets/tilemap/32x32_small.png" id="1_k0juu"]
 [ext_resource type="PackedScene" uid="uid://bseseraklx1f0" path="res://scenes/player/player.tscn" id="1_rwgxs"]
 [ext_resource type="Script" uid="uid://cyxl51x7ugdu0" path="res://scripts/world/world_terrain_generator.gd" id="2_k0juu"]
-[ext_resource type="PackedScene" uid="uid://cpamk0yxvnets" path="res://systems/world_objects/objects/tree_object.tscn" id="3_k0juu"]
+[ext_resource type="Script" uid="uid://6ug4kkngdy8f" path="res://systems/world_objects/world_object_definition.gd" id="3_71j4m"]
+[ext_resource type="PackedScene" uid="uid://cudbwyrx4k8yw" path="res://scenes/structures/crashed_ship.tscn" id="3_i7141"]
+[ext_resource type="Resource" uid="uid://dj7rtfn267pry" path="res://resources/world/tree_definition.tres" id="4_qfnet"]
+[ext_resource type="Resource" uid="uid://v6n8wjja158h" path="res://resources/world/bush_definition.tres" id="5_qfnet"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -132,7 +135,8 @@ tile_set = SubResource("TileSet_i7141")
 script = ExtResource("2_k0juu")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
-tree_scene = ExtResource("3_k0juu")
+crashed_ship_scene = ExtResource("3_i7141")
+world_objects = Array[ExtResource("3_71j4m")]([ExtResource("4_qfnet"), ExtResource("5_qfnet")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]

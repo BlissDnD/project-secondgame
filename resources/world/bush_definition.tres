@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="WorldObjectDefinition" format=3 uid="uid://v6n8wjja158h"]
+
+[ext_resource type="Script" uid="uid://6ug4kkngdy8f" path="res://systems/world_objects/world_object_definition.gd" id="1_ghvos"]
+[ext_resource type="PackedScene" uid="uid://hhwapho0ov8v" path="res://systems/world_objects/objects/bush_object.tscn" id="1_nehon"]
+
+[resource]
+script = ExtResource("1_ghvos")
+object_id = &"bush"
+display_name = "Bush"
+scene = ExtResource("1_nehon")
+spawn_chance = 0.6
+spawn_step_tiles = 3
+min_gap_tiles = 2
+metadata/_custom_type_script = "uid://6ug4kkngdy8f"
