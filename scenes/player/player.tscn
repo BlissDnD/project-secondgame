@@ -234,3 +234,7 @@ shape = SubResource("RectangleShape2D_1u1sw")
 [node name="JumpSound" type="AudioStreamPlayer2D" parent="." unique_id=947266257]
 stream = ExtResource("50_2t3bg")
 volume_db = -19.114
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1547749065]
+zoom = Vector2(0.8, 0.8)
+position_smoothing_enabled = true
