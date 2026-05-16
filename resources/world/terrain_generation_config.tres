@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TerrainGenerationConfig" format=3 uid="uid://2a547luc7g12"]
+
+[ext_resource type="Script" uid="uid://bm56gxpc0buaw" path="res://scripts/world/terrain_generation_config.gd" id="1_d3l42"]
+
+[resource]
+script = ExtResource("1_d3l42")
+surface_y = 12

@@ -49,7 +49,6 @@
 [ext_resource type="Texture2D" uid="uid://cb2chihftwnrp" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00017.png" id="46_hf5gj"]
 [ext_resource type="Texture2D" uid="uid://wd3ynxb5q7ce" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00018.png" id="47_avmva"]
 [ext_resource type="Texture2D" uid="uid://ddan8i786ebqn" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00019.png" id="48_0ioy2"]
-[ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_vlhku"]
 animations = [{
@@ -116,7 +115,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle",
-"speed": 30.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -145,7 +144,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"jump",
-"speed": 30.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -210,7 +209,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"running",
-"speed": 30.0
+"speed": 20.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
@@ -220,16 +219,10 @@ size = Vector2(94, 240)
 script = ExtResource("1_1u1sw")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1780722922]
-scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_vlhku")
 animation = &"running"
 autoplay = "idle"
-frame = 2
-frame_progress = 0.18713756
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=641959194]
 position = Vector2(1, 18)
 shape = SubResource("RectangleShape2D_1u1sw")
-
-[node name="JumpSound" type="AudioStreamPlayer2D" parent="." unique_id=947266257]
-stream = ExtResource("50_2t3bg")

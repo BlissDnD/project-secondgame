@@ -18,6 +18,11 @@ config/icon="res://icon.svg"
 
 BetterTerrain="*uid://w1mqdaqrisg5"
 
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/better-terrain/plugin.cfg")
