@@ -50,6 +50,7 @@
 [ext_resource type="Texture2D" uid="uid://wd3ynxb5q7ce" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00018.png" id="47_avmva"]
 [ext_resource type="Texture2D" uid="uid://ddan8i786ebqn" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00019.png" id="48_0ioy2"]
 [ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
+[ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_vlhku"]
 animations = [{
@@ -216,6 +217,9 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
 size = Vector2(58, 116)
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_2t3bg"]
+radius = 49.0408
+
 [node name="Player" type="CharacterBody2D" unique_id=677817848]
 script = ExtResource("1_1u1sw")
 
@@ -238,3 +242,14 @@ volume_db = -19.114
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1547749065]
 zoom = Vector2(0.8, 0.8)
 position_smoothing_enabled = true
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=1576106411]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=263769443]
+position = Vector2(22, 5)
+shape = SubResource("CircleShape2D_2t3bg")
+
+[node name="Node" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor")]
+script = ExtResource("51_jrbya")
+interaction_area = NodePath("../InteractionArea")
+actor = NodePath("..")

@@ -60,6 +60,25 @@
 [ext_resource type="Texture2D" uid="uid://b3di18jy8i1jx" path="res://assets/images/plants/plant_7/Plant7_00056.png" id="59_qu2qe"]
 [ext_resource type="Texture2D" uid="uid://cup5bcx3sd8dt" path="res://assets/images/plants/plant_7/Plant7_00055.png" id="60_lxybc"]
 [ext_resource type="Texture2D" uid="uid://b1cc5dwuuto7w" path="res://assets/images/plants/plant_7/Plant7_00054.png" id="61_d0n63"]
+[ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/world_objects/interaction/interactable_component.gd" id="61_tk0g0"]
+
+[sub_resource type="GDScript" id="GDScript_6e25h"]
+script/source = "extends StaticBody2D
+
+@export var is_interactable: bool = true
+@export var interaction_label: String = \"Interact\"
+
+
+func can_interact() -> bool:
+	return is_interactable
+
+
+func interact(actor: Node) -> void:
+	if not is_interactable:
+		return
+
+	print(\"Interacted with: \", name)
+"
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_m3m1y"]
 size = Vector2(34, 356)
@@ -253,6 +272,7 @@ animations = [{
 }]
 
 [node name="TreeObject" type="StaticBody2D" unique_id=673718410]
+script = SubResource("GDScript_6e25h")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1301101861]
 position = Vector2(-23, -77)
@@ -263,3 +283,7 @@ disabled = true
 position = Vector2(0, -169)
 sprite_frames = SubResource("SpriteFrames_qf0n2")
 animation = &"idle"
+
+[node name="InteractableComponent" type="Node" parent="." unique_id=34131267]
+script = ExtResource("61_tk0g0")
+metadata/_custom_type_script = "uid://cl62s4hu4eurf"
