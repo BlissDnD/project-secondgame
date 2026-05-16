@@ -208,14 +208,21 @@ animations = [{
 "texture": ExtResource("48_0ioy2")
 }],
 "loop": true,
-"name": &"walk",
+"name": &"running",
 "speed": 20.0
 }]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
+size = Vector2(94, 240)
 
 [node name="Player" type="CharacterBody2D" unique_id=677817848]
 script = ExtResource("1_1u1sw")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1780722922]
 sprite_frames = SubResource("SpriteFrames_vlhku")
-animation = &"idle"
+animation = &"running"
 autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=641959194]
+position = Vector2(1, 18)
+shape = SubResource("RectangleShape2D_1u1sw")
