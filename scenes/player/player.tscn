@@ -52,6 +52,7 @@
 [ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
+[ext_resource type="Script" uid="uid://cwcv247t2cv0x" path="res://systems/carry/carry_manager.gd" id="53_vb1ce"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_vlhku"]
 animations = [{
@@ -256,3 +257,12 @@ interaction_area = NodePath("../InteractionArea")
 actor = NodePath("..")
 
 [node name="DebugOverlay" parent="." unique_id=182094769 instance=ExtResource("52_ahqnk")]
+
+[node name="CarrySocket" type="Node2D" parent="." unique_id=591920792]
+position = Vector2(32, -24)
+
+[node name="CarryManager" type="Node" parent="." unique_id=863781329 node_paths=PackedStringArray("detection_area", "actor", "carry_socket")]
+script = ExtResource("53_vb1ce")
+detection_area = NodePath("../InteractionArea")
+actor = NodePath("..")
+carry_socket = NodePath("../CarrySocket")

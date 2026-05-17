@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://bvuw36un1n5gm" path="res://assets/images/plants/plant_7/Plant7_00002.png" id="2_fqrmb"]
 [ext_resource type="Texture2D" uid="uid://drlev2n7q7jw" path="res://assets/images/plants/plant_7/Plant7_00001.png" id="3_3fwaw"]
 [ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://resources/world/hand_action.tres" id="3_jk6hl"]
+[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/carry/carryable_component.gd" id="4_e35f5"]
 [ext_resource type="Texture2D" uid="uid://cf65kxjtqjg4j" path="res://assets/images/plants/plant_7/Plant7_00000.png" id="4_jk6hl"]
 [ext_resource type="Texture2D" uid="uid://2ciki8in420t" path="res://assets/images/plants/plant_7/Plant7_00017.png" id="5_e35f5"]
 [ext_resource type="Texture2D" uid="uid://dljdltq8xyhts" path="res://assets/images/plants/plant_7/Plant7_00016.png" id="6_86rb4"]
@@ -284,6 +285,10 @@ script = ExtResource("61_tk0g0")
 actions = Array[ExtResource("2_3fwaw")]([ExtResource("3_jk6hl")])
 highlight_target = NodePath("../AnimatedSprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
+metadata/_custom_type_script = "uid://cl62s4hu4eurf"
+
+[node name="CarryableComponent" type="Node" parent="." unique_id=1901769049]
+script = ExtResource("4_e35f5")
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1938758383]
