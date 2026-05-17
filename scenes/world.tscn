@@ -271,17 +271,6 @@ tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
 terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu"), ExtResource("8_q5onr")])
-world_width_tiles = null
-world_height_tiles = null
-base_surface_y = null
-surface_amplitude = null
-noise_frequency = null
-noise_seed = null
-dirt_depth_tiles = null
-dirt_terrain_set = null
-dirt_terrain_id = null
-stone_terrain_set = null
-stone_terrain_id = null
 world_spawns = Array[ExtResource("9_e3hyu")]([ExtResource("10_q5onr"), ExtResource("5_qfnet"), ExtResource("12_jhx03")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 

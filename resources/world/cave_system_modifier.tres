@@ -13,6 +13,6 @@ chamber_count = 10
 chamber_min_radius = Vector2i(3, 2)
 chamber_max_radius = Vector2i(22, 9)
 tunnel_max_steps = 1000
-tunnel_directness = 0.01
+tunnel_directness = 0.46
 extra_connection_chance = 0.11
 metadata/_custom_type_script = "uid://dlmdctcwf4pmm"

@@ -27,6 +27,7 @@ class_name WorldTerrainGenerator2
 var generation_data: WorldGenerationData = WorldGenerationData.new()
 var terrain_cell_types: Dictionary = {}
 
+
 func _ready() -> void:
 	call_deferred("generate")
 
@@ -44,6 +45,7 @@ func generate() -> void:
 
 	generation_data = WorldGenerationData.new()
 	terrain_cell_types.clear()
+
 	tile_map_layer.clear()
 	clear_objects()
 
@@ -68,6 +70,7 @@ func generate() -> void:
 			)
 
 			var cell: Vector2i = Vector2i(x, y)
+
 			terrain_cells[terrain_type].append(cell)
 			terrain_cell_types[cell] = terrain_type
 
@@ -82,6 +85,7 @@ func generate() -> void:
 			noise
 		)
 
+	rebuild_terrain_cell_type_cache(terrain_cells)
 	paint_terrain_cells(terrain_cells)
 
 	spawn_world_spawns(noise)
@@ -92,6 +96,14 @@ func generate() -> void:
 	print("Cave floor cells: ", generation_data.cave_floor_cells.size())
 	print("Objects: ", object_layer.get_child_count() if object_layer != null else 0)
 	print("=== WORLD GENERATED ===")
+
+
+func rebuild_terrain_cell_type_cache(terrain_cells: Dictionary) -> void:
+	terrain_cell_types.clear()
+
+	for terrain_type in terrain_cells.keys():
+		for cell in terrain_cells[terrain_type]:
+			terrain_cell_types[cell] = terrain_type
 
 
 func get_terrain_type_for_cell(
@@ -159,7 +171,7 @@ func spawn_surface_definition(
 	noise: FastNoiseLite
 ) -> void:
 	var spawned_count: int = 0
-	var last_spawn_x: int = -999999
+	var spawned_cells: Array[Vector2i] = []
 	var step: int = maxi(definition.spawn_step_tiles, 1)
 
 	for x in range(0, world_width_tiles, step):
@@ -167,9 +179,6 @@ func spawn_surface_definition(
 			return
 
 		if randf() > definition.spawn_chance:
-			continue
-
-		if x - last_spawn_x < definition.min_gap_tiles:
 			continue
 
 		var surface_y_for_x: int = get_surface_y_for_x(x, noise)
@@ -183,8 +192,15 @@ func spawn_surface_definition(
 			surface_y_for_x + definition.position_offset_tiles.y
 		)
 
+		if is_too_close_to_spawned_cells(
+			ground_cell,
+			spawned_cells,
+			definition.min_gap_tiles
+		):
+			continue
+
 		if spawn_definition_on_cell_top(definition, ground_cell):
-			last_spawn_x = x
+			spawned_cells.append(ground_cell)
 			spawned_count += 1
 
 
@@ -193,31 +209,39 @@ func spawn_cave_floor_definition(
 	noise: FastNoiseLite
 ) -> void:
 	var spawned_count: int = 0
-	var last_spawn_cell: Vector2i = Vector2i(-999999, -999999)
+	var spawned_cells: Array[Vector2i] = []
 
-	for floor_cell in generation_data.cave_floor_cells:
+	var candidates: Array = generation_data.cave_floor_cells.duplicate()
+	candidates.shuffle()
+
+	for floor_cell in candidates:
 		if definition.max_count >= 0 and spawned_count >= definition.max_count:
 			return
 
 		if randf() > definition.spawn_chance:
 			continue
 
-		if last_spawn_cell.x != -999999:
-			var distance: float = Vector2(floor_cell).distance_to(Vector2(last_spawn_cell))
-
-			if distance < float(definition.min_gap_tiles):
-				continue
+		if is_too_close_to_spawned_cells(
+			floor_cell,
+			spawned_cells,
+			definition.min_gap_tiles
+		):
+			continue
 
 		var surface_y_for_x: int = get_surface_y_for_x(floor_cell.x, noise)
 		var depth_from_surface: int = floor_cell.y - surface_y_for_x
 
 		if not is_depth_allowed(definition, depth_from_surface):
 			continue
-
-		var cell: Vector2i = floor_cell + definition.position_offset_tiles
+			
+		var ground_cell: Vector2i = Vector2i(
+			floor_cell.x,
+			floor_cell.y + 1
+		)
+		var cell: Vector2i = ground_cell + definition.position_offset_tiles
 
 		if spawn_definition_on_cell_top(definition, cell):
-			last_spawn_cell = floor_cell
+			spawned_cells.append(floor_cell)
 			spawned_count += 1
 
 
@@ -242,6 +266,7 @@ func spawn_chamber_definition(
 
 		if chamber_radius.y < definition.minimum_chamber_radius.y:
 			continue
+
 		var surface_y_for_x: int = get_surface_y_for_x(center.x, noise)
 		var depth_from_surface: int = center.y - surface_y_for_x
 
@@ -304,18 +329,19 @@ func is_spawn_cell_valid(
 	definition: WorldSpawnDefinition,
 	cell: Vector2i
 ) -> bool:
-	var terrain_type: StringName = get_terrain_type_at_cell(cell)
+	var ground_terrain_type: StringName = get_terrain_type_at_cell(cell)
 
 	if definition.allowed_terrain_types.size() > 0:
-		if not definition.allowed_terrain_types.has(terrain_type):
+		if not definition.allowed_terrain_types.has(ground_terrain_type):
 			return false
+
 	var footprint: Vector2i = definition.footprint_tiles
 
 	for x in range(footprint.x):
 		for y in range(footprint.y):
 			var check_cell: Vector2i = Vector2i(
 				cell.x + x,
-				cell.y - y
+				cell.y - 1 - y
 			)
 
 			if tile_map_layer.get_cell_source_id(check_cell) != -1:
@@ -323,10 +349,27 @@ func is_spawn_cell_valid(
 
 	return true
 
+
 func get_terrain_type_at_cell(cell: Vector2i) -> StringName:
-		if terrain_cell_types.has(cell):
-			return terrain_cell_types[cell]
-		return &""
+	if terrain_cell_types.has(cell):
+		return terrain_cell_types[cell]
+
+	return &""
+
+
+func is_too_close_to_spawned_cells(
+	cell: Vector2i,
+	spawned_cells: Array[Vector2i],
+	min_distance_tiles: int
+) -> bool:
+	for spawned_cell in spawned_cells:
+		var distance: float = Vector2(cell).distance_to(Vector2(spawned_cell))
+
+		if distance < float(min_distance_tiles):
+			return true
+
+	return false
+
 
 func spawn_crashed_ship(noise: FastNoiseLite) -> void:
 	if crashed_ship_scene == null:
