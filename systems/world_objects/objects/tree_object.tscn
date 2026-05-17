@@ -271,11 +271,11 @@ animations = [{
 "speed": 30.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_tk0g0"]
-size = Vector2(104, 359)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_m3m1y"]
 size = Vector2(34, 356)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tk0g0"]
+size = Vector2(104, 359)
 
 [node name="TreeObject" type="StaticBody2D" unique_id=673718410]
 script = SubResource("GDScript_6e25h")
@@ -296,15 +296,15 @@ position = Vector2(0, -169)
 sprite_frames = SubResource("SpriteFrames_qf0n2")
 animation = &"idle"
 
-[node name="InteractionHitbox" type="Area2D" parent="." unique_id=1305716865]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionHitbox" unique_id=1384200607]
-position = Vector2(-27, -178.5)
-shape = SubResource("RectangleShape2D_tk0g0")
-
 [node name="BodyCollider" type="StaticBody2D" parent="." unique_id=1787355941]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="BodyCollider" unique_id=1301101861]
 position = Vector2(-26, -175)
 shape = SubResource("RectangleShape2D_m3m1y")
 disabled = true
+
+[node name="InteractionHitbox" type="Area2D" parent="." unique_id=1305716865]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionHitbox" unique_id=1384200607]
+position = Vector2(-27, -178.5)
+shape = SubResource("RectangleShape2D_tk0g0")

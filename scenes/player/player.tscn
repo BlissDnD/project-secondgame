@@ -251,7 +251,7 @@ position_smoothing_enabled = true
 position = Vector2(22, 5)
 shape = SubResource("CircleShape2D_2t3bg")
 
-[node name="Node" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor")]
+[node name="InteractionManager" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor")]
 script = ExtResource("51_jrbya")
 interaction_area = NodePath("../InteractionArea")
 actor = NodePath("..")
@@ -264,7 +264,7 @@ position = Vector2(32, -24)
 [node name="DropSocket" type="Node2D" parent="." unique_id=1277985867]
 position = Vector2(32, 32)
 
-[node name="CarryManager" type="Node" parent="." unique_id=863781329 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket")]
+[node name="CarryManager" type="Node" parent="." unique_id=1916650998 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket")]
 script = ExtResource("53_vb1ce")
 detection_area = NodePath("../InteractionArea")
 actor = NodePath("..")
