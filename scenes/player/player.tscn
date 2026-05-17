@@ -246,7 +246,6 @@ actor = NodePath("..")
 visible = false
 
 [node name="CarrySocket" type="Node2D" parent="." unique_id=591920792]
-visible = false
 position = Vector2(32, -24)
 
 [node name="DropSocket" type="Node2D" parent="." unique_id=1277985867]

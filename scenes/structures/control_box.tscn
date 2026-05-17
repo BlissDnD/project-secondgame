@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="2_kxhh1"]
 [ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="3_fotd3"]
 [ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://resources/world/hand_action.tres" id="4_76ni3"]
+[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/carry/carryable_component.gd" id="5_fotd3"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_3ir17"]
 animations = [{
@@ -27,10 +28,9 @@ scale = Vector2(0.3336003, 0.37530035)
 sprite_frames = SubResource("SpriteFrames_3ir17")
 metadata/_edit_group_ = true
 
-[node name="InteractionComponent" type="Node" parent="." unique_id=205328356 node_paths=PackedStringArray("highlight_target")]
+[node name="InteractionComponent" type="Node" parent="." unique_id=205328356]
 script = ExtResource("2_kxhh1")
 actions = Array[ExtResource("3_fotd3")]([ExtResource("4_76ni3")])
-highlight_target = NodePath("")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
@@ -43,3 +43,8 @@ metadata/_edit_group_ = true
 position = Vector2(-164.44853, -64.98801)
 scale = Vector2(0.389559, 0.34538043)
 shape = SubResource("CircleShape2D_kakrc")
+
+[node name="CarryableComponent" type="Node" parent="." unique_id=1795967779 node_paths=PackedStringArray("ground_anchor")]
+script = ExtResource("5_fotd3")
+ground_anchor = NodePath("")
+metadata/_custom_type_script = "uid://cl62s4hu4eurf"
