@@ -19,22 +19,22 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_oxbmb"]
+size = Vector2(89, 125)
+
 [node name="Kabala" type="CharacterBody2D" unique_id=378978535]
 script = ExtResource("1_oxbmb")
 
-[node name="InteractionComponent" type="Node" parent="." unique_id=379912243 node_paths=PackedStringArray("hover_area", "highlight_target")]
+[node name="InteractionComponent" type="Node" parent="." unique_id=379912243]
 script = ExtResource("1_84n67")
 actions = Array[ExtResource("2_n262i")]([ExtResource("3_oxbmb")])
-hover_area = NodePath("")
-highlight_target = NodePath("")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
-[node name="CarryableComponent" type="Node" parent="." unique_id=775735412 node_paths=PackedStringArray("ground_anchor")]
+[node name="CarryableComponent" type="Node" parent="." unique_id=775735412]
 script = ExtResource("4_h5drd")
 allowed_terrain_types = Array[StringName]([&"0"])
 can_drop_freely = false
-ground_anchor = NodePath("")
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=690557088]
@@ -51,3 +51,10 @@ polygon = PackedVector2Array(-152, -285.6, -152, -271, -217.29999, -172, -221.29
 
 [node name="NPCWanderController" type="Node" parent="." unique_id=514389991]
 script = ExtResource("7_h5drd")
+
+[node name="BodyCollider" type="StaticBody2D" parent="." unique_id=1904667797]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BodyCollider" unique_id=1170786248]
+position = Vector2(1.5, -59.5)
+shape = SubResource("RectangleShape2D_oxbmb")
+disabled = true

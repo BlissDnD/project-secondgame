@@ -57,7 +57,7 @@ func generate() -> void:
 		&"stone": []
 	}
 
-	var noise := FastNoiseLite.new()
+	var noise: FastNoiseLite = FastNoiseLite.new()
 	noise.seed = noise_seed
 	noise.frequency = noise_frequency
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
@@ -301,7 +301,7 @@ func spawn_definition_on_cell_top(
 	if not is_spawn_cell_valid(definition, cell):
 		return false
 
-	var object := definition.scene.instantiate()
+	var object: Node2D = definition.scene.instantiate() as Node2D
 	object_layer.add_child(object)
 
 	var tile_size: Vector2 = Vector2(tile_map_layer.tile_set.tile_size)
@@ -380,26 +380,27 @@ func spawn_surface_npc_definition(
 	definition: NPCDefinition,
 	noise: FastNoiseLite
 ) -> void:
+	print("Trying to spawn NPC: ", definition.npc_id)
+
 	var spawned_count: int = 0
 
-	var min_x: int = 20
-	var max_x: int = world_width_tiles - 20
+	var min_x: int = 40
+	var max_x: int = 120
+
+	if max_x <= min_x:
+		push_warning("NPC spawn failed: world is too narrow.")
+		return
 
 	var candidate_x_positions: Array[int] = []
 
-	var interval_min: int = maxi(definition.surface_interval_min, 1)
-	var interval_max: int = maxi(definition.surface_interval_max, interval_min)
-	var interval: int = randi_range(interval_min, interval_max)
-
-	var start_x: int = randi_range(min_x, maxi(min_x, min_x + interval - 1))
-
-	for x in range(start_x, max_x, interval):
+	for x in range(min_x, max_x):
 		candidate_x_positions.append(x)
 
 	candidate_x_positions.shuffle()
 
 	for x in candidate_x_positions:
 		if definition.max_count >= 0 and spawned_count >= definition.max_count:
+			print("NPC spawn complete: ", definition.npc_id)
 			return
 
 		if randf() > definition.spawn_chance:
@@ -413,6 +414,10 @@ func spawn_surface_npc_definition(
 
 		if spawn_npc_on_cell_top(definition, ground_cell):
 			spawned_count += 1
+			print("NPC spawned successfully: ", definition.npc_id, " at cell ", ground_cell)
+			return
+
+	print("NPC spawn failed: no valid surface cell found for ", definition.npc_id)
 
 
 func is_npc_surface_cell_valid(cell: Vector2i) -> bool:
@@ -421,9 +426,9 @@ func is_npc_surface_cell_valid(cell: Vector2i) -> bool:
 	if ground_terrain_type == &"":
 		return false
 
-	var above_cell := Vector2i(cell.x, cell.y - 1)
+	var above_cell: Vector2i = Vector2i(cell.x, cell.y - 1)
 
-	if tile_map_layer.get_cell_source_id(above_cell) != -1:
+	if get_terrain_type_at_cell(above_cell) != &"":
 		return false
 
 	return true
@@ -434,24 +439,35 @@ func spawn_npc_on_cell_top(
 	cell: Vector2i
 ) -> bool:
 	if definition.npc_scene == null:
+		print("NPC spawn failed: npc_scene is null")
 		return false
 
-	var npc := definition.npc_scene.instantiate()
+	var npc: Node2D = definition.npc_scene.instantiate() as Node2D
+
+	if npc == null:
+		print("NPC spawn failed: npc_scene root is not Node2D")
+		return false
+
 	object_layer.add_child(npc)
 
 	var tile_size: Vector2 = Vector2(tile_map_layer.tile_set.tile_size)
 
-	var local_cell_top := Vector2(
+	var local_cell_top: Vector2 = Vector2(
 		cell.x * tile_size.x + tile_size.x * 0.5,
 		cell.y * tile_size.y
 	)
 
 	var world_pos: Vector2 = tile_map_layer.to_global(local_cell_top)
 
+	# Temporary safe visual offset so Kabala does not spawn hidden in the floor.
+	world_pos.y -= 8.0
+
 	npc.global_position = world_pos
 
 	if npc.has_method("setup"):
 		npc.setup(definition, world_pos)
+
+	print("Spawned NPC: ", definition.npc_id, " at world position ", world_pos)
 
 	return true
 
@@ -484,7 +500,12 @@ func spawn_crashed_ship(noise: FastNoiseLite) -> void:
 	var spawn_x: int = 12
 	var surface_y: int = get_surface_y_for_x(spawn_x, noise)
 
-	var ship := crashed_ship_scene.instantiate()
+	var ship: Node2D = crashed_ship_scene.instantiate() as Node2D
+
+	if ship == null:
+		push_warning("Crashed ship scene root is not Node2D.")
+		return
+
 	object_layer.add_child(ship)
 
 	var tile_size: Vector2 = Vector2(tile_map_layer.tile_set.tile_size)
