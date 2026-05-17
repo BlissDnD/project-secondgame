@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://bp660xcko1s8e" path="res://systems/npc/npc_controller.gd" id="1_oxbmb"]
 [ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="2_n262i"]
 [ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://resources/world/hand_action.tres" id="3_oxbmb"]
-[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/carry/carryable_component.gd" id="4_h5drd"]
 [ext_resource type="Texture2D" uid="uid://dm6u3s0al8rsj" path="res://assets/images/npc/kabala.png" id="5_mvx3l"]
 [ext_resource type="Script" uid="uid://dscenf1rgm0rn" path="res://systems/npc/npc_wander_controller.gd" id="7_h5drd"]
 
@@ -31,12 +30,6 @@ actions = Array[ExtResource("2_n262i")]([ExtResource("3_oxbmb")])
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
-[node name="CarryableComponent" type="Node" parent="." unique_id=775735412]
-script = ExtResource("4_h5drd")
-allowed_terrain_types = Array[StringName]([&"0"])
-can_drop_freely = false
-metadata/_custom_type_script = "uid://cl62s4hu4eurf"
-
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=690557088]
 position = Vector2(-3.8146973e-06, -76)
 scale = Vector2(0.17578126, 0.17578126)
@@ -52,9 +45,6 @@ polygon = PackedVector2Array(-152, -285.6, -152, -271, -217.29999, -172, -221.29
 [node name="NPCWanderController" type="Node" parent="." unique_id=514389991]
 script = ExtResource("7_h5drd")
 
-[node name="BodyCollider" type="StaticBody2D" parent="." unique_id=1904667797]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BodyCollider" unique_id=1170786248]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1170786248]
 position = Vector2(1.5, -59.5)
 shape = SubResource("RectangleShape2D_oxbmb")
-disabled = true
