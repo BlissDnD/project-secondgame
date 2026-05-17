@@ -24,6 +24,9 @@ class_name WorldTerrainGenerator2
 @export_group("World Spawns")
 @export var world_spawns: Array[WorldSpawnDefinition] = []
 
+@export_group("NPC Spawns")
+@export var npc_definitions: Array[NPCDefinition] = []
+
 var generation_data: WorldGenerationData = WorldGenerationData.new()
 var terrain_cell_types: Dictionary = {}
 
@@ -89,6 +92,7 @@ func generate() -> void:
 	paint_terrain_cells(terrain_cells)
 
 	spawn_world_spawns(noise)
+	spawn_npcs(noise)
 	spawn_crashed_ship(noise)
 
 	print("Dirt cells: ", terrain_cells[&"dirt"].size())
@@ -107,7 +111,7 @@ func rebuild_terrain_cell_type_cache(terrain_cells: Dictionary) -> void:
 
 
 func get_terrain_type_for_cell(
-	x: int,
+	_x: int,
 	y: int,
 	surface_y: int
 ) -> StringName:
@@ -233,11 +237,12 @@ func spawn_cave_floor_definition(
 
 		if not is_depth_allowed(definition, depth_from_surface):
 			continue
-			
+
 		var ground_cell: Vector2i = Vector2i(
 			floor_cell.x,
 			floor_cell.y + 1
 		)
+
 		var cell: Vector2i = ground_cell + definition.position_offset_tiles
 
 		if spawn_definition_on_cell_top(definition, cell):
@@ -346,6 +351,95 @@ func is_spawn_cell_valid(
 
 			if tile_map_layer.get_cell_source_id(check_cell) != -1:
 				return false
+
+	return true
+
+
+func spawn_npcs(noise: FastNoiseLite) -> void:
+	if object_layer == null:
+		push_error("object_layer is not assigned.")
+		return
+
+	for definition in npc_definitions:
+		if definition == null:
+			continue
+
+		if definition.npc_scene == null:
+			push_error("NPCDefinition has no npc_scene: " + str(definition.npc_id))
+			continue
+
+		match definition.spawn_mode:
+			NPCDefinition.SpawnMode.SURFACE_INTERVAL:
+				spawn_surface_npc_definition(definition, noise)
+
+			_:
+				pass
+
+
+func spawn_surface_npc_definition(
+	definition: NPCDefinition,
+	noise: FastNoiseLite
+) -> void:
+	var spawned_count: int = 0
+	var step: int = randi_range(
+		maxi(definition.surface_interval_min, 1),
+		maxi(definition.surface_interval_max, definition.surface_interval_min)
+	)
+
+	for x in range(0, world_width_tiles, step):
+		if definition.max_count >= 0 and spawned_count >= definition.max_count:
+			return
+
+		if randf() > definition.spawn_chance:
+			continue
+
+		var surface_y_for_x: int = get_surface_y_for_x(x, noise)
+		var ground_cell := Vector2i(x, surface_y_for_x)
+
+		if not is_npc_surface_cell_valid(ground_cell):
+			continue
+
+		if spawn_npc_on_cell_top(definition, ground_cell):
+			spawned_count += 1
+
+
+func is_npc_surface_cell_valid(cell: Vector2i) -> bool:
+	var ground_terrain_type: StringName = get_terrain_type_at_cell(cell)
+
+	if ground_terrain_type == &"":
+		return false
+
+	var above_cell := Vector2i(cell.x, cell.y - 1)
+
+	if tile_map_layer.get_cell_source_id(above_cell) != -1:
+		return false
+
+	return true
+
+
+func spawn_npc_on_cell_top(
+	definition: NPCDefinition,
+	cell: Vector2i
+) -> bool:
+	if definition.npc_scene == null:
+		return false
+
+	var npc := definition.npc_scene.instantiate()
+	object_layer.add_child(npc)
+
+	var tile_size: Vector2 = Vector2(tile_map_layer.tile_set.tile_size)
+
+	var local_cell_top := Vector2(
+		cell.x * tile_size.x + tile_size.x * 0.5,
+		cell.y * tile_size.y
+	)
+
+	var world_pos: Vector2 = tile_map_layer.to_global(local_cell_top)
+
+	npc.global_position = world_pos
+
+	if npc.has_method("setup"):
+		npc.setup(definition, world_pos)
 
 	return true
 
