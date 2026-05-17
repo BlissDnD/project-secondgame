@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WorldSpawnDefinition" format=3 uid="uid://77602bmt51it"]
+
+[ext_resource type="PackedScene" uid="uid://btn0nce7ddkes" path="res://systems/world_objects/objects/cave_plant/cave_plant.tscn" id="1_lobxq"]
+[ext_resource type="Script" uid="uid://b2ipxvu3m6o8s" path="res://scripts/world/world_spawn_definition.gd" id="1_ww4gh"]
+
+[resource]
+script = ExtResource("1_ww4gh")
+scene = ExtResource("1_lobxq")
+spawn_location_type = 1
+allowed_terrain_types = Array[StringName]([&"stone"])
+max_count = 30
+spawn_chance = 1.0
+min_gap_tiles = 6
+scale_min = 0.8
+scale_max = 1.2
+metadata/_custom_type_script = "uid://b2ipxvu3m6o8s"
