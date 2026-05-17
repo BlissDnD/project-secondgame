@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="GapTerrainModifier" format=3 uid="uid://ims6e7sfqo7b"]
+
+[ext_resource type="Script" uid="uid://deksl4rpb4fg3" path="res://scripts/world/gap_terrain_modifier.gd" id="1_hrfg7"]
+
+[resource]
+script = ExtResource("1_hrfg7")
+gap_start_x = 30
+gap_width_tiles = 17
+metadata/_custom_type_script = "uid://deksl4rpb4fg3"

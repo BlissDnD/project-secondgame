@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" uid="uid://cudbwyrx4k8yw" path="res://scenes/structures/crashed_ship.tscn" id="3_i7141"]
 [ext_resource type="Resource" uid="uid://dj7rtfn267pry" path="res://resources/world/tree_definition.tres" id="4_qfnet"]
 [ext_resource type="Resource" uid="uid://v6n8wjja158h" path="res://resources/world/bush_definition.tres" id="5_qfnet"]
+[ext_resource type="Script" uid="uid://ddl2opog043o8" path="res://scripts/world/terrain_modifier.gd" id="5_w7kh3"]
+[ext_resource type="Resource" uid="uid://ims6e7sfqo7b" path="res://resources/world/gap_terrain_modifier.tres" id="6_e3hyu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -265,9 +267,8 @@ script = ExtResource("2_k0juu")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
+terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu")])
 world_objects = Array[ExtResource("3_71j4m")]([ExtResource("4_qfnet"), ExtResource("5_qfnet")])
-gap_start_x = 25
-gap_width_tiles = 22
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]
