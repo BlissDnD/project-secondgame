@@ -381,12 +381,24 @@ func spawn_surface_npc_definition(
 	noise: FastNoiseLite
 ) -> void:
 	var spawned_count: int = 0
-	var step: int = randi_range(
-		maxi(definition.surface_interval_min, 1),
-		maxi(definition.surface_interval_max, definition.surface_interval_min)
-	)
 
-	for x in range(0, world_width_tiles, step):
+	var min_x: int = 20
+	var max_x: int = world_width_tiles - 20
+
+	var candidate_x_positions: Array[int] = []
+
+	var interval_min: int = maxi(definition.surface_interval_min, 1)
+	var interval_max: int = maxi(definition.surface_interval_max, interval_min)
+	var interval: int = randi_range(interval_min, interval_max)
+
+	var start_x: int = randi_range(min_x, maxi(min_x, min_x + interval - 1))
+
+	for x in range(start_x, max_x, interval):
+		candidate_x_positions.append(x)
+
+	candidate_x_positions.shuffle()
+
+	for x in candidate_x_positions:
 		if definition.max_count >= 0 and spawned_count >= definition.max_count:
 			return
 
@@ -394,7 +406,7 @@ func spawn_surface_npc_definition(
 			continue
 
 		var surface_y_for_x: int = get_surface_y_for_x(x, noise)
-		var ground_cell := Vector2i(x, surface_y_for_x)
+		var ground_cell: Vector2i = Vector2i(x, surface_y_for_x)
 
 		if not is_npc_surface_cell_valid(ground_cell):
 			continue
