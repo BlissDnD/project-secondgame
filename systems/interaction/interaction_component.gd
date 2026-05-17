@@ -4,6 +4,7 @@ class_name InteractionComponent
 @export var enabled: bool = true
 @export var hover_radius_px: float = 32.0
 @export var actions: Array[InteractionAction] = []
+@export var hover_area: Area2D
 
 @export_group("Highlight")
 @export var highlight_target: CanvasItem

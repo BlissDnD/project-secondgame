@@ -159,7 +159,8 @@ func pick_up(component: Node) -> void:
 	carried_root.reparent(carry_socket)
 	carried_root.position = component.hold_offset
 
-	set_body_collision_enabled(carried_root, false)
+	if component.disable_body_collision_while_carried:
+		set_body_collision_enabled(carried_root, false)
 
 	component.on_picked_up(actor)
 	LoggerConsole.log("Carrying: " + carried_root.name)
@@ -170,13 +171,14 @@ func release_carried() -> void:
 		return
 
 	if carried.requires_ground:
-		if terrain_layer == null:
-			LoggerConsole.log("Cannot place: terrain_layer group is missing.")
-			return
-
 		try_place_on_ground(carried)
-	else:
+		return
+
+	if carried.can_drop_freely:
 		drop_freely(carried)
+		return
+
+	LoggerConsole.log("This item cannot be dropped here.")
 
 
 func try_place_on_ground(component: Node) -> void:
@@ -221,9 +223,22 @@ func try_place_on_ground(component: Node) -> void:
 		ground_cell.y * tile_size.y
 	)
 
-	carried_root.global_position = terrain_layer.to_global(local_place_pos)
+	var final_pos: Vector2 = terrain_layer.to_global(local_place_pos)
 
-	set_body_collision_enabled(carried_root, false)
+	var anchor_offset: Vector2 = Vector2.ZERO
+
+	if component.ground_anchor != null:
+		anchor_offset = (
+			carried_root.global_position
+			- component.ground_anchor.global_position
+		)
+
+	carried_root.global_position = final_pos + anchor_offset
+
+	set_body_collision_enabled(
+		carried_root,
+		component.enable_body_collision_when_placed
+)
 
 	component.on_placed(actor)
 	LoggerConsole.log("Placed: " + carried_root.name)
@@ -270,7 +285,10 @@ func drop_freely(component: Node) -> void:
 	carried_root.reparent(world_parent)
 	carried_root.global_position = drop_socket.global_position
 
-	set_body_collision_enabled(carried_root, true)
+	set_body_collision_enabled(
+		carried_root,
+		component.enable_body_collision_when_dropped
+)
 
 	component.on_dropped(actor)
 	LoggerConsole.log("Dropped freely: " + carried_root.name)

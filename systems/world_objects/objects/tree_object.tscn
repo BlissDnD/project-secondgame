@@ -274,21 +274,20 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_m3m1y"]
 size = Vector2(34, 356)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_tk0g0"]
-size = Vector2(104, 359)
-
 [node name="TreeObject" type="StaticBody2D" unique_id=673718410]
 script = SubResource("GDScript_6e25h")
 
-[node name="InteractionComponent" type="Node" parent="." unique_id=34131267 node_paths=PackedStringArray("highlight_target")]
+[node name="InteractionComponent" type="Node" parent="." unique_id=34131267 node_paths=PackedStringArray("hover_area", "highlight_target")]
 script = ExtResource("61_tk0g0")
 actions = Array[ExtResource("2_3fwaw")]([ExtResource("3_jk6hl")])
+hover_area = NodePath("../InteractionHitbox")
 highlight_target = NodePath("../AnimatedSprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
-[node name="CarryableComponent" type="Node" parent="." unique_id=1901769049]
+[node name="CarryableComponent" type="Node" parent="." unique_id=1901769049 node_paths=PackedStringArray("ground_anchor")]
 script = ExtResource("4_e35f5")
+ground_anchor = NodePath("../GroundAnchor")
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1938758383]
@@ -305,6 +304,9 @@ disabled = true
 
 [node name="InteractionHitbox" type="Area2D" parent="." unique_id=1305716865]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionHitbox" unique_id=1384200607]
-position = Vector2(-27, -178.5)
-shape = SubResource("RectangleShape2D_tk0g0")
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="InteractionHitbox" unique_id=1684071869]
+position = Vector2(2, -168)
+polygon = PackedVector2Array(19.5, -176.8, -4.9000015, -180.5, -37.7, -180.5, -65.9, -162.5, -69.6, -162.5, -77.5, -123.9, -77.5, -90.2, -75.5, -74.8, -75.5, -70.6, -43, 18.5, -35.8, 61.5, -38.5, 111.399994, -38.5, 117.79999, -52.1, 158.5, -56.1, 158.5, -50.5, 178.1, -50.5, 180.5, -25.599998, 180.5, -10.900002, 159.5, -8.199997, 159.5, 3.5, 84.899994, 3.5, 64, -4.5, 21.100006, -4.5, 16.600006, -48.3, -96.5, -36.4, -96.5, -31.599998, -101.4, -33.5, -88.9, -33.5, -81.5, -24.8, -61.5, -12.599998, -61.5, -12.5, -60.1, -12.5, -56.199997, -6.4000015, -53.6, 28.800003, -87.9, 49, -61.5, 62.300003, -61.5, 63.5, -88.4, 63.5, -100.6, 61.399994, -105.3, 71.899994, -97.5, 77.5, -97.5, 77.5, -109.9, 73.5, -123.3, 73.5, -126.9, 55.300003, -141.1, 56.5, -143.3, 56.5, -153.2, 49.5, -162.2, 49.5, -166.5, 31.800003, -166.5, 31, -155.8, 19.5, -173.1)
+
+[node name="GroundAnchor" type="Node2D" parent="." unique_id=1292129910]
+position = Vector2(-35, -2)

@@ -257,11 +257,14 @@ interaction_area = NodePath("../InteractionArea")
 actor = NodePath("..")
 
 [node name="DebugOverlay" parent="." unique_id=182094769 instance=ExtResource("52_ahqnk")]
+visible = false
 
 [node name="CarrySocket" type="Node2D" parent="." unique_id=591920792]
+visible = false
 position = Vector2(32, -24)
 
 [node name="DropSocket" type="Node2D" parent="." unique_id=1277985867]
+visible = false
 position = Vector2(64, 0)
 
 [node name="CarryManager" type="Node" parent="." unique_id=1916650998 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket")]

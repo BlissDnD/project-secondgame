@@ -10,6 +10,12 @@ class_name CarryableComponent
 @export var requires_ground: bool = true
 @export var footprint_tiles: Vector2i = Vector2i(1, 1)
 @export var allowed_terrain_types: Array[StringName] = [&"dirt"]
+@export var can_drop_freely: bool = true
+@export var place_offset: Vector2 = Vector2.ZERO
+@export var disable_body_collision_while_carried: bool = true
+@export var enable_body_collision_when_dropped: bool = true
+@export var enable_body_collision_when_placed: bool = false
+@export var ground_anchor: Node2D
 
 var original_parent: Node = null
 
