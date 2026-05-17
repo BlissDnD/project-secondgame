@@ -51,7 +51,6 @@
 [ext_resource type="Texture2D" uid="uid://ddan8i786ebqn" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00019.png" id="48_0ioy2"]
 [ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
-[ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_vlhku"]
 animations = [{
@@ -243,8 +242,6 @@ volume_db = -19.114
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1547749065]
 zoom = Vector2(0.8, 0.8)
 position_smoothing_enabled = true
-
-[node name="DebugOverlay" parent="Camera2D" unique_id=31658800 instance=ExtResource("52_ahqnk")]
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=1576106411]
 

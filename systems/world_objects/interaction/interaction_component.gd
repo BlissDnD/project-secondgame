@@ -1,5 +1,5 @@
 extends Node
-class_name InteractableComponent
+class_name InteractionComponent
 
 @export var enabled: bool = true
 @export var interaction_name: String = "Interact"
