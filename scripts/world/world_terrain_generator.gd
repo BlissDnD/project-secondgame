@@ -4,14 +4,30 @@ class_name WorldTerrainGenerator2
 @export var tile_map_layer: TileMapLayer
 @export var object_layer: Node2D
 @export var crashed_ship_scene: PackedScene
+
 @export var world_width_tiles: int = 384
 @export var world_height_tiles: int = 144
+
 @export var base_surface_y: int = 13
 @export var surface_amplitude: int = 3
 @export var noise_frequency: float = 0.02
 @export var noise_seed: int = 12345
+
+@export_group("Terrain Layers")
+@export var dirt_depth_tiles: int = 8
+@export var dirt_terrain_set: int = 0
+@export var dirt_terrain_id: int = 0
+@export var stone_terrain_set: int = 0
+@export var stone_terrain_id: int = 1
+
 @export_group("World Objects")
 @export var world_objects: Array[WorldObjectDefinition] = []
+
+@export_group("Forced Gap")
+@export var generate_start_gap: bool = true
+@export var gap_start_x: int = 28
+@export var gap_width_tiles: int = 10
+@export var gap_depth_tiles: int = 40
 
 
 func _ready() -> void:
@@ -32,7 +48,10 @@ func generate() -> void:
 	tile_map_layer.clear()
 	clear_objects()
 
-	var dirt_cells: Array[Vector2i] = []
+	var terrain_cells: Dictionary = {
+		&"dirt": [],
+		&"stone": []
+	}
 
 	var noise := FastNoiseLite.new()
 	noise.seed = noise_seed
@@ -43,20 +62,85 @@ func generate() -> void:
 		var surface_y_for_x := get_surface_y_for_x(x, noise)
 
 		for y in range(surface_y_for_x, world_height_tiles):
-			dirt_cells.append(Vector2i(x, y))
+			var terrain_type := get_terrain_type_for_cell(
+				x,
+				y,
+				surface_y_for_x
+			)
 
-	tile_map_layer.set_cells_terrain_connect(
-		dirt_cells,
-		0,
-		0,
-		true
-	)
+			terrain_cells[terrain_type].append(Vector2i(x, y))
+
+	terrain_cells = apply_gap_modifier(terrain_cells, noise)
+
+	paint_terrain_cells(terrain_cells)
 
 	spawn_world_objects_on_surface(noise)
 	spawn_crashed_ship(noise)
-	print("Dirt cells: ", dirt_cells.size())
+
+	print("Dirt cells: ", terrain_cells[&"dirt"].size())
+	print("Stone cells: ", terrain_cells[&"stone"].size())
 	print("Objects: ", object_layer.get_child_count() if object_layer != null else 0)
 	print("=== WORLD GENERATED ===")
+
+
+func get_terrain_type_for_cell(
+	x: int,
+	y: int,
+	surface_y: int
+) -> StringName:
+	var depth := y - surface_y
+
+	if depth < dirt_depth_tiles:
+		return &"dirt"
+
+	return &"stone"
+
+
+func apply_gap_modifier(
+	terrain_cells: Dictionary,
+	noise: FastNoiseLite
+) -> Dictionary:
+	if not generate_start_gap:
+		return terrain_cells
+
+	var result: Dictionary = {
+		&"dirt": [],
+		&"stone": []
+	}
+
+	for terrain_type in terrain_cells.keys():
+		for cell in terrain_cells[terrain_type]:
+			var inside_gap_x: bool = (
+			cell.x >= gap_start_x
+			and cell.x < gap_start_x + gap_width_tiles
+)
+
+			if inside_gap_x:
+				var surface_y := get_surface_y_for_x(cell.x, noise)
+				var gap_bottom_y := surface_y + gap_depth_tiles
+
+				if cell.y >= surface_y and cell.y <= gap_bottom_y:
+					continue
+
+			result[terrain_type].append(cell)
+
+	return result
+
+
+func paint_terrain_cells(terrain_cells: Dictionary) -> void:
+	tile_map_layer.set_cells_terrain_connect(
+		terrain_cells[&"dirt"],
+		dirt_terrain_set,
+		dirt_terrain_id,
+		true
+	)
+
+	tile_map_layer.set_cells_terrain_connect(
+		terrain_cells[&"stone"],
+		stone_terrain_set,
+		stone_terrain_id,
+		true
+	)
 
 
 func get_surface_y_for_x(x: int, noise: FastNoiseLite) -> int:
@@ -137,30 +221,17 @@ func spawn_world_object_on_cell_top(
 	object.scale = Vector2.ONE * random_scale
 
 
-func clear_objects() -> void:
-	if object_layer == null:
-		return
-
-	for child in object_layer.get_children():
-		child.queue_free()
 func spawn_crashed_ship(noise: FastNoiseLite) -> void:
 	if crashed_ship_scene == null:
 		return
 
 	var spawn_x := 12
-
-	var surface_y := get_surface_y_for_x(
-		spawn_x,
-		noise
-	)
+	var surface_y := get_surface_y_for_x(spawn_x, noise)
 
 	var ship := crashed_ship_scene.instantiate()
-
 	object_layer.add_child(ship)
 
-	var tile_size := Vector2(
-		tile_map_layer.tile_set.tile_size
-	)
+	var tile_size := Vector2(tile_map_layer.tile_set.tile_size)
 
 	var local_pos := Vector2(
 		spawn_x * tile_size.x,
@@ -170,3 +241,11 @@ func spawn_crashed_ship(noise: FastNoiseLite) -> void:
 	var world_pos := tile_map_layer.to_global(local_pos)
 
 	ship.global_position = world_pos
+
+
+func clear_objects() -> void:
+	if object_layer == null:
+		return
+
+	for child in object_layer.get_children():
+		child.queue_free()
