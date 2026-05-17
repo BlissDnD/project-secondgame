@@ -287,6 +287,8 @@ metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
 [node name="CarryableComponent" type="Node" parent="." unique_id=1901769049 node_paths=PackedStringArray("ground_anchor")]
 script = ExtResource("4_e35f5")
+allowed_terrain_types = Array[StringName]([&"0"])
+can_drop_freely = false
 ground_anchor = NodePath("../GroundAnchor")
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 

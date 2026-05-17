@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="CaveSystemTerrainModifier" format=3 uid="uid://bl4nshh76476g"]
+
+[ext_resource type="Script" uid="uid://dlmdctcwf4pmm" path="res://scripts/world/cave_system_terrain_modifier.gd" id="1_ubgds"]
+
+[resource]
+script = ExtResource("1_ubgds")
+chamber_min_radius = Vector2i(10, 10)
+metadata/_custom_type_script = "uid://dlmdctcwf4pmm"
