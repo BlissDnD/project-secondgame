@@ -4,6 +4,6 @@
 
 [resource]
 script = ExtResource("1_hrfg7")
-gap_start_x = 30
-gap_width_tiles = 17
+gap_start_x = 150
+gap_width_tiles = 20
 metadata/_custom_type_script = "uid://deksl4rpb4fg3"
