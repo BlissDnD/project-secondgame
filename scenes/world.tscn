@@ -4,13 +4,14 @@
 [ext_resource type="PackedScene" uid="uid://bseseraklx1f0" path="res://scenes/player/player.tscn" id="1_rwgxs"]
 [ext_resource type="Texture2D" uid="uid://bpblp2ssxlfu3" path="res://assets/tilemap/stone32.png" id="2_4mrxx"]
 [ext_resource type="Script" uid="uid://cyxl51x7ugdu0" path="res://scripts/world/world_terrain_generator.gd" id="2_k0juu"]
-[ext_resource type="Script" uid="uid://6ug4kkngdy8f" path="res://systems/world_objects/world_object_definition.gd" id="3_71j4m"]
 [ext_resource type="PackedScene" uid="uid://cudbwyrx4k8yw" path="res://scenes/structures/crashed_ship.tscn" id="3_i7141"]
-[ext_resource type="Resource" uid="uid://dj7rtfn267pry" path="res://resources/world/tree_definition.tres" id="4_qfnet"]
 [ext_resource type="Resource" uid="uid://v6n8wjja158h" path="res://resources/world/bush_definition.tres" id="5_qfnet"]
 [ext_resource type="Script" uid="uid://ddl2opog043o8" path="res://scripts/world/terrain_modifier.gd" id="5_w7kh3"]
 [ext_resource type="Resource" uid="uid://ims6e7sfqo7b" path="res://resources/world/gap_terrain_modifier.tres" id="6_e3hyu"]
 [ext_resource type="Resource" uid="uid://bl4nshh76476g" path="res://resources/world/cave_system_modifier.tres" id="7_e3hyu"]
+[ext_resource type="Resource" uid="uid://bu7fo4mcg2ac6" path="res://resources/world/cave_floor_detection_modifier.tres" id="8_q5onr"]
+[ext_resource type="Script" uid="uid://b2ipxvu3m6o8s" path="res://scripts/world/world_spawn_definition.gd" id="9_e3hyu"]
+[ext_resource type="Resource" uid="uid://b3qjgxkmioi6s" path="res://systems/world_objects/objects/tree/tree_definition.tres" id="10_q5onr"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -268,8 +269,19 @@ script = ExtResource("2_k0juu")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
-terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu")])
-world_objects = Array[ExtResource("3_71j4m")]([ExtResource("4_qfnet"), ExtResource("5_qfnet")])
+terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu"), ExtResource("8_q5onr")])
+world_width_tiles = null
+world_height_tiles = null
+base_surface_y = null
+surface_amplitude = null
+noise_frequency = null
+noise_seed = null
+dirt_depth_tiles = null
+dirt_terrain_set = null
+dirt_terrain_id = null
+stone_terrain_set = null
+stone_terrain_id = null
+world_spawns = Array[ExtResource("9_e3hyu")]([ExtResource("10_q5onr"), ExtResource("5_qfnet")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]

@@ -25,6 +25,7 @@ class_name CaveSystemTerrainModifier
 func apply(
 	terrain_cells: Dictionary,
 	generator: WorldTerrainGenerator2,
+	generation_data: WorldGenerationData,
 	noise: FastNoiseLite
 ) -> Dictionary:
 	if not enabled:
@@ -35,6 +36,7 @@ func apply(
 
 	var chambers: Array[Dictionary] = generate_chambers(
 		generator,
+		generation_data,
 		noise,
 		rng
 	)
@@ -74,6 +76,7 @@ func apply(
 
 func generate_chambers(
 	generator: WorldTerrainGenerator2,
+	generation_data: WorldGenerationData,
 	noise: FastNoiseLite,
 	rng: RandomNumberGenerator
 ) -> Array[Dictionary]:
@@ -106,10 +109,13 @@ func generate_chambers(
 			)
 		)
 
-		chambers.append({
+		var chamber: Dictionary = {
 			"center": Vector2i(x, y),
 			"radius": radius
-		})
+		}
+
+		chambers.append(chamber)
+		generation_data.generated_chambers.append(chamber)
 
 	chambers.sort_custom(_sort_chambers_by_x)
 

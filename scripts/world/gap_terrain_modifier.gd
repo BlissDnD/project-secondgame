@@ -10,6 +10,7 @@ class_name GapTerrainModifier
 func apply(
 	terrain_cells: Dictionary,
 	generator: WorldTerrainGenerator2,
+	generation_data: WorldGenerationData,
 	noise: FastNoiseLite
 ) -> Dictionary:
 	print(

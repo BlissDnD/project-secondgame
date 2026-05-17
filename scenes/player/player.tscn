@@ -244,6 +244,7 @@ actor = NodePath("..")
 
 [node name="DebugOverlay" parent="." unique_id=182094769 instance=ExtResource("52_ahqnk")]
 visible = false
+position = Vector2(-700, -600)
 
 [node name="CarrySocket" type="Node2D" parent="." unique_id=591920792]
 position = Vector2(32, -24)

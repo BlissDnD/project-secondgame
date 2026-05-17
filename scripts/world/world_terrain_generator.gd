@@ -21,9 +21,11 @@ class_name WorldTerrainGenerator2
 @export var stone_terrain_set: int = 0
 @export var stone_terrain_id: int = 1
 
-@export_group("World Objects")
-@export var world_objects: Array[WorldObjectDefinition] = []
+@export_group("World Spawns")
+@export var world_spawns: Array[WorldSpawnDefinition] = []
 
+var generation_data: WorldGenerationData = WorldGenerationData.new()
+var terrain_cell_types: Dictionary = {}
 
 func _ready() -> void:
 	call_deferred("generate")
@@ -40,6 +42,8 @@ func generate() -> void:
 		push_error("tile_map_layer has no TileSet.")
 		return
 
+	generation_data = WorldGenerationData.new()
+	terrain_cell_types.clear()
 	tile_map_layer.clear()
 	clear_objects()
 
@@ -63,7 +67,9 @@ func generate() -> void:
 				surface_y_for_x
 			)
 
-			terrain_cells[terrain_type].append(Vector2i(x, y))
+			var cell: Vector2i = Vector2i(x, y)
+			terrain_cells[terrain_type].append(cell)
+			terrain_cell_types[cell] = terrain_type
 
 	for modifier in terrain_modifiers:
 		if modifier == null:
@@ -72,16 +78,18 @@ func generate() -> void:
 		terrain_cells = modifier.apply(
 			terrain_cells,
 			self,
+			generation_data,
 			noise
 		)
 
 	paint_terrain_cells(terrain_cells)
 
-	spawn_world_objects_on_surface(noise)
+	spawn_world_spawns(noise)
 	spawn_crashed_ship(noise)
 
 	print("Dirt cells: ", terrain_cells[&"dirt"].size())
 	print("Stone cells: ", terrain_cells[&"stone"].size())
+	print("Cave floor cells: ", generation_data.cave_floor_cells.size())
 	print("Objects: ", object_layer.get_child_count() if object_layer != null else 0)
 	print("=== WORLD GENERATED ===")
 
@@ -122,30 +130,42 @@ func get_surface_y_for_x(x: int, noise: FastNoiseLite) -> int:
 	return base_surface_y + surface_offset
 
 
-func spawn_world_objects_on_surface(noise: FastNoiseLite) -> void:
+func spawn_world_spawns(noise: FastNoiseLite) -> void:
 	if object_layer == null:
 		push_error("object_layer is not assigned.")
 		return
 
-	for definition in world_objects:
+	for definition in world_spawns:
 		if definition == null:
 			continue
 
 		if definition.scene == null:
-			push_error("WorldObjectDefinition has no scene: " + str(definition.object_id))
+			push_error("WorldSpawnDefinition has no scene: " + str(definition.object_id))
 			continue
 
-		spawn_definition_on_surface(definition, noise)
+		match definition.spawn_location_type:
+			WorldSpawnDefinition.SpawnLocationType.SURFACE:
+				spawn_surface_definition(definition, noise)
+
+			WorldSpawnDefinition.SpawnLocationType.CAVE_FLOOR:
+				spawn_cave_floor_definition(definition, noise)
+
+			WorldSpawnDefinition.SpawnLocationType.CHAMBER:
+				spawn_chamber_definition(definition, noise)
 
 
-func spawn_definition_on_surface(
-	definition: WorldObjectDefinition,
+func spawn_surface_definition(
+	definition: WorldSpawnDefinition,
 	noise: FastNoiseLite
 ) -> void:
+	var spawned_count: int = 0
 	var last_spawn_x: int = -999999
 	var step: int = maxi(definition.spawn_step_tiles, 1)
 
 	for x in range(0, world_width_tiles, step):
+		if definition.max_count >= 0 and spawned_count >= definition.max_count:
+			return
+
 		if randf() > definition.spawn_chance:
 			continue
 
@@ -153,21 +173,104 @@ func spawn_definition_on_surface(
 			continue
 
 		var surface_y_for_x: int = get_surface_y_for_x(x, noise)
+		var depth_from_surface: int = 0
+
+		if not is_depth_allowed(definition, depth_from_surface):
+			continue
 
 		var ground_cell: Vector2i = Vector2i(
 			x + definition.position_offset_tiles.x,
 			surface_y_for_x + definition.position_offset_tiles.y
 		)
 
-		spawn_world_object_on_cell_top(definition, ground_cell)
+		if spawn_definition_on_cell_top(definition, ground_cell):
+			last_spawn_x = x
+			spawned_count += 1
 
-		last_spawn_x = x
 
-
-func spawn_world_object_on_cell_top(
-	definition: WorldObjectDefinition,
-	cell: Vector2i
+func spawn_cave_floor_definition(
+	definition: WorldSpawnDefinition,
+	noise: FastNoiseLite
 ) -> void:
+	var spawned_count: int = 0
+	var last_spawn_cell: Vector2i = Vector2i(-999999, -999999)
+
+	for floor_cell in generation_data.cave_floor_cells:
+		if definition.max_count >= 0 and spawned_count >= definition.max_count:
+			return
+
+		if randf() > definition.spawn_chance:
+			continue
+
+		if last_spawn_cell.x != -999999:
+			var distance: float = Vector2(floor_cell).distance_to(Vector2(last_spawn_cell))
+
+			if distance < float(definition.min_gap_tiles):
+				continue
+
+		var surface_y_for_x: int = get_surface_y_for_x(floor_cell.x, noise)
+		var depth_from_surface: int = floor_cell.y - surface_y_for_x
+
+		if not is_depth_allowed(definition, depth_from_surface):
+			continue
+
+		var cell: Vector2i = floor_cell + definition.position_offset_tiles
+
+		if spawn_definition_on_cell_top(definition, cell):
+			last_spawn_cell = floor_cell
+			spawned_count += 1
+
+
+func spawn_chamber_definition(
+	definition: WorldSpawnDefinition,
+	noise: FastNoiseLite
+) -> void:
+	var spawned_count: int = 0
+
+	for chamber in generation_data.generated_chambers:
+		if definition.max_count >= 0 and spawned_count >= definition.max_count:
+			return
+
+		if randf() > definition.spawn_chance:
+			continue
+
+		var center: Vector2i = chamber["center"]
+		var chamber_radius: Vector2i = chamber["radius"]
+
+		if chamber_radius.x < definition.minimum_chamber_radius.x:
+			continue
+
+		if chamber_radius.y < definition.minimum_chamber_radius.y:
+			continue
+		var surface_y_for_x: int = get_surface_y_for_x(center.x, noise)
+		var depth_from_surface: int = center.y - surface_y_for_x
+
+		if not is_depth_allowed(definition, depth_from_surface):
+			continue
+
+		var cell: Vector2i = center + definition.position_offset_tiles
+
+		if spawn_definition_on_cell_top(definition, cell):
+			spawned_count += 1
+
+
+func is_depth_allowed(
+	definition: WorldSpawnDefinition,
+	depth_from_surface: int
+) -> bool:
+	return (
+		depth_from_surface >= definition.min_depth_from_surface
+		and depth_from_surface <= definition.max_depth_from_surface
+	)
+
+
+func spawn_definition_on_cell_top(
+	definition: WorldSpawnDefinition,
+	cell: Vector2i
+) -> bool:
+	if not is_spawn_cell_valid(definition, cell):
+		return false
+
 	var object := definition.scene.instantiate()
 	object_layer.add_child(object)
 
@@ -194,6 +297,36 @@ func spawn_world_object_on_cell_top(
 
 	object.scale = Vector2.ONE * random_scale
 
+	return true
+
+
+func is_spawn_cell_valid(
+	definition: WorldSpawnDefinition,
+	cell: Vector2i
+) -> bool:
+	var terrain_type: StringName = get_terrain_type_at_cell(cell)
+
+	if definition.allowed_terrain_types.size() > 0:
+		if not definition.allowed_terrain_types.has(terrain_type):
+			return false
+	var footprint: Vector2i = definition.footprint_tiles
+
+	for x in range(footprint.x):
+		for y in range(footprint.y):
+			var check_cell: Vector2i = Vector2i(
+				cell.x + x,
+				cell.y - y
+			)
+
+			if tile_map_layer.get_cell_source_id(check_cell) != -1:
+				return false
+
+	return true
+
+func get_terrain_type_at_cell(cell: Vector2i) -> StringName:
+		if terrain_cell_types.has(cell):
+			return terrain_cell_types[cell]
+		return &""
 
 func spawn_crashed_ship(noise: FastNoiseLite) -> void:
 	if crashed_ship_scene == null:

@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="CaveFloorDetectionModifier" format=3 uid="uid://bu7fo4mcg2ac6"]
+
+[ext_resource type="Script" uid="uid://vdbrtqlq3bfn" path="res://scripts/world/cave_floor_detection_modifier.gd" id="1_mij0v"]
+
+[resource]
+script = ExtResource("1_mij0v")
+metadata/_custom_type_script = "uid://vdbrtqlq3bfn"
