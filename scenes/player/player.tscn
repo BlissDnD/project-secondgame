@@ -54,6 +54,12 @@
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
 [ext_resource type="Script" uid="uid://cwcv247t2cv0x" path="res://systems/carry/carry_manager.gd" id="53_vb1ce"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
+size = Vector2(58, 116)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2t3bg"]
+radius = 49.0408
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_vlhku"]
 animations = [{
 "frames": [{
@@ -216,22 +222,8 @@ animations = [{
 "speed": 30.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
-size = Vector2(58, 116)
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_2t3bg"]
-radius = 49.0408
-
 [node name="Player" type="CharacterBody2D" unique_id=677817848]
 script = ExtResource("1_1u1sw")
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1780722922]
-scale = Vector2(0.5, 0.5)
-sprite_frames = SubResource("SpriteFrames_vlhku")
-animation = &"running"
-autoplay = "idle"
-frame = 2
-frame_progress = 0.18713756
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=641959194]
 position = Vector2(-1, 12)
@@ -245,15 +237,9 @@ volume_db = -19.114
 zoom = Vector2(0.8, 0.8)
 position_smoothing_enabled = true
 
-[node name="InteractionArea" type="Area2D" parent="." unique_id=1576106411]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=263769443]
-position = Vector2(22, 5)
-shape = SubResource("CircleShape2D_2t3bg")
-
 [node name="InteractionManager" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor")]
 script = ExtResource("51_jrbya")
-interaction_area = NodePath("../InteractionArea")
+interaction_area = NodePath("../FlipContainer/InteractionArea")
 actor = NodePath("..")
 
 [node name="DebugOverlay" parent="." unique_id=182094769 instance=ExtResource("52_ahqnk")]
@@ -269,7 +255,23 @@ position = Vector2(64, 0)
 
 [node name="CarryManager" type="Node" parent="." unique_id=1916650998 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket")]
 script = ExtResource("53_vb1ce")
-detection_area = NodePath("../InteractionArea")
+detection_area = NodePath("../FlipContainer/InteractionArea")
 actor = NodePath("..")
 carry_socket = NodePath("../CarrySocket")
 drop_socket = NodePath("../DropSocket")
+
+[node name="FlipContainer" type="Node2D" parent="." unique_id=595349572]
+
+[node name="InteractionArea" type="Area2D" parent="FlipContainer" unique_id=1576106411]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FlipContainer/InteractionArea" unique_id=263769443]
+position = Vector2(22, 5)
+shape = SubResource("CircleShape2D_2t3bg")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="FlipContainer" unique_id=1780722922]
+scale = Vector2(0.5, 0.5)
+sprite_frames = SubResource("SpriteFrames_vlhku")
+animation = &"running"
+autoplay = "idle"
+frame = 2
+frame_progress = 0.18713756

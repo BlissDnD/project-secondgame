@@ -1,11 +1,13 @@
 extends CharacterBody2D
-@onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
-@onready var jump_sound: AudioStreamPlayer2D = $JumpSound
 
+# Fix: Path updated to look INSIDE the FlipContainer
+@onready var animated_sprite_2d: AnimatedSprite2D = $FlipContainer/AnimatedSprite2D
+@onready var jump_sound: AudioStreamPlayer2D = $JumpSound
+# Fix: Type changed from Node to Node2D so we can use scale
+@onready var flip_container: Node2D = $FlipContainer
 
 const SPEED = 300.0
 const JUMP_VELOCITY = -400.0
-
 
 func _physics_process(delta: float) -> void:
 	# Add animations.
@@ -25,7 +27,6 @@ func _physics_process(delta: float) -> void:
 		jump_sound.play()
 
 	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
 	var direction := Input.get_axis("ui_left", "ui_right")
 	if direction:
 		velocity.x = direction * SPEED
@@ -34,7 +35,8 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	
-	if direction == 1.0:
-		animated_sprite_2d.flip_h = false
-	elif direction == -1.0:
-		animated_sprite_2d.flip_h = true
+	# Fix: Removed flip_h entirely. Scaling the container flips everything inside it at once.
+	if direction > 0:
+		flip_container.scale.x = 1   # Faces right
+	elif direction < 0:
+		flip_container.scale.x = -1  # Faces left
