@@ -143,6 +143,7 @@ metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]
 position = Vector2(165, 60)
 
-[node name="ObjectLayer" type="Node2D" parent="." unique_id=569224624]
+[node name="DebugOverlay" parent="Player" unique_id=182094769 instance=ExtResource("8_4mrxx")]
+position = Vector2(0, -500)
 
-[node name="DebugOverlay" parent="." unique_id=31658800 instance=ExtResource("8_4mrxx")]
+[node name="ObjectLayer" type="Node2D" parent="." unique_id=569224624]

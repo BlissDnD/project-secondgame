@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cudbwyrx4k8yw"]
 
 [ext_resource type="Texture2D" uid="uid://b2q614www0exb" path="res://assets/images/structures/crashed_ship.png" id="1_ui48l"]
+[ext_resource type="PackedScene" uid="uid://dpnmg34drxxrw" path="res://scenes/structures/control_box.tscn" id="2_5vh88"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_1gvfc"]
 animations = [{
@@ -20,3 +21,9 @@ position = Vector2(-9.536743e-07, -84)
 rotation = 0.113248795
 scale = Vector2(0.4576408, 0.4576408)
 sprite_frames = SubResource("SpriteFrames_1gvfc")
+
+[node name="ControlBox" parent="." unique_id=1146345802 instance=ExtResource("2_5vh88")]
+position = Vector2(-109, -52)
+
+[node name="ControlBox2" parent="." unique_id=160733268 instance=ExtResource("2_5vh88")]
+position = Vector2(-30, -25)

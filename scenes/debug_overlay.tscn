@@ -2,8 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dawt5so80q4vy" path="res://scripts/debug_overlay.gd" id="1_wl0fn"]
 
-[node name="DebugOverlay" type="CanvasLayer" unique_id=31658800 node_paths=PackedStringArray("label")]
-follow_viewport_enabled = true
+[node name="DebugOverlay" type="Node2D" unique_id=182094769 node_paths=PackedStringArray("label")]
 script = ExtResource("1_wl0fn")
 label = NodePath("RichTextLabel")
 

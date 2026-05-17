@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="InteractionAction" format=3 uid="uid://ba76fd1vb0hs3"]
+
+[ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="1_ogu1a"]
+
+[resource]
+script = ExtResource("1_ogu1a")
+metadata/_custom_type_script = "uid://scjl3g6m1ock"

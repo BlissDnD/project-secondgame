@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dpnmg34drxxrw"]
+
+[ext_resource type="Texture2D" uid="uid://602qykgjtwj1" path="res://assets/images/SlimeGreen/SlimeBasic_00011.png" id="1_be7v0"]
+[ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="2_kxhh1"]
+[ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="3_fotd3"]
+[ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://resources/world/hand_action.tres" id="4_76ni3"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_3ir17"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_be7v0")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_kakrc"]
+radius = 144.33191
+
+[node name="ControlBox" type="StaticBody2D" unique_id=1146345802]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=805151633]
+position = Vector2(9.1671944e-05, 0)
+scale = Vector2(0.3336003, 0.37530035)
+sprite_frames = SubResource("SpriteFrames_3ir17")
+metadata/_edit_group_ = true
+
+[node name="InteractionComponent" type="Node" parent="." unique_id=205328356 node_paths=PackedStringArray("highlight_target")]
+script = ExtResource("2_kxhh1")
+actions = Array[ExtResource("3_fotd3")]([ExtResource("4_76ni3")])
+highlight_target = NodePath("")
+highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
+metadata/_custom_type_script = "uid://cl62s4hu4eurf"
+
+[node name="InteractionHitbox" type="Area2D" parent="." unique_id=255023390]
+position = Vector2(171.43759, 68.75)
+scale = Vector2(1.0425, 1.0425)
+metadata/_edit_group_ = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionHitbox" unique_id=600980625]
+position = Vector2(-164.44853, -64.98801)
+scale = Vector2(0.389559, 0.34538043)
+shape = SubResource("CircleShape2D_kakrc")

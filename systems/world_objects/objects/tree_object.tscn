@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://cpamk0yxvnets"]
 
+[ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="2_3fwaw"]
 [ext_resource type="Texture2D" uid="uid://bvuw36un1n5gm" path="res://assets/images/plants/plant_7/Plant7_00002.png" id="2_fqrmb"]
 [ext_resource type="Texture2D" uid="uid://drlev2n7q7jw" path="res://assets/images/plants/plant_7/Plant7_00001.png" id="3_3fwaw"]
+[ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://resources/world/hand_action.tres" id="3_jk6hl"]
 [ext_resource type="Texture2D" uid="uid://cf65kxjtqjg4j" path="res://assets/images/plants/plant_7/Plant7_00000.png" id="4_jk6hl"]
 [ext_resource type="Texture2D" uid="uid://2ciki8in420t" path="res://assets/images/plants/plant_7/Plant7_00017.png" id="5_e35f5"]
 [ext_resource type="Texture2D" uid="uid://dljdltq8xyhts" path="res://assets/images/plants/plant_7/Plant7_00016.png" id="6_86rb4"]
@@ -60,7 +62,7 @@
 [ext_resource type="Texture2D" uid="uid://b3di18jy8i1jx" path="res://assets/images/plants/plant_7/Plant7_00056.png" id="59_qu2qe"]
 [ext_resource type="Texture2D" uid="uid://cup5bcx3sd8dt" path="res://assets/images/plants/plant_7/Plant7_00055.png" id="60_lxybc"]
 [ext_resource type="Texture2D" uid="uid://b1cc5dwuuto7w" path="res://assets/images/plants/plant_7/Plant7_00054.png" id="61_d0n63"]
-[ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/world_objects/interaction/interaction_component.gd" id="61_tk0g0"]
+[ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="61_tk0g0"]
 
 [sub_resource type="GDScript" id="GDScript_6e25h"]
 script/source = "extends StaticBody2D
@@ -277,8 +279,11 @@ size = Vector2(34, 356)
 [node name="TreeObject" type="StaticBody2D" unique_id=673718410]
 script = SubResource("GDScript_6e25h")
 
-[node name="InteractionComponent" type="Node" parent="." unique_id=34131267]
+[node name="InteractionComponent" type="Node" parent="." unique_id=34131267 node_paths=PackedStringArray("highlight_target")]
 script = ExtResource("61_tk0g0")
+actions = Array[ExtResource("2_3fwaw")]([ExtResource("3_jk6hl")])
+highlight_target = NodePath("../AnimatedSprite2D")
+highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1938758383]
