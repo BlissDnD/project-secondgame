@@ -10,7 +10,7 @@
 [ext_resource type="Resource" uid="uid://v6n8wjja158h" path="res://resources/world/bush_definition.tres" id="5_qfnet"]
 [ext_resource type="Script" uid="uid://ddl2opog043o8" path="res://scripts/world/terrain_modifier.gd" id="5_w7kh3"]
 [ext_resource type="Resource" uid="uid://ims6e7sfqo7b" path="res://resources/world/gap_terrain_modifier.tres" id="6_e3hyu"]
-[ext_resource type="Script" uid="uid://dqfrklky5m7y8" path="res://scripts/world/noise_cave_generation_modifier.gd" id="7_e3hyu"]
+[ext_resource type="Resource" uid="uid://bl4nshh76476g" path="res://resources/world/cave_system_modifier.tres" id="7_e3hyu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -258,10 +258,6 @@ terrain_set_0/terrain_1/color = Color(0.41811183, 0.41811186, 0.41811183, 1)
 sources/0 = SubResource("TileSetAtlasSource_71j4m")
 sources/1 = SubResource("TileSetAtlasSource_7r4gi")
 
-[sub_resource type="Resource" id="Resource_q5onr"]
-script = ExtResource("7_e3hyu")
-metadata/_custom_type_script = "uid://dqfrklky5m7y8"
-
 [node name="World" type="Node2D" unique_id=1212785255]
 
 [node name="TerrainTileMapLayer" type="TileMapLayer" parent="." unique_id=449527124 groups=["terrain_layer"]]
@@ -272,7 +268,7 @@ script = ExtResource("2_k0juu")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
-terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), SubResource("Resource_q5onr")])
+terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu")])
 world_objects = Array[ExtResource("3_71j4m")]([ExtResource("4_qfnet"), ExtResource("5_qfnet")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
