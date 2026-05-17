@@ -3,6 +3,7 @@ extends Node
 @export var detection_area: Area2D
 @export var actor: Node2D
 @export var carry_socket: Node2D
+@export var drop_socket: Node2D
 
 var nearby_carryables: Dictionary = {}
 var current_candidate: Node = null
@@ -20,6 +21,10 @@ func _ready() -> void:
 
 	if carry_socket == null:
 		push_error("CarryManager: carry_socket is not assigned.")
+		return
+
+	if drop_socket == null:
+		push_error("CarryManager: drop_socket is not assigned.")
 		return
 
 	detection_area.area_entered.connect(_on_area_entered)
@@ -136,7 +141,7 @@ func pick_up(component: Node) -> void:
 	carried_root.reparent(carry_socket)
 	carried_root.position = component.hold_offset
 
-	set_collision_enabled(carried_root, false)
+	set_body_collision_enabled(carried_root, false)
 
 	component.on_picked_up(actor)
 	LoggerConsole.log("Carrying: " + carried_root.name)
@@ -158,12 +163,12 @@ func drop_carried() -> void:
 	if world_parent == null:
 		world_parent = actor.get_parent()
 
-	var drop_global_position: Vector2 = actor.global_position + component.drop_offset
-
 	carried_root.reparent(world_parent)
-	carried_root.global_position = drop_global_position
+	carried_root.global_position = drop_socket.global_position
 
-	set_collision_enabled(carried_root, true)
+	# For now, dropped carried objects do NOT block the player again.
+	# This only affects BodyCollider and does not disable InteractionHitbox.
+	set_body_collision_enabled(carried_root, false)
 
 	component.on_dropped(actor)
 	LoggerConsole.log("Dropped: " + carried_root.name)
@@ -171,15 +176,17 @@ func drop_carried() -> void:
 	carried = null
 
 
-func set_collision_enabled(root: Node, enabled: bool) -> void:
+func set_body_collision_enabled(root: Node, enabled: bool) -> void:
 	for child in root.get_children():
-		if child is CollisionShape2D:
-			child.disabled = not enabled
+		if child.name == "BodyCollider":
+			for body_child in child.get_children():
+				if body_child is CollisionShape2D:
+					body_child.disabled = not enabled
 
-		if child is CollisionPolygon2D:
-			child.disabled = not enabled
+				if body_child is CollisionPolygon2D:
+					body_child.disabled = not enabled
 
-		set_collision_enabled(child, enabled)
+		set_body_collision_enabled(child, enabled)
 
 
 func find_carryable_component(node: Node) -> Node:

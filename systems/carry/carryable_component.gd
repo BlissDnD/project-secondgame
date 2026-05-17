@@ -21,4 +21,5 @@ func on_picked_up(actor: Node2D) -> void:
 
 
 func on_dropped(actor: Node2D) -> void:
+	
 	LoggerConsole.log(str(actor.name) + " dropped " + str(owner.name))

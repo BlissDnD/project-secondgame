@@ -261,8 +261,12 @@ actor = NodePath("..")
 [node name="CarrySocket" type="Node2D" parent="." unique_id=591920792]
 position = Vector2(32, -24)
 
-[node name="CarryManager" type="Node" parent="." unique_id=863781329 node_paths=PackedStringArray("detection_area", "actor", "carry_socket")]
+[node name="DropSocket" type="Node2D" parent="." unique_id=1277985867]
+position = Vector2(32, 32)
+
+[node name="CarryManager" type="Node" parent="." unique_id=863781329 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket")]
 script = ExtResource("53_vb1ce")
 detection_area = NodePath("../InteractionArea")
 actor = NodePath("..")
 carry_socket = NodePath("../CarrySocket")
+drop_socket = NodePath("../DropSocket")
