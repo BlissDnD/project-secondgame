@@ -128,7 +128,7 @@ sources/0 = SubResource("TileSetAtlasSource_71j4m")
 
 [node name="World" type="Node2D" unique_id=1212785255]
 
-[node name="TerrainTileMapLayer" type="TileMapLayer" parent="." unique_id=449527124]
+[node name="TerrainTileMapLayer" type="TileMapLayer" parent="." unique_id=449527124 groups=["terrain_layer"]]
 tile_set = SubResource("TileSet_i7141")
 
 [node name="WorldTerrainGenerator" type="Node" parent="." unique_id=878029160 node_paths=PackedStringArray("tile_map_layer", "object_layer")]

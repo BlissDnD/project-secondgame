@@ -33,6 +33,10 @@ window/size/viewport_height=1080
 
 enabled=PackedStringArray("res://addons/GitGodot/plugin.cfg", "res://addons/better-terrain/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg")
 
+[global_group]
+
+terrain_layer=""
+
 [input]
 
 ui_accept={

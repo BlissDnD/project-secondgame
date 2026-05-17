@@ -4,6 +4,7 @@ extends Node
 @export var actor: Node2D
 @export var carry_socket: Node2D
 @export var drop_socket: Node2D
+@export var ground_search_down_tiles: int = 8
 
 var terrain_layer: TileMapLayer = null
 
@@ -13,7 +14,8 @@ var carried: Node = null
 
 
 func _ready() -> void:
-	print("CARRY MANAGER READY")
+	LoggerConsole.log("CarryManager ready")
+
 	if detection_area == null:
 		push_error("CarryManager: detection_area is not assigned.")
 		return
@@ -29,25 +31,19 @@ func _ready() -> void:
 	if drop_socket == null:
 		push_error("CarryManager: drop_socket is not assigned.")
 		return
-	
+
 	terrain_layer = get_tree().get_first_node_in_group("terrain_layer") as TileMapLayer
 
 	if terrain_layer == null:
-		push_error("CarryManager: terrain_layer is not assigned.")
-		return
+		LoggerConsole.log("CarryManager warning: no terrain_layer group found. Ground placement disabled.")
 
-	detection_area.area_entered.connect(_on_area_entered)
-	detection_area.area_exited.connect(_on_area_exited)
-	LoggerConsole.log("CarryManager ready")
-	LoggerConsole.log("DetectionArea: " + str(detection_area))
-	LoggerConsole.log("Actor: " + str(actor))
-	LoggerConsole.log("CarrySocket: " + str(carry_socket))
-	LoggerConsole.log("DropSocket: " + str(drop_socket))
+	if not detection_area.area_entered.is_connected(_on_area_entered):
+		detection_area.area_entered.connect(_on_area_entered)
 
-	detection_area.area_entered.connect(_on_area_entered)
-	detection_area.area_exited.connect(_on_area_exited)
+	if not detection_area.area_exited.is_connected(_on_area_exited):
+		detection_area.area_exited.connect(_on_area_exited)
 
-	LoggerConsole.log("CarryManager signals connected")
+	LoggerConsole.log("CarryManager signals connected to: " + detection_area.name)
 
 
 func _physics_process(_delta: float) -> void:
@@ -68,14 +64,13 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
-	
 	var root: Node = area.owner
-	LoggerConsole.log("CARRY AREA ENTERED: " + area.name)
+
 	if root == null:
+		LoggerConsole.log("Carry entered area has no owner.")
 		return
 
 	if root == actor:
-		LoggerConsole.log("Carry entered area has no owner.")
 		return
 
 	var component: Node = find_carryable_component(root)
@@ -85,12 +80,12 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 
 	if not component.can_carry():
+		LoggerConsole.log("Carryable disabled on: " + root.name)
 		return
 
 	var id: int = component.get_instance_id()
 
 	if nearby_carryables.has(id):
-		LoggerConsole.log("Found CarryableComponent on: " + root.name)
 		return
 
 	nearby_carryables[id] = component
@@ -175,6 +170,10 @@ func release_carried() -> void:
 		return
 
 	if carried.requires_ground:
+		if terrain_layer == null:
+			LoggerConsole.log("Cannot place: terrain_layer group is missing.")
+			return
+
 		try_place_on_ground(carried)
 	else:
 		drop_freely(carried)
@@ -188,7 +187,16 @@ func try_place_on_ground(component: Node) -> void:
 		return
 
 	var drop_local: Vector2 = terrain_layer.to_local(drop_socket.global_position)
-	var target_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+	var start_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+
+	var target_cell: Vector2i = find_first_empty_cell_above_ground(
+		start_cell,
+		ground_search_down_tiles
+	)
+
+	if target_cell == Vector2i(-999999, -999999):
+		LoggerConsole.log("Cannot place here: no ground below.")
+		return
 
 	var ground_cell: Vector2i = Vector2i(
 		target_cell.x,
@@ -221,6 +229,30 @@ func try_place_on_ground(component: Node) -> void:
 	LoggerConsole.log("Placed: " + carried_root.name)
 
 	carried = null
+
+
+func find_first_empty_cell_above_ground(
+	start_cell: Vector2i,
+	max_search_down: int
+) -> Vector2i:
+	for offset_y in range(max_search_down + 1):
+		var ground_cell: Vector2i = Vector2i(
+			start_cell.x,
+			start_cell.y + offset_y
+		)
+
+		var target_cell: Vector2i = Vector2i(
+			ground_cell.x,
+			ground_cell.y - 1
+		)
+
+		var ground_has_tile: bool = terrain_layer.get_cell_source_id(ground_cell) != -1
+		var target_is_empty: bool = terrain_layer.get_cell_source_id(target_cell) == -1
+
+		if ground_has_tile and target_is_empty:
+			return target_cell
+
+	return Vector2i(-999999, -999999)
 
 
 func drop_freely(component: Node) -> void:
