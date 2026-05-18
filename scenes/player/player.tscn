@@ -234,7 +234,7 @@ stream = ExtResource("50_2t3bg")
 volume_db = -19.114
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1547749065]
-zoom = Vector2(0.2, 0.2)
+zoom = Vector2(0.4, 0.4)
 position_smoothing_enabled = true
 
 [node name="InteractionManager" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor")]
