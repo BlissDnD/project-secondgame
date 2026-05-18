@@ -1,10 +1,9 @@
 extends Resource
 class_name TerrainModifier
 
-
 func apply(
 	terrain_cells: Dictionary,
-	generator: WorldTerrainGenerator2,
+	config: WorldTerrainConfig,
 	generation_data: WorldGenerationData,
 	noise: FastNoiseLite
 ) -> Dictionary:

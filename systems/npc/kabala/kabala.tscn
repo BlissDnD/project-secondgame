@@ -2,10 +2,17 @@
 
 [ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="1_84n67"]
 [ext_resource type="Script" uid="uid://bp660xcko1s8e" path="res://systems/npc/npc_controller.gd" id="1_oxbmb"]
+[ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="2_diwhs"]
 [ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="2_n262i"]
-[ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://resources/world/hand_action.tres" id="3_oxbmb"]
+[ext_resource type="Resource" uid="uid://cpgqniytousr" path="res://systems/dialogue/test_dialogue.tres" id="3_h5drd"]
+[ext_resource type="Resource" uid="uid://cspgjt3v41pf2" path="res://ui/kabala_idle_dialogue_resource.tres" id="4_mvx3l"]
 [ext_resource type="Texture2D" uid="uid://dm6u3s0al8rsj" path="res://assets/images/npc/kabala.png" id="5_mvx3l"]
+[ext_resource type="Resource" uid="uid://cc622rgmrhpo0" path="res://systems/interaction/dialogue_action.tres" id="6_h5drd"]
 [ext_resource type="Script" uid="uid://dscenf1rgm0rn" path="res://systems/npc/npc_wander_controller.gd" id="7_h5drd"]
+
+[sub_resource type="Resource" id="Resource_c0jvq"]
+script = ExtResource("2_diwhs")
+metadata/_custom_type_script = "uid://q0u1xspouqyd"
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_diwhs"]
 animations = [{
@@ -23,10 +30,15 @@ size = Vector2(89, 125)
 
 [node name="Kabala" type="CharacterBody2D" unique_id=378978535]
 script = ExtResource("1_oxbmb")
+npc_definition = SubResource("Resource_c0jvq")
+dialogue = ExtResource("3_h5drd")
+idle_dialogue = ExtResource("4_mvx3l")
 
-[node name="InteractionComponent" type="Node" parent="." unique_id=379912243]
+[node name="InteractionComponent" type="Node" parent="." unique_id=379912243 node_paths=PackedStringArray("hover_area", "highlight_target")]
 script = ExtResource("1_84n67")
-actions = Array[ExtResource("2_n262i")]([ExtResource("3_oxbmb")])
+actions = Array[ExtResource("2_n262i")]([ExtResource("6_h5drd")])
+hover_area = NodePath("../InteractionHitbox")
+highlight_target = NodePath("../AnimatedSprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
@@ -48,3 +60,6 @@ script = ExtResource("7_h5drd")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1170786248]
 position = Vector2(1.5, -59.5)
 shape = SubResource("RectangleShape2D_oxbmb")
+
+[node name="DialogueAnchor" type="Marker2D" parent="." unique_id=643768095]
+position = Vector2(0, -48)

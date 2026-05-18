@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="DialogueResource" format=3 uid="uid://cpgqniytousr"]
+
+[ext_resource type="Script" uid="uid://ciqrkg70jhtq4" path="res://systems/dialogue/dialogue_choice.gd" id="1_apeu5"]
+[ext_resource type="Script" uid="uid://c6jtp1nd1w6hc" path="res://systems/dialogue/dialogue_line.gd" id="2_pu1a0"]
+[ext_resource type="Script" uid="uid://duife52k0exm3" path="res://systems/dialogue/dialogue_resource.gd" id="3_g63xu"]
+
+[sub_resource type="Resource" id="Resource_apeu5"]
+script = ExtResource("2_pu1a0")
+speaker_name = "Kabala"
+text = "Haaa! You can see me?!"
+metadata/_custom_type_script = "uid://c6jtp1nd1w6hc"
+
+[sub_resource type="Resource" id="Resource_pu1a0"]
+script = ExtResource("2_pu1a0")
+speaker_name = "Kabala"
+text = "Since when you are standing there?"
+metadata/_custom_type_script = "uid://c6jtp1nd1w6hc"
+
+[resource]
+script = ExtResource("3_g63xu")
+lines = Array[ExtResource("2_pu1a0")]([SubResource("Resource_apeu5"), SubResource("Resource_pu1a0")])
+metadata/_custom_type_script = "uid://duife52k0exm3"

@@ -4,15 +4,12 @@
 
 [resource]
 script = ExtResource("1_ubgds")
-seed_offset = 2
-start_x = 5
-end_x = 400
-min_depth_from_surface = 10
-max_depth_from_surface = 120
-chamber_count = 10
+chamber_count = 18
 chamber_min_radius = Vector2i(3, 2)
 chamber_max_radius = Vector2i(22, 9)
-tunnel_max_steps = 1000
+max_depth_from_surface = 120
+tunnel_max_steps = 700
 tunnel_directness = 0.46
 extra_connection_chance = 0.11
+seed_offset = 2
 metadata/_custom_type_script = "uid://dlmdctcwf4pmm"

@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 BetterTerrain="*uid://w1mqdaqrisg5"
 LoggerConsole="*uid://c3wjofajps1qe"
+DialogueManager="*uid://cr1ojiflcvdg"
+BarkManager="*uid://c0hqpfaed1n7a"
 
 [debug]
 

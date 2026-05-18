@@ -17,8 +17,6 @@
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="13_dss4m"]
 [ext_resource type="Resource" uid="uid://bgqi10xspcvba" path="res://systems/npc/kabala/kabala_npc_definition.tres" id="14_7t5mc"]
 [ext_resource type="Script" uid="uid://db531sowljlst" path="res://systems/npc/npc_spawner.gd" id="16_lakw3"]
-[ext_resource type="PackedScene" uid="uid://bax6bvt62mhs3" path="res://ui/dialogue_box.tscn" id="18_lakw3"]
-[ext_resource type="PackedScene" uid="uid://brnv2uy6xj3yi" path="res://ui/bark_bubble.tscn" id="19_pm21f"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -295,13 +293,3 @@ position = Vector2(165, 60)
 script = ExtResource("16_lakw3")
 npc_definitions = Array[ExtResource("13_dss4m")]([ExtResource("14_7t5mc")])
 world_root = NodePath("../WorldTerrainGenerator")
-
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1208311473]
-
-[node name="DialogueBox" parent="CanvasLayer" unique_id=438379010 instance=ExtResource("18_lakw3")]
-
-[node name="BarkBubble" parent="CanvasLayer" unique_id=598050960 instance=ExtResource("19_pm21f")]
-offset_left = -130.0
-offset_top = -30.0
-offset_right = -130.0
-offset_bottom = -30.0

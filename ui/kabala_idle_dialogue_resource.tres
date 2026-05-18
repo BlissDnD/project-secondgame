@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="IdleDialogueResource" format=3 uid="uid://cspgjt3v41pf2"]
+
+[ext_resource type="Script" uid="uid://dsy2or3rhq7in" path="res://systems/dialogue/idle_dialogue_resource.gd" id="1_qbp1w"]
+
+[resource]
+script = ExtResource("1_qbp1w")
+lines = Array[String](["... meow!", "Kabalaa"])
+display_duration = 5.0
+chance = 5.0
+require_player_nearby = false
+cooldown_after_interaction = 2.0
+metadata/_custom_type_script = "uid://dsy2or3rhq7in"

@@ -32,10 +32,24 @@ func _physics_process(_delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		if current_target == null:
-			LoggerConsole.log("No " + str(active_action_id) + " target.")
+			LoggerConsole.log("No interaction target.")
 			return
 
-		current_target.execute_action(active_action_id, actor)
+		var owner_node: Node = current_target.owner
+
+		if owner_node != null and owner_node.has_method("interact"):
+			owner_node.interact(actor)
+			return
+
+		if current_target.has_action(active_action_id):
+			current_target.execute_action(active_action_id, actor)
+			return
+
+		if current_target.has_action(&"hand"):
+			current_target.execute_action(&"hand", actor)
+			return
+
+		LoggerConsole.log("Target has no usable action.")
 
 
 func _on_area_entered(area: Area2D) -> void:
@@ -124,9 +138,7 @@ func get_closest_target() -> InteractionComponent:
 		if owner_node == null:
 			continue
 
-		var distance: float = actor.global_position.distance_to(
-			owner_node.global_position
-		)
+		var distance: float = actor.global_position.distance_to(owner_node.global_position)
 
 		if distance < closest_distance:
 			closest_distance = distance
@@ -148,10 +160,7 @@ func set_current_target(next_target: InteractionComponent) -> void:
 		current_target.set_highlighted(true)
 
 
-func is_mouse_over_component(
-	component: InteractionComponent,
-	mouse_pos: Vector2
-) -> bool:
+func is_mouse_over_component(component: InteractionComponent, mouse_pos: Vector2) -> bool:
 	if component == null:
 		return false
 
@@ -188,10 +197,7 @@ func is_mouse_over_area(area: Area2D, mouse_pos: Vector2) -> bool:
 				var rectangle: RectangleShape2D = shape as RectangleShape2D
 				var half_size: Vector2 = rectangle.size * 0.5
 
-				if (
-					abs(local_mouse_shape.x) <= half_size.x
-					and abs(local_mouse_shape.y) <= half_size.y
-				):
+				if abs(local_mouse_shape.x) <= half_size.x and abs(local_mouse_shape.y) <= half_size.y:
 					return true
 
 			if shape is CircleShape2D:
@@ -213,10 +219,18 @@ func is_valid_target(component: InteractionComponent) -> bool:
 	if not component.can_interact():
 		return false
 
-	if not component.has_action(active_action_id):
-		return false
+	var owner_node: Node = component.owner
 
-	return true
+	if owner_node != null and owner_node.has_method("interact"):
+		return true
+
+	if component.has_action(active_action_id):
+		return true
+
+	if component.has_action(&"hand"):
+		return true
+
+	return false
 
 
 func find_interaction_component(node: Node) -> InteractionComponent:

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="InteractionAction" format=3 uid="uid://cc622rgmrhpo0"]
+
+[ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="1_6ifh7"]
+
+[resource]
+script = ExtResource("1_6ifh7")
+action_id = &"dialogue"
+label = "Talk"
+metadata/_custom_type_script = "uid://scjl3g6m1ock"

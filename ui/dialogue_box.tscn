@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://bax6bvt62mhs3"]
+
+[ext_resource type="Script" uid="uid://b3evcv8pamjex" path="res://ui/dialogue_box.gd" id="1_2ix3t"]
+
+[node name="DialogueBox" type="Control" unique_id=778786253]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+script = ExtResource("1_2ix3t")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1029021655]
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 0
+offset_right = 286.0
+offset_bottom = 51.0
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=742493734]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 26
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=398953752]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpeakerLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=147535071]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Speaker"
+
+[node name="BodyLabel" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=2038282802]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+bbcode_enabled = true
+text = "Dialogue text..."
+fit_content = true
+scroll_active = false
+
+[node name="ChoicesContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=856540682]
+unique_name_in_owner = true
+layout_mode = 2

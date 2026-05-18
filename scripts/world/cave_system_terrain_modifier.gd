@@ -2,155 +2,164 @@ extends TerrainModifier
 class_name CaveSystemTerrainModifier
 
 @export var enabled: bool = true
-@export var seed_offset: int = 5000
-
-@export_group("Bounds")
-@export var start_x: int = 40
-@export var end_x: int = 320
-@export var min_depth_from_surface: int = 18
-@export var max_depth_from_surface: int = 90
 
 @export_group("Chambers")
 @export var chamber_count: int = 8
 @export var chamber_min_radius: Vector2i = Vector2i(4, 3)
-@export var chamber_max_radius: Vector2i = Vector2i(12, 7)
+@export var chamber_max_radius: Vector2i = Vector2i(10, 6)
+@export var min_depth_from_surface: int = 12
+@export var max_depth_from_surface: int = 80
 
 @export_group("Tunnels")
-@export var tunnel_half_width: int = 2
+@export var tunnel_radius: int = 2
 @export var tunnel_max_steps: int = 2000
 @export_range(0.0, 1.0, 0.01) var tunnel_directness: float = 0.75
 @export_range(0.0, 1.0, 0.01) var extra_connection_chance: float = 0.25
 
+@export_group("Random")
+@export var seed_offset: int = 9001
+
+var _carved_cells: Dictionary = {}
+
 
 func apply(
 	terrain_cells: Dictionary,
-	generator: WorldTerrainGenerator2,
+	config: WorldTerrainConfig,
 	generation_data: WorldGenerationData,
 	noise: FastNoiseLite
 ) -> Dictionary:
 	if not enabled:
 		return terrain_cells
 
+	if config == null:
+		push_error("CaveSystemTerrainModifier.apply: config is null.")
+		return terrain_cells
+
+	if generation_data == null:
+		push_error("CaveSystemTerrainModifier.apply: generation_data is null.")
+		return terrain_cells
+
+	if noise == null:
+		push_error("CaveSystemTerrainModifier.apply: noise is null.")
+		return terrain_cells
+
+	_carved_cells.clear()
+
 	var rng := RandomNumberGenerator.new()
 	rng.seed = noise.seed + seed_offset
 
 	var chambers: Array[Dictionary] = generate_chambers(
-		generator,
-		generation_data,
+		config,
 		noise,
 		rng
 	)
 
-	var carved_cells: Dictionary = {}
+	chambers.sort_custom(_sort_chambers_by_x)
+	generation_data.generated_chambers = chambers.duplicate()
 
 	for chamber in chambers:
+		var center: Vector2i = chamber["center"]
+		var radius: Vector2i = chamber["radius"]
+
 		carve_ellipse(
-			carved_cells,
-			chamber["center"],
-			chamber["radius"]
+			center,
+			radius
 		)
 
-	for i in range(chambers.size() - 1):
+	for index in range(chambers.size() - 1):
+		var chamber_a: Dictionary = chambers[index]
+		var chamber_b: Dictionary = chambers[index + 1]
+
 		carve_tunnel(
-			carved_cells,
-			chambers[i]["center"],
-			chambers[i + 1]["center"],
+			chamber_a["center"],
+			chamber_b["center"],
 			rng
 		)
 
 	for i in range(chambers.size()):
 		for j in range(i + 2, chambers.size()):
-			if rng.randf() <= extra_connection_chance:
-				carve_tunnel(
-					carved_cells,
-					chambers[i]["center"],
-					chambers[j]["center"],
-					rng
-				)
+			if rng.randf() > extra_connection_chance:
+				continue
 
-	return remove_carved_cells(
-		terrain_cells,
-		carved_cells
-	)
+			carve_tunnel(
+				chambers[i]["center"],
+				chambers[j]["center"],
+				rng
+			)
+
+	remove_carved_cells(terrain_cells)
+
+	return terrain_cells
 
 
 func generate_chambers(
-	generator: WorldTerrainGenerator2,
-	generation_data: WorldGenerationData,
+	config: WorldTerrainConfig,
 	noise: FastNoiseLite,
 	rng: RandomNumberGenerator
 ) -> Array[Dictionary]:
 	var chambers: Array[Dictionary] = []
 
-	for i in range(chamber_count):
-		var x: int = rng.randi_range(
-			start_x,
-			end_x
+	var min_x: int = 8
+	var max_x: int = config.world_width_tiles - 8
+
+	if max_x <= min_x:
+		return chambers
+
+	for _i in range(chamber_count):
+		var x: int = rng.randi_range(min_x, max_x)
+		var surface_y: int = config.get_surface_y_for_x(x, noise)
+
+		var min_y: int = surface_y + min_depth_from_surface
+		var max_y: int = mini(
+			surface_y + max_depth_from_surface,
+			config.world_height_tiles - 8
 		)
 
-		var surface_y: int = generator.get_surface_y_for_x(
+		if max_y <= min_y:
+			continue
+
+		var center := Vector2i(
 			x,
-			noise
+			rng.randi_range(min_y, max_y)
 		)
 
-		var y: int = surface_y + rng.randi_range(
-			min_depth_from_surface,
-			max_depth_from_surface
+		var radius := Vector2i(
+			rng.randi_range(chamber_min_radius.x, chamber_max_radius.x),
+			rng.randi_range(chamber_min_radius.y, chamber_max_radius.y)
 		)
 
-		var radius: Vector2i = Vector2i(
-			rng.randi_range(
-				chamber_min_radius.x,
-				chamber_max_radius.x
-			),
-			rng.randi_range(
-				chamber_min_radius.y,
-				chamber_max_radius.y
-			)
-		)
-
-		var chamber: Dictionary = {
-			"center": Vector2i(x, y),
+		chambers.append({
+			"center": center,
 			"radius": radius
-		}
-
-		chambers.append(chamber)
-		generation_data.generated_chambers.append(chamber)
-
-	chambers.sort_custom(_sort_chambers_by_x)
+		})
 
 	return chambers
 
 
-func _sort_chambers_by_x(
-	a: Dictionary,
-	b: Dictionary
-) -> bool:
-	return a["center"].x < b["center"].x
+func _sort_chambers_by_x(a: Dictionary, b: Dictionary) -> bool:
+	var center_a: Vector2i = a["center"]
+	var center_b: Vector2i = b["center"]
+
+	return center_a.x < center_b.x
 
 
 func carve_ellipse(
-	carved_cells: Dictionary,
 	center: Vector2i,
 	radius: Vector2i
 ) -> void:
-	for x in range(
-		center.x - radius.x,
-		center.x + radius.x + 1
-	):
-		for y in range(
-			center.y - radius.y,
-			center.y + radius.y + 1
-		):
-			var dx: float = float(x - center.x) / float(radius.x)
-			var dy: float = float(y - center.y) / float(radius.y)
+	if radius.x <= 0 or radius.y <= 0:
+		return
 
-			if dx * dx + dy * dy <= 1.0:
-				carved_cells[Vector2i(x, y)] = true
+	for x in range(center.x - radius.x, center.x + radius.x + 1):
+		for y in range(center.y - radius.y, center.y + radius.y + 1):
+			var normalized_x: float = float(x - center.x) / float(radius.x)
+			var normalized_y: float = float(y - center.y) / float(radius.y)
+
+			if normalized_x * normalized_x + normalized_y * normalized_y <= 1.0:
+				_carved_cells[Vector2i(x, y)] = true
 
 
 func carve_tunnel(
-	carved_cells: Dictionary,
 	from_cell: Vector2i,
 	to_cell: Vector2i,
 	rng: RandomNumberGenerator
@@ -158,81 +167,74 @@ func carve_tunnel(
 	var current: Vector2i = from_cell
 	var steps: int = 0
 
-	while current.distance_to(to_cell) > 2 and steps < tunnel_max_steps:
+	while current != to_cell and steps < tunnel_max_steps:
 		carve_circle(
-			carved_cells,
 			current,
-			tunnel_half_width
+			tunnel_radius
 		)
 
-		var direction_to_target: Vector2 = Vector2(
-			to_cell.x - current.x,
-			to_cell.y - current.y
-		).normalized()
+		var direction := Vector2i.ZERO
 
-		var random_direction: Vector2 = Vector2(
-			rng.randf_range(-1.0, 1.0),
-			rng.randf_range(-1.0, 1.0)
-		).normalized()
+		if rng.randf() <= tunnel_directness:
+			var delta: Vector2i = to_cell - current
 
-		var mixed_direction: Vector2 = (
-			direction_to_target * tunnel_directness
-			+ random_direction * (1.0 - tunnel_directness)
-		).normalized()
-
-		if abs(mixed_direction.x) > abs(mixed_direction.y):
-			current.x += sign_int(
-				roundi(mixed_direction.x)
-			)
+			if abs(delta.x) > abs(delta.y):
+				direction.x = sign_int(delta.x)
+			else:
+				direction.y = sign_int(delta.y)
 		else:
-			current.y += sign_int(
-				roundi(mixed_direction.y)
-			)
+			match rng.randi_range(0, 3):
+				0:
+					direction = Vector2i.RIGHT
+				1:
+					direction = Vector2i.LEFT
+				2:
+					direction = Vector2i.DOWN
+				3:
+					direction = Vector2i.UP
 
+		current += direction
 		steps += 1
 
 	carve_circle(
-		carved_cells,
 		to_cell,
-		tunnel_half_width
+		tunnel_radius
 	)
 
 
 func carve_circle(
-	carved_cells: Dictionary,
 	center: Vector2i,
 	radius: int
 ) -> void:
-	for x in range(
-		center.x - radius,
-		center.x + radius + 1
-	):
-		for y in range(
-			center.y - radius,
-			center.y + radius + 1
-		):
-			var cell: Vector2i = Vector2i(x, y)
+	if radius <= 0:
+		_carved_cells[center] = true
+		return
 
-			if center.distance_to(cell) <= radius:
-				carved_cells[cell] = true
+	var radius_squared: int = radius * radius
+
+	for x in range(center.x - radius, center.x + radius + 1):
+		for y in range(center.y - radius, center.y + radius + 1):
+			var offset := Vector2i(
+				x - center.x,
+				y - center.y
+			)
+
+			if offset.length_squared() <= radius_squared:
+				_carved_cells[Vector2i(x, y)] = true
 
 
 func remove_carved_cells(
-	terrain_cells: Dictionary,
-	carved_cells: Dictionary
-) -> Dictionary:
-	var result: Dictionary = {}
-
+	terrain_cells: Dictionary
+) -> void:
 	for terrain_type in terrain_cells.keys():
-		result[terrain_type] = []
+		var source_cells: Array = terrain_cells[terrain_type]
+		var kept_cells: Array[Vector2i] = []
 
-		for cell in terrain_cells[terrain_type]:
-			if carved_cells.has(cell):
-				continue
+		for cell in source_cells:
+			if not _carved_cells.has(cell):
+				kept_cells.append(cell)
 
-			result[terrain_type].append(cell)
-
-	return result
+		terrain_cells[terrain_type] = kept_cells
 
 
 func sign_int(value: int) -> int:

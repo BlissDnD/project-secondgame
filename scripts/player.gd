@@ -11,7 +11,8 @@ const JUMP_VELOCITY = -400.0
 
 var godmode_enabled: bool = false
 
-
+func _ready()-> void:
+	BarkManager.set_player(self)
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_godmode"):
 		godmode_enabled = !godmode_enabled
