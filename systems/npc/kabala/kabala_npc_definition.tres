@@ -1,7 +1,61 @@
 [gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://bgqi10xspcvba"]
 
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="1_5pcgh"]
+[ext_resource type="Script" uid="uid://dawk15hoi5rwt" path="res://systems/dialogue/npc_dialogue_rule.gd" id="1_7cao3"]
 [ext_resource type="PackedScene" uid="uid://lexxakgo4ldx" path="res://systems/npc/kabala/kabala.tscn" id="1_yr74h"]
+[ext_resource type="Script" uid="uid://c6jtp1nd1w6hc" path="res://systems/dialogue/dialogue_line.gd" id="3_kv3bq"]
+[ext_resource type="Script" uid="uid://duife52k0exm3" path="res://systems/dialogue/dialogue_resource.gd" id="4_060ec"]
+[ext_resource type="Resource" uid="uid://cspgjt3v41pf2" path="res://systems/npc/kabala/dialogue/kabala_idle_dialogue_resource.tres" id="4_jup83"]
+[ext_resource type="Resource" uid="uid://ce1vrqdilwqus" path="res://systems/npc/kabala/dialogue/kabala_intro_script.tres" id="5_7cao3"]
+[ext_resource type="Resource" uid="uid://b4lp4gjc2qyq2" path="res://systems/npc/kabala/dialogue/kabala_dialogue_repeat.tres" id="7_bsf3n"]
+
+[sub_resource type="Resource" id="Resource_kv3bq"]
+script = ExtResource("3_kv3bq")
+metadata/_custom_type_script = "uid://c6jtp1nd1w6hc"
+
+[sub_resource type="Resource" id="Resource_060ec"]
+script = ExtResource("4_060ec")
+lines = Array[ExtResource("3_kv3bq")]([SubResource("Resource_kv3bq")])
+choices = Array[ExtResource("4_060ec")]([null])
+metadata/_custom_type_script = "uid://duife52k0exm3"
+
+[sub_resource type="Resource" id="Resource_b420a"]
+script = ExtResource("3_kv3bq")
+speaker_name = "Kabala"
+text = "yes? it is awesome, not jsut a yes!"
+metadata/_custom_type_script = "uid://c6jtp1nd1w6hc"
+
+[sub_resource type="Resource" id="Resource_6kd35"]
+script = ExtResource("4_060ec")
+dialogue_id = &"yes"
+lines = Array[ExtResource("3_kv3bq")]([SubResource("Resource_b420a")])
+choices = Array[ExtResource("4_060ec")]([SubResource("Resource_060ec"), null])
+metadata/_custom_type_script = "uid://duife52k0exm3"
+
+[sub_resource type="Resource" id="Resource_lnb1r"]
+script = ExtResource("4_060ec")
+lines = Array[ExtResource("3_kv3bq")]([null])
+metadata/_custom_type_script = "uid://duife52k0exm3"
+
+[sub_resource type="Resource" id="Resource_k6acw"]
+script = ExtResource("3_kv3bq")
+speaker_name = "Kabala"
+text = "It works!!"
+metadata/_custom_type_script = "uid://c6jtp1nd1w6hc"
+
+[sub_resource type="Resource" id="Resource_jf45n"]
+script = ExtResource("4_060ec")
+lines = Array[ExtResource("3_kv3bq")]([SubResource("Resource_k6acw")])
+choices = Array[ExtResource("4_060ec")]([SubResource("Resource_6kd35"), SubResource("Resource_lnb1r")])
+metadata/_custom_type_script = "uid://duife52k0exm3"
+
+[sub_resource type="Resource" id="Resource_fsrx6"]
+script = ExtResource("1_7cao3")
+rule_id = &"after_control_box"
+priority = 100
+required_world_flag = &"control_box_activated"
+dialogue = SubResource("Resource_jf45n")
+metadata/_custom_type_script = "uid://dawk15hoi5rwt"
 
 [resource]
 script = ExtResource("1_5pcgh")
@@ -11,4 +65,8 @@ npc_scene = ExtResource("1_yr74h")
 surface_interval_min = 40
 surface_interval_max = 80
 walk_speed = 30.0
+intro_dialogue = ExtResource("5_7cao3")
+repeat_dialogue = ExtResource("7_bsf3n")
+dialogue_rules = Array[ExtResource("1_7cao3")]([SubResource("Resource_fsrx6")])
+idle_dialogue_resource = ExtResource("4_jup83")
 metadata/_custom_type_script = "uid://q0u1xspouqyd"

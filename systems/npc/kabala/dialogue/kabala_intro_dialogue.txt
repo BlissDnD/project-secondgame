@@ -1,0 +1,11 @@
+::start
+Kabala: Haa!! You can see me?!
+Kabala: I thought I was alone here.
+
+? Who are you? -> who
+? Goodbye. -> END
+
+::who
+Kabala: I am Kabala.
+Kabala: I have been trapped here for years.
+-> END

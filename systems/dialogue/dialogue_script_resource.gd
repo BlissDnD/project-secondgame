@@ -1,12 +1,8 @@
 extends Resource
-class_name DialogueResource
+class_name DialogueScriptResource
 
 @export var dialogue_id: StringName
-@export var lines: Array[DialogueLine] = []
-@export var choices: Array[DialogueChoice] = []
-
-@export_category("Flow")
-@export var show_choices_after_line_index: int = -1
+@export_file("*.dialogue", "*.txt") var script_path: String
 
 @export_category("Behavior")
 @export var lock_player_input: bool = false

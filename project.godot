@@ -21,6 +21,7 @@ BetterTerrain="*uid://w1mqdaqrisg5"
 LoggerConsole="*uid://c3wjofajps1qe"
 DialogueManager="*uid://cr1ojiflcvdg"
 BarkManager="*uid://c0hqpfaed1n7a"
+GameStateManager="*uid://brqhg4frh5jw1"
 
 [debug]
 

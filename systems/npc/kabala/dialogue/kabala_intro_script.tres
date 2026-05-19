@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="DialogueScriptResource" format=3 uid="uid://ce1vrqdilwqus"]
+
+[ext_resource type="Script" uid="uid://hvbrj8h5auge" path="res://systems/dialogue/dialogue_script_resource.gd" id="1_3bdek"]
+
+[resource]
+script = ExtResource("1_3bdek")
+dialogue_id = &"kabala_intro"
+script_path = "res://systems/npc/kabala/dialogue/kabala_intro_dialogue.txt"
+metadata/_custom_type_script = "uid://hvbrj8h5auge"

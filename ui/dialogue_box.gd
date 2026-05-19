@@ -15,8 +15,6 @@ var is_typing: bool = false
 
 
 func _ready() -> void:
-	print("DialogueBox ready")
-
 	hide()
 
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -55,15 +53,12 @@ func _input(event: InputEvent) -> void:
 		DialogueManager.advance()
 
 
-func _on_dialogue_started(_dialogue: DialogueResource) -> void:
-	print("DialogueBox received dialogue_started")
+func _on_dialogue_started(_dialogue) -> void:
 	show()
 	_clear_choices()
 
 
 func _on_dialogue_line_changed(line: DialogueLine, _line_index: int) -> void:
-	print("DialogueBox line changed: ", line.text)
-
 	_clear_choices()
 
 	speaker_label.text = line.speaker_name
@@ -72,23 +67,24 @@ func _on_dialogue_line_changed(line: DialogueLine, _line_index: int) -> void:
 	_start_typewriter()
 
 
-func _on_dialogue_choices_changed(choices: Array[DialogueChoice]) -> void:
-	print("DialogueBox choices changed: ", choices.size())
-
+func _on_dialogue_choices_changed(choices: Array) -> void:
 	_clear_choices()
 	_finish_typewriter()
 
 	for i in choices.size():
+		var choice = choices[i]
+
 		var button := Button.new()
-		button.text = choices[i].label
+		button.text = choice.label
+
 		button.pressed.connect(func() -> void:
 			DialogueManager.choose(i)
 		)
+
 		choices_container.add_child(button)
 
 
-func _on_dialogue_ended(_dialogue: DialogueResource) -> void:
-	print("DialogueBox received dialogue_ended")
+func _on_dialogue_ended(_dialogue) -> void:
 	hide()
 	_clear_choices()
 	_reset_typewriter()

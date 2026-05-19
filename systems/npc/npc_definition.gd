@@ -2,12 +2,14 @@ extends Resource
 class_name NPCDefinition
 
 enum SpawnMode {
-	NONE,
 	SURFACE_INTERVAL
 }
 
+@export_category("Identity")
 @export var npc_id: StringName
 @export var display_name: String = "NPC"
+
+@export_category("Scene")
 @export var npc_scene: PackedScene
 
 @export_category("Spawn")
@@ -27,5 +29,8 @@ enum SpawnMode {
 @export var can_interact: bool = true
 @export var interaction_prompt: String = "Talk"
 
-@export_category("Future Dialogue")
-@export var dialogue_resource: Resource
+@export_category("Dialogue")
+@export var intro_dialogue: DialogueScriptResource
+@export var repeat_dialogue: DialogueScriptResource
+@export var dialogue_rules: Array[NPCDialogueRule] = []
+@export var idle_dialogue_resource: IdleDialogueResource
