@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sq3if"]
-size = Vector2(59, 85)
+size = Vector2(60, 85)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -37,6 +37,7 @@ animations = [{
 size = Vector2(106, 100)
 
 [node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label")]
+collision_layer = 4
 script = ExtResource("1_nupkf")
 state_machine = NodePath("WorkerStateMachine")
 needs = NodePath("WorkerNeedsComponent")
@@ -45,7 +46,7 @@ crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=332867246]
-position = Vector2(1.5, -32.5)
+position = Vector2(2, -32.5)
 shape = SubResource("RectangleShape2D_sq3if")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
@@ -89,9 +90,8 @@ offset_bottom = 18.0
 
 [node name="CarryableComponent" type="Area2D" parent="." unique_id=1676451399 node_paths=PackedStringArray("root_node")]
 script = ExtResource("7_4pgqf")
-supports_grid_placement = true
-can_insert_into_worker_socket = true
 root_node = NodePath("..")
+can_insert_into_worker_socket = true
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1248316060]

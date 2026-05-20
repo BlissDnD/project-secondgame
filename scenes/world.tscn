@@ -23,6 +23,9 @@
 [ext_resource type="PackedScene" uid="uid://qwwdf1ck5o3" path="res://scenes/worker/crystal_node.tscn" id="21_ctatt"]
 [ext_resource type="PackedScene" uid="uid://d3gxd0nmiyvk8" path="res://scenes/worker/crystal_node_station.tscn" id="22_xgqkh"]
 [ext_resource type="PackedScene" uid="uid://c8h8edlxc3fjv" path="res://scenes/worker/worker.tscn" id="23_munwf"]
+[ext_resource type="Script" uid="uid://padt2g1f7e1y" path="res://systems/world_generation/world_debug_spawn_service.gd" id="24_ctatt"]
+[ext_resource type="Script" uid="uid://b7nov50mcnb4l" path="res://systems/interaction/placement/placement_validator.gd" id="25_munwf"]
+[ext_resource type="Script" uid="uid://csb1wyobgijs0" path="res://systems/interaction/placement/placement_preview.gd" id="26_ts3gi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -310,10 +313,23 @@ offset_top = -30.0
 offset_right = -130.0
 offset_bottom = -30.0
 
-[node name="MainCrystal" parent="." unique_id=1643437430 instance=ExtResource("20_kpybi")]
+[node name="WorldDebugSpawnService" type="Node" parent="." unique_id=413822738 node_paths=PackedStringArray("spawn_origin", "terrain_provider")]
+script = ExtResource("24_ctatt")
+main_crystal_scene = ExtResource("20_kpybi")
+crystal_node_scene = ExtResource("21_ctatt")
+worker_scene = ExtResource("23_munwf")
+crystal_station_scene = ExtResource("22_xgqkh")
+spawn_origin = NodePath("../Player")
+terrain_provider = NodePath("../WorldTerrainGenerator")
+spawn_offset_x = 60.0
+object_spacing = 20.0
+metadata/_custom_type_script = "uid://padt2g1f7e1y"
 
-[node name="CrystalNode" parent="." unique_id=924663088 instance=ExtResource("21_ctatt")]
+[node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap")]
+script = ExtResource("25_munwf")
+terrain_tilemap = NodePath("../TerrainTileMapLayer")
+metadata/_custom_type_script = "uid://b7nov50mcnb4l"
 
-[node name="CrystalNodeStation" parent="." unique_id=1501838052 instance=ExtResource("22_xgqkh")]
-
-[node name="Worker" parent="." unique_id=591280423 instance=ExtResource("23_munwf")]
+[node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484]
+script = ExtResource("26_ts3gi")
+metadata/_custom_type_script = "uid://csb1wyobgijs0"

@@ -1,11 +1,10 @@
 extends Area2D
 class_name CarryableComponent
 
-signal picked_up(carrier: Node)
-signal dropped(carrier: Node)
+signal picked_up(carrier: Node2D)
+signal dropped(carrier: Node2D)
 
 @export var root_node: Node2D
-
 @export var hold_offset: Vector2 = Vector2(24, -16)
 
 @export var can_be_carried: bool = true
@@ -16,7 +15,6 @@ signal dropped(carrier: Node)
 @export var can_insert_into_worker_socket: bool = false
 
 @export var placeable_definition: PlaceableDefinition
-
 @export var footprint_tiles: Vector2i = Vector2i.ONE
 
 @export var disable_body_collision_while_carried: bool = true
@@ -27,8 +25,7 @@ signal dropped(carrier: Node)
 
 var carrier: Node2D = null
 var is_carried: bool = false
-
-var original_parent: Node = null
+var original_parent: Node2D = null
 
 
 func _ready() -> void:
@@ -37,7 +34,7 @@ func _ready() -> void:
 
 
 func can_carry() -> bool:
-	return can_be_carried
+	return can_be_carried and root_node != null
 
 
 func get_carried_root() -> Node2D:
@@ -45,10 +42,7 @@ func get_carried_root() -> Node2D:
 
 
 func pickup(new_carrier: Node2D) -> bool:
-	if not can_be_carried:
-		return false
-
-	if root_node == null:
+	if not can_carry():
 		return false
 
 	carrier = new_carrier
@@ -58,7 +52,6 @@ func pickup(new_carrier: Node2D) -> bool:
 		root_node.on_picked_up()
 
 	picked_up.emit(carrier)
-
 	return true
 
 
@@ -68,8 +61,7 @@ func drop(drop_position: Vector2) -> void:
 
 	root_node.global_position = drop_position
 
-	var old_carrier := carrier
-
+	var old_carrier: Node2D = carrier
 	carrier = null
 	is_carried = false
 
@@ -92,13 +84,13 @@ func carry_update() -> void:
 	root_node.global_position = carrier.global_position + hold_offset
 
 
-func on_picked_up(by_actor: Node) -> void:
+func on_picked_up(_by_actor: Node2D) -> void:
 	pass
 
 
-func on_dropped(by_actor: Node) -> void:
+func on_dropped(_by_actor: Node2D) -> void:
 	pass
 
 
-func on_placed(by_actor: Node) -> void:
+func on_placed(_by_actor: Node2D) -> void:
 	pass

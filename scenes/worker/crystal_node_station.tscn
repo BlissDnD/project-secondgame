@@ -51,13 +51,17 @@ shape = SubResource("RectangleShape2D_0g1qb")
 offset_right = 4.0
 offset_bottom = 27.0
 
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node")]
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "ground_anchor")]
 script = ExtResource("5_vmugq")
+root_node = NodePath("..")
+requires_ground = true
 supports_grid_placement = true
 placeable_definition = ExtResource("5_n4p0y")
-root_node = NodePath("..")
+ground_anchor = NodePath("../GroundAnchor")
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1074899958]
 position = Vector2(1, 33)
 shape = SubResource("RectangleShape2D_n4p0y")
+
+[node name="GroundAnchor" type="Node2D" parent="." unique_id=1623249915]

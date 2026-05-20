@@ -233,10 +233,10 @@ func clear_objects() -> void:
 		child.queue_free()
 		
 func _spawn_debug_worker_loop_objects() -> void:
-	var spawn_service := get_node_or_null("WorldDebugSpawnService")
+	var spawn_service := get_tree().current_scene.get_node_or_null("WorldDebugSpawnService")
 
 	if spawn_service == null:
-		push_warning("WorldDebugSpawnService not found.")
+		push_warning("WorldDebugSpawnService not found in current scene.")
 		return
 
 	spawn_service.spawn_test_worker_loop_objects()
