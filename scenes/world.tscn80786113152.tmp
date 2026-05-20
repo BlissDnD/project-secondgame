@@ -281,13 +281,13 @@ tile_set = SubResource("TileSet_i7141")
 
 [node name="WorldTerrainGenerator" type="Node" parent="." unique_id=878029160 node_paths=PackedStringArray("tile_map_layer", "object_layer")]
 script = ExtResource("2_k0juu")
-tile_map_layer = NodePath("../TerrainTileMapLayer")
-object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
 terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu"), ExtResource("8_q5onr")])
 config = SubResource("Resource_lakw3")
 world_spawns = Array[ExtResource("9_e3hyu")]([ExtResource("10_q5onr"), ExtResource("5_qfnet"), ExtResource("12_jhx03")])
 npc_definitions = Array[ExtResource("13_dss4m")]([ExtResource("14_7t5mc")])
+tile_map_layer = NodePath("../TerrainTileMapLayer")
+object_layer = NodePath("../ObjectLayer")
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]

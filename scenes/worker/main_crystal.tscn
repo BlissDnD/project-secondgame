@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://ci1g3qojtqeg4"]
+
+[ext_resource type="Texture2D" uid="uid://br3mxo1a8cxek" path="res://assets/images/Plant Animations/Plant Wind 1/Plant Wind 1_00024.png" id="1_f7kw7"]
+[ext_resource type="Script" uid="uid://ipyajtan6bym" path="res://systems/work/main_crystal.gd" id="1_hyv5x"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_hyv5x"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_f7kw7")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b5bu4"]
+size = Vector2(81, 94)
+
+[node name="MainCrystal" type="Node2D" unique_id=1643437430]
+script = ExtResource("1_hyv5x")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1225371543]
+position = Vector2(-63, -79)
+scale = Vector2(0.49023438, 0.53125)
+sprite_frames = SubResource("SpriteFrames_hyv5x")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1515454983]
+position = Vector2(-16, -40)
+shape = SubResource("RectangleShape2D_b5bu4")

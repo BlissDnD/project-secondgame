@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="2_kxhh1"]
 [ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="3_fotd3"]
 [ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://systems/interaction/hand_action.tres" id="4_76ni3"]
-[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/carry/carryable_component.gd" id="5_fotd3"]
+[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_fotd3"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_3ir17"]
 animations = [{

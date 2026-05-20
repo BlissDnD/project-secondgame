@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://qwwdf1ck5o3"]
+
+[ext_resource type="Texture2D" uid="uid://drffxhugo0bl1" path="res://assets/images/Plant Animations/Plant 8 Poison/PlantPosion_00004.png" id="1_hp6a3"]
+[ext_resource type="Script" uid="uid://ceomqcfcds58i" path="res://systems/work/crystal_node.gd" id="2_njnyv"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_njnyv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_hp6a3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_njnyv"]
+radius = 32.449963
+
+[node name="CrystalNode" type="Node2D" unique_id=924663088]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2097123807]
+position = Vector2(-1.5258789e-05, -24.000015)
+scale = Vector2(0.21484375, 0.21484375)
+sprite_frames = SubResource("SpriteFrames_njnyv")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=849319673]
+position = Vector2(-1, -29)
+shape = SubResource("CircleShape2D_njnyv")
+script = ExtResource("2_njnyv")

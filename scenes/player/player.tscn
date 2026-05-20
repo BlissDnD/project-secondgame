@@ -52,7 +52,7 @@
 [ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
-[ext_resource type="Script" uid="uid://cwcv247t2cv0x" path="res://systems/carry/carry_manager.gd" id="53_vb1ce"]
+[ext_resource type="Script" uid="uid://cwcv247t2cv0x" path="res://systems/interaction/carry/carry_manager.gd" id="53_vb1ce"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
 size = Vector2(58, 116)

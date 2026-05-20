@@ -6,11 +6,14 @@ extends Node
 @export var drop_socket: Node2D
 @export var ground_search_down_tiles: int = 8
 
+@export var placement_validator: PlacementValidator
+@export var placement_preview: PlacementPreview
+
 var terrain_layer: TileMapLayer = null
 
 var nearby_carryables: Dictionary = {}
-var current_candidate: Node = null
-var carried: Node = null
+var current_candidate: Area2D = null
+var carried: Area2D = null
 
 
 func _ready() -> void:
@@ -35,7 +38,7 @@ func _ready() -> void:
 	terrain_layer = get_tree().get_first_node_in_group("terrain_layer") as TileMapLayer
 
 	if terrain_layer == null:
-		LoggerConsole.log("CarryManager warning: no terrain_layer group found. Ground placement disabled.")
+		LoggerConsole.log("CarryManager warning: no terrain_layer group found.")
 
 	if not detection_area.area_entered.is_connected(_on_area_entered):
 		detection_area.area_entered.connect(_on_area_entered)
@@ -49,6 +52,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if carried == null:
 		current_candidate = get_closest_candidate()
+	else:
+		update_placement_preview()
 
 
 func _input(event: InputEvent) -> void:
@@ -67,20 +72,17 @@ func _on_area_entered(area: Area2D) -> void:
 	var root: Node = area.owner
 
 	if root == null:
-		LoggerConsole.log("Carry entered area has no owner.")
 		return
 
 	if root == actor:
 		return
 
-	var component: Node = find_carryable_component(root)
+	var component: Area2D = find_carryable_component(root)
 
 	if component == null:
-		LoggerConsole.log("No CarryableComponent on: " + root.name)
 		return
 
 	if not component.can_carry():
-		LoggerConsole.log("Carryable disabled on: " + root.name)
 		return
 
 	var id: int = component.get_instance_id()
@@ -89,7 +91,6 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 
 	nearby_carryables[id] = component
-	LoggerConsole.log("Added carryable: " + root.name)
 
 
 func _on_area_exited(area: Area2D) -> void:
@@ -98,7 +99,7 @@ func _on_area_exited(area: Area2D) -> void:
 	if root == null:
 		return
 
-	var component: Node = find_carryable_component(root)
+	var component: Area2D = find_carryable_component(root)
 
 	if component == null:
 		return
@@ -112,12 +113,12 @@ func _on_area_exited(area: Area2D) -> void:
 		current_candidate = null
 
 
-func get_closest_candidate() -> Node:
-	var closest: Node = null
+func get_closest_candidate() -> Area2D:
+	var closest: Area2D = null
 	var closest_distance: float = INF
 
 	for item in nearby_carryables.values():
-		var component: Node = item as Node
+		var component: Area2D = item as Area2D
 
 		if component == null:
 			continue
@@ -144,7 +145,7 @@ func get_closest_candidate() -> Node:
 	return closest
 
 
-func pick_up(component: Node) -> void:
+func pick_up(component: Area2D) -> void:
 	if carried != null:
 		return
 
@@ -156,6 +157,8 @@ func pick_up(component: Node) -> void:
 	carried = component
 	component.original_parent = carried_root.get_parent()
 
+	_release_occupancy_if_placeable(carried_root)
+
 	carried_root.reparent(carry_socket)
 	carried_root.position = component.hold_offset
 
@@ -163,11 +166,21 @@ func pick_up(component: Node) -> void:
 		set_body_collision_enabled(carried_root, false)
 
 	component.on_picked_up(actor)
+
 	LoggerConsole.log("Carrying: " + carried_root.name)
 
 
 func release_carried() -> void:
 	if carried == null:
+		return
+
+	if carried.can_insert_into_worker_socket:
+		if try_insert_worker_into_socket():
+			clear_placement_preview()
+			return
+
+	if carried.supports_grid_placement:
+		try_place_with_grid_system(carried)
 		return
 
 	if carried.requires_ground:
@@ -181,7 +194,181 @@ func release_carried() -> void:
 	LoggerConsole.log("This item cannot be dropped here.")
 
 
-func try_place_on_ground(component: Node) -> void:
+func update_placement_preview() -> void:
+	if carried == null:
+		clear_placement_preview()
+		return
+
+	if not carried.supports_grid_placement:
+		clear_placement_preview()
+		return
+
+	if placement_validator == null:
+		clear_placement_preview()
+		return
+
+	if terrain_layer == null:
+		clear_placement_preview()
+		return
+
+	var definition: PlaceableDefinition = carried.placeable_definition
+
+	if definition == null:
+		clear_placement_preview()
+		return
+
+	var drop_local: Vector2 = terrain_layer.to_local(drop_socket.global_position)
+	var target_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+
+	var cells: Array[Vector2i] = placement_validator.get_footprint_cells(
+		target_cell,
+		definition.footprint
+	)
+
+	var valid: bool = placement_validator.is_valid_placement(
+		definition,
+		target_cell,
+		get_tree().current_scene
+	)
+
+	if placement_preview != null:
+		placement_preview.set_preview(cells, valid)
+
+
+func clear_placement_preview() -> void:
+	if placement_preview != null:
+		placement_preview.clear_preview()
+
+
+func try_insert_worker_into_socket() -> bool:
+	if carried == null:
+		return false
+
+	var worker_root: Node2D = carried.get_carried_root()
+
+	if worker_root == null:
+		return false
+
+	for area in detection_area.get_overlapping_areas():
+		if not area is WorkerSocket:
+			continue
+
+		var socket: WorkerSocket = area as WorkerSocket
+
+		if not socket.can_accept_worker(worker_root):
+			continue
+
+		var world_parent: Node = carried.original_parent
+
+		if world_parent == null:
+			world_parent = actor.get_parent()
+
+		worker_root.reparent(world_parent)
+
+		set_body_collision_enabled(
+			worker_root,
+			carried.enable_body_collision_when_dropped
+		)
+
+		carried.on_dropped(actor)
+
+		var inserted: bool = socket.insert_worker(worker_root)
+
+		if not inserted:
+			LoggerConsole.log("Worker socket rejected worker.")
+			return false
+
+		LoggerConsole.log("Inserted worker into socket.")
+
+		carried = null
+		return true
+
+	return false
+
+
+func try_place_with_grid_system(component: Area2D) -> void:
+	if placement_validator == null:
+		LoggerConsole.log("Missing PlacementValidator.")
+		return
+
+	if terrain_layer == null:
+		LoggerConsole.log("Missing terrain layer.")
+		return
+
+	var definition: PlaceableDefinition = component.placeable_definition
+
+	if definition == null:
+		LoggerConsole.log("Missing PlaceableDefinition.")
+		return
+
+	var carried_root: Node2D = component.get_carried_root()
+
+	if carried_root == null:
+		carried = null
+		clear_placement_preview()
+		return
+
+	var drop_local: Vector2 = terrain_layer.to_local(drop_socket.global_position)
+	var target_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+
+	var valid: bool = placement_validator.is_valid_placement(
+		definition,
+		target_cell,
+		get_tree().current_scene
+	)
+
+	if not valid:
+		LoggerConsole.log("Invalid placement.")
+		return
+
+	var world_parent: Node = component.original_parent
+
+	if world_parent == null:
+		world_parent = actor.get_parent()
+
+	carried_root.reparent(world_parent)
+
+	var tile_size: Vector2 = Vector2(terrain_layer.tile_set.tile_size)
+	var local_place_pos: Vector2 = Vector2(
+		target_cell.x * tile_size.x,
+		target_cell.y * tile_size.y
+	)
+
+	carried_root.global_position = terrain_layer.to_global(local_place_pos)
+
+	if carried_root is PlaceableObject:
+		var placeable: PlaceableObject = carried_root as PlaceableObject
+		placeable.definition = definition
+		placeable.origin_cell = target_cell
+		placeable.occupied_cells = placement_validator.get_footprint_cells(
+			target_cell,
+			definition.footprint
+		)
+
+		if definition.blocks_placement:
+			PlacementOccupancyRegistry.occupy_cells(
+				placeable.occupied_cells,
+				placeable
+			)
+
+	set_body_collision_enabled(
+		carried_root,
+		component.enable_body_collision_when_placed
+	)
+
+	component.on_placed(actor)
+
+	LoggerConsole.log("Placed with grid system: " + carried_root.name)
+
+	carried = null
+	clear_placement_preview()
+
+
+func try_place_on_ground(component: Area2D) -> void:
+	if terrain_layer == null:
+		LoggerConsole.log("Cannot place: no terrain layer.")
+		return
+
 	var carried_root: Node2D = component.get_carried_root()
 
 	if carried_root == null:
@@ -197,7 +384,7 @@ func try_place_on_ground(component: Node) -> void:
 	)
 
 	if target_cell == Vector2i(-999999, -999999):
-		LoggerConsole.log("Cannot place here: no ground below.")
+		LoggerConsole.log("No valid ground found.")
 		return
 
 	var ground_cell: Vector2i = Vector2i(
@@ -206,7 +393,7 @@ func try_place_on_ground(component: Node) -> void:
 	)
 
 	if not is_valid_ground_placement(component, target_cell, ground_cell):
-		LoggerConsole.log("Cannot place here.")
+		LoggerConsole.log("Invalid ground placement.")
 		return
 
 	var world_parent: Node = component.original_parent
@@ -217,14 +404,12 @@ func try_place_on_ground(component: Node) -> void:
 	carried_root.reparent(world_parent)
 
 	var tile_size: Vector2 = Vector2(terrain_layer.tile_set.tile_size)
-
 	var local_place_pos: Vector2 = Vector2(
 		target_cell.x * tile_size.x + tile_size.x * 0.5,
 		ground_cell.y * tile_size.y
 	)
 
 	var final_pos: Vector2 = terrain_layer.to_global(local_place_pos)
-
 	var anchor_offset: Vector2 = Vector2.ZERO
 
 	if component.ground_anchor != null:
@@ -238,12 +423,42 @@ func try_place_on_ground(component: Node) -> void:
 	set_body_collision_enabled(
 		carried_root,
 		component.enable_body_collision_when_placed
-)
+	)
 
 	component.on_placed(actor)
+
 	LoggerConsole.log("Placed: " + carried_root.name)
 
 	carried = null
+	clear_placement_preview()
+
+
+func drop_freely(component: Area2D) -> void:
+	var carried_root: Node2D = component.get_carried_root()
+
+	if carried_root == null:
+		carried = null
+		return
+
+	var world_parent: Node = component.original_parent
+
+	if world_parent == null:
+		world_parent = actor.get_parent()
+
+	carried_root.reparent(world_parent)
+	carried_root.global_position = drop_socket.global_position
+
+	set_body_collision_enabled(
+		carried_root,
+		component.enable_body_collision_when_dropped
+	)
+
+	component.on_dropped(actor)
+
+	LoggerConsole.log("Dropped freely: " + carried_root.name)
+
+	carried = null
+	clear_placement_preview()
 
 
 func find_first_empty_cell_above_ground(
@@ -270,34 +485,8 @@ func find_first_empty_cell_above_ground(
 	return Vector2i(-999999, -999999)
 
 
-func drop_freely(component: Node) -> void:
-	var carried_root: Node2D = component.get_carried_root()
-
-	if carried_root == null:
-		carried = null
-		return
-
-	var world_parent: Node = component.original_parent
-
-	if world_parent == null:
-		world_parent = actor.get_parent()
-
-	carried_root.reparent(world_parent)
-	carried_root.global_position = drop_socket.global_position
-
-	set_body_collision_enabled(
-		carried_root,
-		component.enable_body_collision_when_dropped
-)
-
-	component.on_dropped(actor)
-	LoggerConsole.log("Dropped freely: " + carried_root.name)
-
-	carried = null
-
-
 func is_valid_ground_placement(
-	component: Node,
+	component: Area2D,
 	target_cell: Vector2i,
 	ground_cell: Vector2i
 ) -> bool:
@@ -336,14 +525,33 @@ func set_body_collision_enabled(root: Node, enabled: bool) -> void:
 		set_body_collision_enabled(child, enabled)
 
 
-func find_carryable_component(node: Node) -> Node:
-	if node.has_method("can_carry") and node.has_method("get_carried_root"):
-		return node
+func find_carryable_component(node: Node) -> Area2D:
+	if node is Area2D:
+		if node.has_method("can_carry") and node.has_method("get_carried_root"):
+			return node as Area2D
 
 	for child in node.get_children():
-		var found: Node = find_carryable_component(child)
+		var found: Area2D = find_carryable_component(child)
 
 		if found != null:
 			return found
 
 	return null
+
+
+func _release_occupancy_if_placeable(root: Node) -> void:
+	if not root is PlaceableObject:
+		return
+
+	var placeable: PlaceableObject = root as PlaceableObject
+
+	if placeable.definition == null:
+		return
+
+	if not placeable.definition.blocks_placement:
+		return
+
+	PlacementOccupancyRegistry.release_cells(
+		placeable.occupied_cells,
+		placeable
+	)

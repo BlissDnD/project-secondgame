@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://d3gxd0nmiyvk8"]
+
+[ext_resource type="Script" uid="uid://cnsebctupoako" path="res://systems/work/crystal_node_station.gd" id="1_5o5yr"]
+[ext_resource type="Texture2D" uid="uid://dxua1o4ttgtea" path="res://assets/images/SlimeOrange/SlimeOrange_00018.png" id="2_ggd22"]
+[ext_resource type="Script" uid="uid://bm8wr0qu0bxo2" path="res://systems/work/workers/worker_socket.gd" id="3_vmugq"]
+[ext_resource type="Resource" uid="uid://cuxhv824am5ox" path="res://systems/interaction/placement/placeables/crystal_node_station_definition.tres" id="5_n4p0y"]
+[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_vmugq"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_n4p0y"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_ggd22")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s7fu6"]
+size = Vector2(35, 23)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0g1qb"]
+size = Vector2(50.5, 43)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_n4p0y"]
+size = Vector2(44, 24)
+
+[node name="CrystalNodeStation" type="Node2D" unique_id=1501838052 node_paths=PackedStringArray("worker_socket")]
+script = ExtResource("1_5o5yr")
+worker_socket = NodePath("WorkerSocket")
+definition = ExtResource("5_n4p0y")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=125109257]
+position = Vector2(-1.0000038, 34)
+scale = Vector2(0.123170726, 0.12317073)
+sprite_frames = SubResource("SpriteFrames_n4p0y")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1483393256]
+position = Vector2(1.5, 36.5)
+shape = SubResource("RectangleShape2D_s7fu6")
+
+[node name="WorkerSocket" type="Area2D" parent="." unique_id=42561517]
+script = ExtResource("3_vmugq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerSocket" unique_id=1074872798]
+position = Vector2(3, 19)
+shape = SubResource("RectangleShape2D_0g1qb")
+
+[node name="ProgressBar" type="ProgressBar" parent="." unique_id=683943216]
+offset_right = 4.0
+offset_bottom = 27.0
+
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node")]
+script = ExtResource("5_vmugq")
+supports_grid_placement = true
+placeable_definition = ExtResource("5_n4p0y")
+root_node = NodePath("..")
+metadata/_custom_type_script = "uid://c0acc3v16fne0"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1074899958]
+position = Vector2(1, 33)
+shape = SubResource("RectangleShape2D_n4p0y")

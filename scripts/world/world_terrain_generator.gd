@@ -69,6 +69,8 @@ func generate() -> void:
 
 	spawn_npcs(noise)
 	spawn_crashed_ship(noise)
+	
+	_spawn_debug_worker_loop_objects()
 
 	print("Dirt cells: ", terrain_cells.get(&"dirt", []).size())
 	print("Stone cells: ", terrain_cells.get(&"stone", []).size())
@@ -229,3 +231,12 @@ func clear_objects() -> void:
 
 	for child in object_layer.get_children():
 		child.queue_free()
+		
+func _spawn_debug_worker_loop_objects() -> void:
+	var spawn_service := get_node_or_null("WorldDebugSpawnService")
+
+	if spawn_service == null:
+		push_warning("WorldDebugSpawnService not found.")
+		return
+
+	spawn_service.spawn_test_worker_loop_objects()

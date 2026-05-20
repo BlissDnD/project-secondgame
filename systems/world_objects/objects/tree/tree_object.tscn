@@ -1,9 +1,5 @@
 [gd_scene format=3 uid="uid://cpamk0yxvnets"]
 
-[ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="1_uvphi"]
-[ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="2_8phsb"]
-[ext_resource type="Resource" uid="uid://ba76fd1vb0hs3" path="res://systems/interaction/hand_action.tres" id="3_ewpu3"]
-[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/carry/carryable_component.gd" id="4_d0ac1"]
 [ext_resource type="Texture2D" uid="uid://bvuw36un1n5gm" path="res://assets/images/plants/plant_7/Plant7_00002.png" id="5_ylaa0"]
 [ext_resource type="Texture2D" uid="uid://drlev2n7q7jw" path="res://assets/images/plants/plant_7/Plant7_00001.png" id="6_xb3er"]
 [ext_resource type="Texture2D" uid="uid://cf65kxjtqjg4j" path="res://assets/images/plants/plant_7/Plant7_00000.png" id="7_0x77a"]
@@ -276,21 +272,6 @@ size = Vector2(34, 356)
 
 [node name="TreeObject" type="StaticBody2D" unique_id=673718410]
 script = SubResource("GDScript_6e25h")
-
-[node name="InteractionComponent" type="Node" parent="." unique_id=34131267 node_paths=PackedStringArray("hover_area", "highlight_target")]
-script = ExtResource("1_uvphi")
-actions = Array[ExtResource("2_8phsb")]([ExtResource("3_ewpu3")])
-hover_area = NodePath("../InteractionHitbox")
-highlight_target = NodePath("../AnimatedSprite2D")
-highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
-metadata/_custom_type_script = "uid://cl62s4hu4eurf"
-
-[node name="CarryableComponent" type="Node" parent="." unique_id=1901769049 node_paths=PackedStringArray("ground_anchor")]
-script = ExtResource("4_d0ac1")
-allowed_terrain_types = Array[StringName]([&"0"])
-can_drop_freely = false
-ground_anchor = NodePath("../GroundAnchor")
-metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1938758383]
 position = Vector2(0, -169)
