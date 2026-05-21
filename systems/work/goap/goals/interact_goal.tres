@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GOAPInteractGoal" format=3 uid="uid://c30f1qfu2d8e4"]
+
+[ext_resource type="Script" uid="uid://d10gmeyc1hcgt" path="res://systems/work/goap/goals/goap_interact_goal.gd" id="1_0ecvc"]
+
+[resource]
+script = ExtResource("1_0ecvc")
+goal_id = &"interact"
+display_name = "Interact"
+desired_state = Dictionary[StringName, Variant]({
+&"has_interacted": true
+})
+base_priority = 5.0
+metadata/_custom_type_script = "uid://d10gmeyc1hcgt"

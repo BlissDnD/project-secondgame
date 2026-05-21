@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GOAPIdleGoal" format=3 uid="uid://cppffm3iwkmdb"]
+
+[ext_resource type="Script" uid="uid://blbc28tnsbu1a" path="res://systems/work/goap/goals/goap_idle_goal.gd" id="1_gfi7m"]
+
+[resource]
+script = ExtResource("1_gfi7m")
+goal_id = &"idle"
+display_name = "Idle"
+desired_state = Dictionary[StringName, Variant]({
+&"is_idle": true
+})
+base_priority = 0.2
+metadata/_custom_type_script = "uid://blbc28tnsbu1a"

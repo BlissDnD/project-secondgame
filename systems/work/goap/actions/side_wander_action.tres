@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="GOAPSideWanderAction" format=3 uid="uid://cfum8wq0eidmj"]
+
+[ext_resource type="Script" uid="uid://b17s75xs1fsoh" path="res://systems/work/goap/actions/goap_side_wander_action.gd" id="1_mybts"]
+
+[resource]
+script = ExtResource("1_mybts")
+action_id = &"side_wander"
+display_name = "Side Wander"
+effects = Dictionary[StringName, Variant]({
+&"is_idle": true
+})
+metadata/_custom_type_script = "uid://b17s75xs1fsoh"

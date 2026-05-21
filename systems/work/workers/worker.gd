@@ -13,9 +13,29 @@ class_name Worker
 
 @export var gravity: float = 900.0
 
+@export_category("Idle Wander")
+@export var idle_wander_enabled: bool = true
+@export var idle_wander_speed: float = 35.0
+@export var idle_wander_move_time_min: float = 1.0
+@export var idle_wander_move_time_max: float = 3.0
+@export var idle_wander_pause_time_min: float = 0.5
+@export var idle_wander_pause_time_max: float = 1.4
+@export_range(0.0, 1.0, 0.01) var idle_wander_turn_chance: float = 0.35
+@export var idle_wander_turn_on_wall: bool = true
+@export var idle_wander_turn_on_gap: bool = true
+
+@export_category("Idle Wander Rays")
+@export var idle_floor_ray: RayCast2D
+@export var idle_wall_ray: RayCast2D
+@export var idle_gap_ray: RayCast2D
+
 var current_socket: Node
 var has_crystal_cargo: bool = false
 var main_crystal_target: Node2D
+
+var idle_wander_direction: int = 1
+var idle_wander_timer: float = 0.0
+var idle_wander_paused: bool = false
 
 
 func _ready() -> void:
@@ -30,6 +50,15 @@ func _ready() -> void:
 	if movement == null:
 		movement = get_node_or_null("WorkerMovementComponent")
 
+	if idle_floor_ray == null:
+		idle_floor_ray = get_node_or_null("FloorRay")
+
+	if idle_wall_ray == null:
+		idle_wall_ray = get_node_or_null("WallRay")
+
+	if idle_gap_ray == null:
+		idle_gap_ray = get_node_or_null("GapRay")
+
 	if crystal_cargo_visual != null:
 		crystal_cargo_visual.visible = false
 
@@ -43,6 +72,9 @@ func _ready() -> void:
 	if state_machine != null:
 		if not state_machine.state_changed.is_connected(_on_state_changed):
 			state_machine.state_changed.connect(_on_state_changed)
+
+	randomize()
+	_randomize_idle_wander()
 
 	set_worker_state(WorkerStateMachine.IDLE)
 
@@ -155,7 +187,7 @@ func _update_state_behavior(delta: float) -> void:
 			if movement != null:
 				movement.clear_target()
 
-			_apply_idle_physics(delta)
+			_apply_idle_wander(delta)
 
 		WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL:
 			if movement != null:
@@ -193,6 +225,73 @@ func _update_state_behavior(delta: float) -> void:
 			velocity.x = 0.0
 			_apply_gravity(delta)
 			move_and_slide()
+
+
+func _apply_idle_wander(delta: float) -> void:
+	if not idle_wander_enabled:
+		_apply_idle_physics(delta)
+		return
+
+	idle_wander_timer -= delta
+
+	if idle_wander_paused:
+		velocity.x = 0.0
+		_apply_gravity(delta)
+		move_and_slide()
+
+		if idle_wander_timer <= 0.0:
+			idle_wander_paused = false
+			idle_wander_timer = randf_range(idle_wander_move_time_min, idle_wander_move_time_max)
+			_update_idle_wander_rays()
+
+		return
+
+	if _idle_wander_should_turn():
+		_turn_idle_wander()
+	elif idle_wander_timer <= 0.0:
+		if randf() < idle_wander_turn_chance:
+			_turn_idle_wander()
+		else:
+			idle_wander_paused = true
+			idle_wander_timer = randf_range(idle_wander_pause_time_min, idle_wander_pause_time_max)
+
+	velocity.x = idle_wander_direction * idle_wander_speed
+	_apply_gravity(delta)
+	move_and_slide()
+
+
+func _idle_wander_should_turn() -> bool:
+	if idle_wander_turn_on_wall:
+		if idle_wall_ray != null and idle_wall_ray.enabled and idle_wall_ray.is_colliding():
+			return true
+
+	if idle_wander_turn_on_gap:
+		if idle_gap_ray != null and idle_gap_ray.enabled and not idle_gap_ray.is_colliding():
+			return true
+
+	return false
+
+
+func _turn_idle_wander() -> void:
+	idle_wander_direction *= -1
+	idle_wander_timer = randf_range(idle_wander_move_time_min, idle_wander_move_time_max)
+	idle_wander_paused = false
+	_update_idle_wander_rays()
+
+
+func _randomize_idle_wander() -> void:
+	idle_wander_direction = 1 if randf() > 0.5 else -1
+	idle_wander_timer = randf_range(idle_wander_move_time_min, idle_wander_move_time_max)
+	idle_wander_paused = false
+	_update_idle_wander_rays()
+
+
+func _update_idle_wander_rays() -> void:
+	if idle_wall_ray != null:
+		idle_wall_ray.target_position.x = absf(idle_wall_ray.target_position.x) * float(idle_wander_direction)
+
+	if idle_gap_ray != null:
+		idle_gap_ray.position.x = absf(idle_gap_ray.position.x) * float(idle_wander_direction)
 
 
 func _apply_idle_physics(delta: float) -> void:
@@ -261,6 +360,9 @@ func _on_movement_blocked() -> void:
 func _on_state_changed(old_state: StringName, new_state: StringName) -> void:
 	print("Worker state changed: ", old_state, " -> ", new_state)
 
+	if new_state == WorkerStateMachine.IDLE:
+		_randomize_idle_wander()
+
 
 func _update_debug_label() -> void:
 	if debug_label == null:
@@ -273,5 +375,8 @@ func _update_debug_label() -> void:
 
 	if has_crystal_cargo:
 		state_text += "\nCargo: Crystal"
+
+	state_text += "\nIdleDir: " + str(idle_wander_direction)
+	state_text += "\nIdlePaused: " + str(idle_wander_paused)
 
 	debug_label.text = state_text

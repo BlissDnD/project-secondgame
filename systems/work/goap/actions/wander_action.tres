@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="GOAPWanderAction" format=3 uid="uid://ly3wwd4xqfiq"]
+
+[ext_resource type="Script" uid="uid://cqtmeggyaenpq" path="res://systems/work/goap/actions/goap_wander_action.gd" id="1_6fkbk"]
+
+[resource]
+script = ExtResource("1_6fkbk")
+motor_path = NodePath("../WorkerMotor2D")
+actor_path = NodePath("..")
+action_id = &"wander"
+display_name = "Wander"
+effects = Dictionary[StringName, Variant]({
+&"is_idle": true
+})
+metadata/_custom_type_script = "uid://cqtmeggyaenpq"
