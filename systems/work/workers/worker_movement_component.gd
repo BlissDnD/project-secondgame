@@ -30,6 +30,9 @@ func set_target(position: Vector2) -> void:
 func clear_target() -> void:
 	has_target = false
 
+	if worker_body != null:
+		worker_body.velocity.x = 0.0
+
 
 func physics_update(delta: float) -> void:
 	if worker_body == null:
@@ -38,19 +41,20 @@ func physics_update(delta: float) -> void:
 	if blocked_cooldown > 0.0:
 		blocked_cooldown -= delta
 
+	if not has_target:
+		worker_body.velocity.x = 0.0
+		return
+
 	if not worker_body.is_on_floor():
 		worker_body.velocity.y += gravity * delta
-
-	if not has_target:
-		worker_body.velocity.x = move_toward(worker_body.velocity.x, 0.0, move_speed)
-		worker_body.move_and_slide()
-		return
+	else:
+		if worker_body.velocity.y > 0.0:
+			worker_body.velocity.y = 0.0
 
 	var distance_to_target := worker_body.global_position.distance_to(target_position)
 
 	if distance_to_target <= target_reach_distance:
 		worker_body.velocity.x = 0.0
-		worker_body.move_and_slide()
 		has_target = false
 		reached_target.emit()
 		return
@@ -95,6 +99,9 @@ func _detect_gap() -> bool:
 	if gap_ray == null:
 		return false
 
+	if worker_body == null:
+		return false
+
 	if not worker_body.is_on_floor():
 		return false
 
@@ -109,11 +116,13 @@ func _detect_wall() -> bool:
 
 
 func _stop_as_blocked() -> void:
+	if worker_body == null:
+		return
+
 	if blocked_cooldown > 0.0:
 		return
 
 	has_target = false
 	worker_body.velocity.x = 0.0
-	worker_body.move_and_slide()
 	blocked_cooldown = 0.5
 	blocked.emit()

@@ -10,6 +10,8 @@
 [ext_resource type="Resource" uid="uid://bl4nshh76476g" path="res://resources/world/cave_system_modifier.tres" id="7_e3hyu"]
 [ext_resource type="Resource" uid="uid://bu7fo4mcg2ac6" path="res://resources/world/cave_floor_detection_modifier.tres" id="8_q5onr"]
 [ext_resource type="Script" uid="uid://cjfpel04g0fbq" path="res://systems/world_generation/world_terrain_config.gd" id="9_7t5mc"]
+[ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="10_oo54l"]
+[ext_resource type="Resource" uid="uid://dj3twycfgax3n" path="res://systems/npc/kabala/kabala_npc_definition.tres" id="11_kpybi"]
 [ext_resource type="Script" uid="uid://db531sowljlst" path="res://systems/npc/npc_spawner.gd" id="16_lakw3"]
 [ext_resource type="PackedScene" uid="uid://bax6bvt62mhs3" path="res://ui/dialogue_box.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://brnv2uy6xj3yi" path="res://ui/bark_bubble.tscn" id="19_pm21f"]
@@ -283,6 +285,7 @@ object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
 terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu"), ExtResource("8_q5onr")])
 config = SubResource("Resource_lakw3")
+npc_definitions = Array[ExtResource("10_oo54l")]([ExtResource("11_kpybi")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]

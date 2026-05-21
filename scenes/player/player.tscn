@@ -225,6 +225,7 @@ animations = [{
 [node name="Player" type="CharacterBody2D" unique_id=677817848]
 collision_layer = 2
 script = ExtResource("1_1u1sw")
+noclip_speed = 1200.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=641959194]
 position = Vector2(-1, 12)
@@ -264,6 +265,7 @@ drop_socket = NodePath("../DropSocket")
 [node name="FlipContainer" type="Node2D" parent="." unique_id=595349572]
 
 [node name="InteractionArea" type="Area2D" parent="FlipContainer" unique_id=1576106411]
+collision_layer = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FlipContainer/InteractionArea" unique_id=263769443]
 position = Vector2(22, 5)

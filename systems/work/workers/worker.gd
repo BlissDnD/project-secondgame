@@ -11,6 +11,8 @@ class_name Worker
 @export var main_crystal_group: String = "main_crystal"
 @export var deposit_distance: float = 28.0
 
+@export var gravity: float = 900.0
+
 var current_socket: Node
 var has_crystal_cargo: bool = false
 var main_crystal_target: Node2D
@@ -32,11 +34,15 @@ func _ready() -> void:
 		crystal_cargo_visual.visible = false
 
 	if movement != null:
-		movement.reached_target.connect(_on_movement_reached_target)
-		movement.blocked.connect(_on_movement_blocked)
+		if not movement.reached_target.is_connected(_on_movement_reached_target):
+			movement.reached_target.connect(_on_movement_reached_target)
+
+		if not movement.blocked.is_connected(_on_movement_blocked):
+			movement.blocked.connect(_on_movement_blocked)
 
 	if state_machine != null:
-		state_machine.state_changed.connect(_on_state_changed)
+		if not state_machine.state_changed.is_connected(_on_state_changed):
+			state_machine.state_changed.connect(_on_state_changed)
 
 	set_worker_state(WorkerStateMachine.IDLE)
 
@@ -88,6 +94,9 @@ func on_inserted_into_socket(socket: Node) -> void:
 	current_socket = socket
 	velocity = Vector2.ZERO
 
+	if movement != null:
+		movement.clear_target()
+
 
 func on_removed_from_socket(socket: Node) -> void:
 	if current_socket == socket:
@@ -98,11 +107,18 @@ func on_removed_from_socket(socket: Node) -> void:
 
 
 func on_picked_up() -> void:
+	if movement != null:
+		movement.clear_target()
+
 	set_worker_state(WorkerStateMachine.CARRIED)
 	velocity = Vector2.ZERO
 
 
 func on_dropped() -> void:
+	if movement != null:
+		movement.clear_target()
+
+	velocity = Vector2.ZERO
 	set_worker_state(WorkerStateMachine.IDLE)
 
 
@@ -137,19 +153,61 @@ func _update_state_behavior(delta: float) -> void:
 
 		WorkerStateMachine.IDLE:
 			if movement != null:
-				movement.physics_update(delta)
+				movement.clear_target()
+
+			_apply_idle_physics(delta)
 
 		WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL:
+			if movement != null:
+				movement.clear_target()
+
 			velocity.x = 0.0
-			if not is_on_floor():
-				velocity.y += 900.0 * delta
+			_apply_gravity(delta)
 			move_and_slide()
 
 		WorkerStateMachine.CARRIED:
+			if movement != null:
+				movement.clear_target()
+
 			velocity = Vector2.ZERO
 
+		WorkerStateMachine.WORKING_CRYSTAL_NODE:
+			if movement != null:
+				movement.clear_target()
+
+			velocity = Vector2.ZERO
+
+		WorkerStateMachine.DEPOSITING_CRYSTAL:
+			if movement != null:
+				movement.clear_target()
+
+			velocity = Vector2.ZERO
+
+		WorkerStateMachine.SLEEPING:
+			if movement != null:
+				movement.clear_target()
+
+			_apply_idle_physics(delta)
+
 		_:
-			pass
+			velocity.x = 0.0
+			_apply_gravity(delta)
+			move_and_slide()
+
+
+func _apply_idle_physics(delta: float) -> void:
+	velocity.x = 0.0
+	_apply_gravity(delta)
+	move_and_slide()
+
+
+func _apply_gravity(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y += gravity * delta
+		return
+
+	if velocity.y > 0.0:
+		velocity.y = 0.0
 
 
 func _try_deposit_crystal() -> void:

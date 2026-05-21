@@ -4,12 +4,14 @@
 [ext_resource type="Script" uid="uid://b7n5yeu6ahi74" path="res://systems/work/workers/worker_state_machine.gd" id="2_md8yx"]
 [ext_resource type="Texture2D" uid="uid://d0g8n3shatreo" path="res://assets/images/Plant Animations/BlueFlower1/BlueFlower_00000.png" id="2_sq3if"]
 [ext_resource type="Texture2D" uid="uid://db3w05vvlupcv" path="res://assets/images/Plant Animations/BlueFlower2/BluePlantClosed_00045.png" id="3_4pgqf"]
-[ext_resource type="Script" uid="uid://ddf3tn23ax6ie" path="res://systems/work/workers/worker_needs_component.gd" id="3_sq3if"]
 [ext_resource type="Script" uid="uid://c1cycgosdi6gm" path="res://systems/work/workers/worker_movement_component.gd" id="4_4pgqf"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_sq3if"]
-size = Vector2(60, 85)
+[ext_resource type="Script" uid="uid://oe6rx48tfp1c" path="res://systems/work/goap/worker_blackboard.gd" id="7_ock52"]
+[ext_resource type="Script" uid="uid://bwkulnmcg4nk7" path="res://systems/work/goap/worker_stats.gd" id="8_8hyuv"]
+[ext_resource type="Script" uid="uid://bdnd3v60f5cx6" path="res://systems/work/goap/worker_motor_2d.gd" id="9_304bw"]
+[ext_resource type="Script" uid="uid://bssfx7ccek50r" path="res://systems/work/goap/worker_need_component.gd" id="10_f51o5"]
+[ext_resource type="Script" uid="uid://dtl6k7k0kll8k" path="res://systems/work/goap/worker_sensor_2d.gd" id="11_j82ov"]
+[ext_resource type="Script" uid="uid://dom034yrmhg55" path="res://systems/work/goap/goap_brain.gd" id="12_5oyiq"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -36,18 +38,25 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ydra3"]
 size = Vector2(106, 100)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4pgqf"]
+size = Vector2(20, 74)
+
+[sub_resource type="Resource" id="Resource_4vlxc"]
+script = ExtResource("8_8hyuv")
+metadata/_custom_type_script = "uid://bwkulnmcg4nk7"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
+size = Vector2(51, 64)
+
 [node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label")]
 collision_layer = 4
+floor_block_on_wall = false
 script = ExtResource("1_nupkf")
 state_machine = NodePath("WorkerStateMachine")
-needs = NodePath("WorkerNeedsComponent")
+needs = NodePath("")
 movement = NodePath("WorkerMovementComponent")
 crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=332867246]
-position = Vector2(2, -32.5)
-shape = SubResource("RectangleShape2D_sq3if")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
 position = Vector2(-17.000004, -143)
@@ -63,10 +72,6 @@ sprite_frames = SubResource("SpriteFrames_ydra3")
 [node name="WorkerStateMachine" type="Node" parent="." unique_id=733597544]
 script = ExtResource("2_md8yx")
 metadata/_custom_type_script = "uid://b7n5yeu6ahi74"
-
-[node name="WorkerNeedsComponent" type="Node" parent="." unique_id=683208901]
-script = ExtResource("3_sq3if")
-metadata/_custom_type_script = "uid://ddf3tn23ax6ie"
 
 [node name="WorkerMovementComponent" type="Node" parent="." unique_id=1461913073 node_paths=PackedStringArray("worker_body", "floor_ray", "wall_ray", "gap_ray")]
 script = ExtResource("4_4pgqf")
@@ -88,12 +93,54 @@ offset_top = -5.0
 offset_right = 39.0
 offset_bottom = 18.0
 
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1676451399 node_paths=PackedStringArray("root_node")]
+[node name="GroundAnchor" type="Node2D" parent="." unique_id=166947312]
+
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1125259685 node_paths=PackedStringArray("root_node", "ground_anchor", "highlight_target")]
+collision_layer = 2
+collision_mask = 0
 script = ExtResource("7_4pgqf")
 root_node = NodePath("..")
 can_insert_into_worker_socket = true
+ground_anchor = NodePath("../GroundAnchor")
+highlight_target = NodePath("../WorkerSprite")
+highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.627451)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1248316060]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=767862528]
 position = Vector2(-1, -40)
 shape = SubResource("RectangleShape2D_ydra3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1787094264]
+position = Vector2(0, -27)
+shape = SubResource("RectangleShape2D_4pgqf")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1821003176]
+
+[node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
+script = ExtResource("7_ock52")
+stats = SubResource("Resource_4vlxc")
+metadata/_custom_type_script = "uid://oe6rx48tfp1c"
+
+[node name="WorkerMotor2D" type="Node" parent="." unique_id=1652161077]
+script = ExtResource("9_304bw")
+actor_path = NodePath("..")
+navigation_agent_path = NodePath("../NavigationAgent2D")
+metadata/_custom_type_script = "uid://bdnd3v60f5cx6"
+
+[node name="WorkerNeedComponent" type="Node" parent="." unique_id=703939084]
+script = ExtResource("10_f51o5")
+blackboard_path = NodePath("../WorkerBlackboard")
+metadata/_custom_type_script = "uid://bssfx7ccek50r"
+
+[node name="WorkerSensor2D" type="Area2D" parent="." unique_id=1197924075]
+script = ExtResource("11_j82ov")
+metadata/_custom_type_script = "uid://dtl6k7k0kll8k"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerSensor2D" unique_id=1679016499]
+position = Vector2(-1.5, -22)
+shape = SubResource("RectangleShape2D_lf01n")
+
+[node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
+script = ExtResource("12_5oyiq")
+blackboard_path = NodePath("../WorkerBlackboard")
+metadata/_custom_type_script = "uid://dom034yrmhg55"

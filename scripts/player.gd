@@ -6,7 +6,7 @@ extends CharacterBody2D
 
 @export var noclip_speed: float = 600.0
 
-const SPEED = 300.0
+const SPEED = 800.0
 const JUMP_VELOCITY = -400.0
 
 var godmode_enabled: bool = false
@@ -74,7 +74,31 @@ func handle_normal_movement(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 
 	move_and_slide()
-
+	#
+	#for i in range(get_slide_collision_count()):
+		#var collision := get_slide_collision(i)
+		#var collider := collision.get_collider()
+#
+		#if collider == null:
+			#continue
+#
+		#var layer_text := "n/a"
+		#var mask_text := "n/a"
+#
+		#if collider is CollisionObject2D:
+			#layer_text = str(collider.collision_layer)
+			#mask_text = str(collider.collision_mask)
+#
+		#print(
+			#"PLAYER COLLIDING WITH: ",
+			#collider.name,
+			#" path=",
+			#collider.get_path(),
+			#" layer=",
+			#layer_text,
+			#" mask=",
+			#mask_text
+		#)
 	if direction > 0:
 		flip_container.scale.x = 1
 	elif direction < 0:

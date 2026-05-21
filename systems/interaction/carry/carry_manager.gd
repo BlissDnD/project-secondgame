@@ -353,9 +353,11 @@ func try_place_with_grid_system(component: Area2D) -> void:
 	carried_root.reparent(world_parent)
 
 	var tile_size: Vector2 = Vector2(terrain_layer.tile_set.tile_size)
+	var footprint: Vector2i = definition.footprint
+
 	var local_place_pos: Vector2 = Vector2(
-		target_cell.x * tile_size.x,
-		target_cell.y * tile_size.y
+		target_cell.x * tile_size.x + tile_size.x * float(footprint.x) * 0.5,
+		target_cell.y * tile_size.y + tile_size.y * float(footprint.y) * 0.5
 	)
 
 	var final_pos: Vector2 = terrain_layer.to_global(local_place_pos)
