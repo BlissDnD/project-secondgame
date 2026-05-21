@@ -9,6 +9,10 @@ extends Node
 @export var placement_validator: PlacementValidator
 @export var placement_preview: PlacementPreview
 
+@export var placement_distance_tiles: int = 2
+@export var placement_search_up_tiles: int = 8
+@export var placement_search_down_tiles: int = 32
+
 var terrain_layer: TileMapLayer = null
 
 var nearby_carryables: Dictionary = {}
@@ -39,6 +43,28 @@ func _ready() -> void:
 
 	if terrain_layer == null:
 		LoggerConsole.log("CarryManager warning: no terrain_layer group found.")
+
+	if placement_validator == null:
+		placement_validator = get_tree().get_first_node_in_group("placement_validator") as PlacementValidator
+
+	if placement_preview == null:
+		placement_preview = get_tree().get_first_node_in_group("placement_preview") as PlacementPreview
+
+	if placement_validator == null:
+		var root := get_tree().current_scene
+		if root != null:
+			placement_validator = root.find_child("PlacementValidator", true, false) as PlacementValidator
+
+	if placement_preview == null:
+		var root := get_tree().current_scene
+		if root != null:
+			placement_preview = root.find_child("PlacementPreview", true, false) as PlacementPreview
+
+	if placement_validator == null:
+		LoggerConsole.log("CarryManager warning: Missing PlacementValidator.")
+
+	if placement_preview == null:
+		LoggerConsole.log("CarryManager warning: Missing PlacementPreview.")
 
 	if not detection_area.area_entered.is_connected(_on_area_entered):
 		detection_area.area_entered.connect(_on_area_entered)
@@ -217,8 +243,7 @@ func update_placement_preview() -> void:
 		clear_placement_preview()
 		return
 
-	var drop_local: Vector2 = terrain_layer.to_local(drop_socket.global_position)
-	var target_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+	var target_cell: Vector2i = get_grounded_placement_cell(definition)
 
 	var cells: Array[Vector2i] = placement_validator.get_footprint_cells(
 		target_cell,
@@ -308,8 +333,7 @@ func try_place_with_grid_system(component: Area2D) -> void:
 		clear_placement_preview()
 		return
 
-	var drop_local: Vector2 = terrain_layer.to_local(drop_socket.global_position)
-	var target_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+	var target_cell: Vector2i = get_grounded_placement_cell(definition)
 
 	var valid: bool = placement_validator.is_valid_placement(
 		definition,
@@ -334,7 +358,16 @@ func try_place_with_grid_system(component: Area2D) -> void:
 		target_cell.y * tile_size.y
 	)
 
-	carried_root.global_position = terrain_layer.to_global(local_place_pos)
+	var final_pos: Vector2 = terrain_layer.to_global(local_place_pos)
+	var anchor_offset: Vector2 = Vector2.ZERO
+
+	if component.ground_anchor != null:
+		anchor_offset = (
+			carried_root.global_position
+			- component.ground_anchor.global_position
+		)
+
+	carried_root.global_position = final_pos + anchor_offset
 
 	if carried_root is PlaceableObject:
 		var placeable: PlaceableObject = carried_root as PlaceableObject
@@ -375,8 +408,7 @@ func try_place_on_ground(component: Area2D) -> void:
 		carried = null
 		return
 
-	var drop_local: Vector2 = terrain_layer.to_local(drop_socket.global_position)
-	var start_cell: Vector2i = terrain_layer.local_to_map(drop_local)
+	var start_cell: Vector2i = get_grounded_placement_cell_from_actor_x()
 
 	var target_cell: Vector2i = find_first_empty_cell_above_ground(
 		start_cell,
@@ -459,6 +491,78 @@ func drop_freely(component: Area2D) -> void:
 
 	carried = null
 	clear_placement_preview()
+
+
+func get_grounded_placement_cell(definition: PlaceableDefinition) -> Vector2i:
+	if terrain_layer == null:
+		return Vector2i.ZERO
+
+	var target_cell: Vector2i = get_grounded_placement_cell_from_actor_x()
+
+	var search_start_y: int = target_cell.y - placement_search_up_tiles
+	var search_end_y: int = target_cell.y + placement_search_down_tiles
+
+	for y in range(search_start_y, search_end_y + 1):
+		var origin_cell := Vector2i(target_cell.x, y)
+		var cells: Array[Vector2i] = placement_validator.get_footprint_cells(
+			origin_cell,
+			definition.footprint
+		)
+
+		if _cells_have_ground_below(cells) and _cells_are_empty(cells):
+			return origin_cell
+
+	return target_cell
+
+
+func get_grounded_placement_cell_from_actor_x() -> Vector2i:
+	var facing: float = get_actor_facing_direction()
+
+	var tile_size: Vector2 = Vector2(terrain_layer.tile_set.tile_size)
+
+	var target_world: Vector2 = actor.global_position + Vector2(
+		tile_size.x * float(placement_distance_tiles) * facing,
+		0.0
+	)
+
+	var target_local: Vector2 = terrain_layer.to_local(target_world)
+
+	return terrain_layer.local_to_map(target_local)
+
+
+func get_actor_facing_direction() -> float:
+	if actor.has_method("get_facing_direction"):
+		return float(actor.get_facing_direction())
+
+	var flip_container := actor.get_node_or_null("FlipContainer")
+
+	if flip_container != null:
+		if flip_container.scale.x < 0.0:
+			return -1.0
+		return 1.0
+
+	if actor.scale.x < 0.0:
+		return -1.0
+
+	return 1.0
+
+
+func _cells_have_ground_below(cells: Array[Vector2i]) -> bool:
+	for cell in cells:
+		var below := cell + Vector2i.DOWN
+
+		if terrain_layer.get_cell_source_id(below) == -1:
+			return false
+
+	return true
+
+
+func _cells_are_empty(cells: Array[Vector2i]) -> bool:
+	for cell in cells:
+		if terrain_layer.get_cell_source_id(cell) != -1:
+			return false
+
+	return true
 
 
 func find_first_empty_cell_above_ground(

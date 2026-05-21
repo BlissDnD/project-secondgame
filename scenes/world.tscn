@@ -10,12 +10,6 @@
 [ext_resource type="Resource" uid="uid://bl4nshh76476g" path="res://resources/world/cave_system_modifier.tres" id="7_e3hyu"]
 [ext_resource type="Resource" uid="uid://bu7fo4mcg2ac6" path="res://resources/world/cave_floor_detection_modifier.tres" id="8_q5onr"]
 [ext_resource type="Script" uid="uid://cjfpel04g0fbq" path="res://systems/world_generation/world_terrain_config.gd" id="9_7t5mc"]
-[ext_resource type="Script" uid="uid://b2ipxvu3m6o8s" path="res://scripts/world/world_spawn_definition.gd" id="9_e3hyu"]
-[ext_resource type="Resource" uid="uid://b3qjgxkmioi6s" path="res://systems/world_objects/objects/tree/tree_definition.tres" id="10_q5onr"]
-[ext_resource type="Resource" uid="uid://77602bmt51it" path="res://systems/world_objects/objects/cave_plant/cave_plant.tres" id="12_jhx03"]
-[ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="13_dss4m"]
-[ext_resource type="Resource" uid="uid://v6n8wjja158h" path="res://resources/world/bush_definition.tres" id="14_7t5mc"]
-[ext_resource type="Resource" uid="uid://bgqi10xspcvba" path="res://systems/npc/kabala/resources/kabala_npc_definition.tres" id="15_munwf"]
 [ext_resource type="Script" uid="uid://db531sowljlst" path="res://systems/npc/npc_spawner.gd" id="16_lakw3"]
 [ext_resource type="PackedScene" uid="uid://bax6bvt62mhs3" path="res://ui/dialogue_box.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://brnv2uy6xj3yi" path="res://ui/bark_bubble.tscn" id="19_pm21f"]
@@ -289,8 +283,6 @@ object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
 terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu"), ExtResource("8_q5onr")])
 config = SubResource("Resource_lakw3")
-world_spawns = Array[ExtResource("9_e3hyu")]([ExtResource("10_q5onr"), ExtResource("14_7t5mc"), ExtResource("12_jhx03")])
-npc_definitions = Array[ExtResource("13_dss4m")]([ExtResource("15_munwf")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]
@@ -312,7 +304,7 @@ offset_top = -30.0
 offset_right = -130.0
 offset_bottom = -30.0
 
-[node name="WorldDebugSpawnService" type="Node" parent="." unique_id=413822738 node_paths=PackedStringArray("spawn_origin", "terrain_provider")]
+[node name="WorldDebugSpawnService" type="Node" parent="." unique_id=413822738 node_paths=PackedStringArray("spawn_origin", "terrain_provider", "tile_map_layer", "object_layer")]
 script = ExtResource("24_ctatt")
 main_crystal_scene = ExtResource("20_kpybi")
 crystal_node_scene = ExtResource("21_ctatt")
@@ -320,15 +312,16 @@ worker_scene = ExtResource("23_munwf")
 crystal_station_scene = ExtResource("22_xgqkh")
 spawn_origin = NodePath("../Player")
 terrain_provider = NodePath("../WorldTerrainGenerator")
-spawn_offset_x = 60.0
-object_spacing = 20.0
+tile_map_layer = NodePath("../TerrainTileMapLayer")
+object_layer = NodePath("../ObjectLayer")
+object_spacing_tiles = 40
 metadata/_custom_type_script = "uid://padt2g1f7e1y"
 
-[node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap")]
+[node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap") groups=["placement_preview", "placement_validator", "terrain_layer"]]
 script = ExtResource("25_munwf")
 terrain_tilemap = NodePath("../TerrainTileMapLayer")
 metadata/_custom_type_script = "uid://b7nov50mcnb4l"
 
-[node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484]
+[node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484 groups=["placement_preview", "placement_validator", "terrain_layer"]]
 script = ExtResource("26_ts3gi")
 metadata/_custom_type_script = "uid://csb1wyobgijs0"

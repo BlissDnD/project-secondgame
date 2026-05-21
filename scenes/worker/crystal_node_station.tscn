@@ -27,6 +27,7 @@ size = Vector2(50.5, 43)
 size = Vector2(44, 24)
 
 [node name="CrystalNodeStation" type="Node2D" unique_id=1501838052 node_paths=PackedStringArray("worker_socket")]
+position = Vector2(-1, -48)
 script = ExtResource("1_5o5yr")
 worker_socket = NodePath("WorkerSocket")
 definition = ExtResource("5_n4p0y")
@@ -50,14 +51,17 @@ shape = SubResource("RectangleShape2D_0g1qb")
 [node name="ProgressBar" type="ProgressBar" parent="." unique_id=683943216]
 offset_right = 4.0
 offset_bottom = 27.0
+metadata/_edit_use_anchors_ = true
 
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "ground_anchor")]
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "ground_anchor", "highlight_target")]
 script = ExtResource("5_vmugq")
 root_node = NodePath("..")
 requires_ground = true
 supports_grid_placement = true
 placeable_definition = ExtResource("5_n4p0y")
 ground_anchor = NodePath("../GroundAnchor")
+highlight_target = NodePath("../AnimatedSprite2D")
+highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.4392157)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1074899958]

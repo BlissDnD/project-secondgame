@@ -27,9 +27,11 @@ scale = Vector2(0.3336003, 0.37530035)
 sprite_frames = SubResource("SpriteFrames_3ir17")
 metadata/_edit_group_ = true
 
-[node name="InteractionComponent" type="Node" parent="." unique_id=205328356]
+[node name="InteractionComponent" type="Node" parent="." unique_id=205328356 node_paths=PackedStringArray("hover_area", "highlight_target")]
 script = ExtResource("2_kxhh1")
 actions = Array[ExtResource("3_fotd3")]([ExtResource("4_76ni3")])
+hover_area = NodePath("../InteractionHitbox")
+highlight_target = NodePath("../AnimatedSprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.18039216)
 metadata/_custom_type_script = "uid://cl62s4hu4eurf"
 

@@ -23,14 +23,27 @@ signal dropped(carrier: Node2D)
 
 @export var ground_anchor: Node2D
 
+@export_group("Highlight")
+@export var highlight_target: CanvasItem
+@export var highlight_color: Color = Color(1.35, 1.35, 1.35, 1.0)
+
 var carrier: Node2D = null
 var is_carried: bool = false
 var original_parent: Node2D = null
+
+var _default_modulate: Color = Color.WHITE
+var _is_highlighted: bool = false
 
 
 func _ready() -> void:
 	if root_node == null:
 		root_node = owner as Node2D
+
+	if highlight_target == null:
+		highlight_target = _find_first_canvas_item(root_node)
+
+	if highlight_target != null:
+		_default_modulate = highlight_target.modulate
 
 
 func can_carry() -> bool:
@@ -47,6 +60,8 @@ func pickup(new_carrier: Node2D) -> bool:
 
 	carrier = new_carrier
 	is_carried = true
+
+	set_highlighted(false)
 
 	if root_node.has_method("on_picked_up"):
 		root_node.on_picked_up()
@@ -82,6 +97,50 @@ func carry_update() -> void:
 		return
 
 	root_node.global_position = carrier.global_position + hold_offset
+
+
+func set_highlighted(value: bool) -> void:
+	if _is_highlighted == value:
+		return
+
+	_is_highlighted = value
+
+	if highlight_target == null:
+		return
+
+	if value:
+		highlight_target.modulate = highlight_color
+	else:
+		highlight_target.modulate = _default_modulate
+
+
+func is_highlighted() -> bool:
+	return _is_highlighted
+
+
+func _find_first_canvas_item(node: Node) -> CanvasItem:
+	if node == null:
+		return null
+
+	for child in node.get_children():
+		if child is AnimatedSprite2D:
+			return child as CanvasItem
+
+	for child in node.get_children():
+		if child is Sprite2D:
+			return child as CanvasItem
+
+	for child in node.get_children():
+		if child is CanvasItem:
+			return child as CanvasItem
+
+	for child in node.get_children():
+		var found := _find_first_canvas_item(child)
+
+		if found != null:
+			return found
+
+	return null
 
 
 func on_picked_up(_by_actor: Node2D) -> void:

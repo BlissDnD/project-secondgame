@@ -254,14 +254,12 @@ position = Vector2(32, -24)
 visible = false
 position = Vector2(64, 0)
 
-[node name="CarryManager" type="Node" parent="." unique_id=1916650998 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket", "placement_validator", "placement_preview")]
+[node name="CarryManager" type="Node" parent="." unique_id=1916650998 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket") groups=["placement_preview", "placement_validator", "terrain_layer"]]
 script = ExtResource("53_vb1ce")
 detection_area = NodePath("../FlipContainer/InteractionArea")
 actor = NodePath("..")
 carry_socket = NodePath("../CarrySocket")
 drop_socket = NodePath("../DropSocket")
-placement_validator = NodePath("")
-placement_preview = NodePath("")
 
 [node name="FlipContainer" type="Node2D" parent="." unique_id=595349572]
 

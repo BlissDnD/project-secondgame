@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://bgqi10xspcvba"]
+[gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://dj3twycfgax3n"]
 
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="1_5pcgh"]
 [ext_resource type="Script" uid="uid://dawk15hoi5rwt" path="res://systems/dialogue/npc_dialogue_rule.gd" id="1_7cao3"]
-[ext_resource type="PackedScene" uid="uid://lexxakgo4ldx" path="res://systems/npc/kabala/scripts/kabala.tscn" id="1_yr74h"]
 [ext_resource type="Script" uid="uid://ciqrkg70jhtq4" path="res://systems/dialogue/dialogue_choice.gd" id="2_egmc3"]
 [ext_resource type="Script" uid="uid://c6jtp1nd1w6hc" path="res://systems/dialogue/dialogue_line.gd" id="3_kv3bq"]
 [ext_resource type="Script" uid="uid://duife52k0exm3" path="res://systems/dialogue/dialogue_resource.gd" id="4_060ec"]
 [ext_resource type="Resource" uid="uid://cspgjt3v41pf2" path="res://systems/npc/kabala/dialogue/kabala_idle_dialogue_resource.tres" id="4_jup83"]
 [ext_resource type="Resource" uid="uid://ce1vrqdilwqus" path="res://systems/npc/kabala/dialogue/kabala_intro_script.tres" id="5_7cao3"]
+[ext_resource type="PackedScene" uid="uid://cel3ie1cvhufk" path="res://systems/npc/kabala/kabala.tscn" id="7_7cao3"]
 [ext_resource type="Resource" uid="uid://b4lp4gjc2qyq2" path="res://systems/npc/kabala/dialogue/kabala_dialogue_repeat.tres" id="7_bsf3n"]
 
 [sub_resource type="Resource" id="Resource_k6acw"]
@@ -33,7 +33,7 @@ metadata/_custom_type_script = "uid://dawk15hoi5rwt"
 script = ExtResource("1_5pcgh")
 npc_id = &"kabala"
 display_name = "Kabala"
-npc_scene = ExtResource("1_yr74h")
+npc_scene = ExtResource("7_7cao3")
 surface_interval_min = 40
 surface_interval_max = 80
 walk_speed = 30.0

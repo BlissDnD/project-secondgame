@@ -3,9 +3,10 @@ extends Node
 @export var interaction_area: Area2D
 @export var actor: Node2D
 @export var active_action_id: StringName = &"hand"
+@export var include_carryables: bool = true
 
-var nearby_components: Dictionary = {}
-var current_target: InteractionComponent = null
+var nearby_targets: Dictionary = {}
+var current_target: Node = null
 
 
 func _ready() -> void:
@@ -25,7 +26,7 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	var next_target: InteractionComponent = get_best_target()
+	var next_target: Node = get_best_target()
 	set_current_target(next_target)
 
 
@@ -35,72 +36,58 @@ func _input(event: InputEvent) -> void:
 			LoggerConsole.log("No interaction target.")
 			return
 
-		var owner_node: Node = current_target.owner
-
-		if owner_node != null and owner_node.has_method("interact"):
-			owner_node.interact(actor)
+		if current_target is InteractionComponent:
+			_use_interaction_component(current_target as InteractionComponent)
 			return
 
-		if current_target.has_action(active_action_id):
-			current_target.execute_action(active_action_id, actor)
+		if include_carryables and current_target is CarryableComponent:
+			LoggerConsole.log("Carryable target: " + str(current_target.owner.name))
 			return
-
-		if current_target.has_action(&"hand"):
-			current_target.execute_action(&"hand", actor)
-			return
-
-		LoggerConsole.log("Target has no usable action.")
 
 
 func _on_area_entered(area: Area2D) -> void:
-	var root: Node = area.owner
-
-	if root == null:
+	if area == null:
 		return
+
+	var target: Node = _find_target_from_area(area)
+
+	if target == null:
+		return
+
+	var root: Node = target.owner
 
 	if root == actor:
 		return
 
-	var component: InteractionComponent = find_interaction_component(root)
+	var id: int = target.get_instance_id()
 
-	if component == null:
+	if nearby_targets.has(id):
 		return
 
-	if not is_valid_target(component):
-		return
-
-	var id: int = component.get_instance_id()
-
-	if nearby_components.has(id):
-		return
-
-	nearby_components[id] = component
-	LoggerConsole.log("Added interaction target: " + root.name)
+	nearby_targets[id] = target
 
 
 func _on_area_exited(area: Area2D) -> void:
-	var root: Node = area.owner
-
-	if root == null:
+	if area == null:
 		return
 
-	var component: InteractionComponent = find_interaction_component(root)
+	var target: Node = _find_target_from_area(area)
 
-	if component == null:
+	if target == null:
 		return
 
-	var id: int = component.get_instance_id()
+	var id: int = target.get_instance_id()
 
-	if nearby_components.has(id):
-		nearby_components.erase(id)
+	if nearby_targets.has(id):
+		nearby_targets.erase(id)
 
-	if current_target == component:
-		component.set_highlighted(false)
+	if current_target == target:
+		_set_target_highlighted(current_target, false)
 		current_target = null
 
 
-func get_best_target() -> InteractionComponent:
-	var hovered: InteractionComponent = get_hovered_target()
+func get_best_target() -> Node:
+	var hovered: Node = get_hovered_target()
 
 	if hovered != null:
 		return hovered
@@ -108,84 +95,154 @@ func get_best_target() -> InteractionComponent:
 	return get_closest_target()
 
 
-func get_hovered_target() -> InteractionComponent:
+func get_hovered_target() -> Node:
 	var mouse_pos: Vector2 = actor.get_global_mouse_position()
 
-	for item in nearby_components.values():
-		var component: InteractionComponent = item as InteractionComponent
+	for item in nearby_targets.values():
+		var target: Node = item as Node
 
-		if not is_valid_target(component):
+		if not _is_valid_target(target):
 			continue
 
-		if is_mouse_over_component(component, mouse_pos):
-			return component
+		if _is_mouse_over_target(target, mouse_pos):
+			return target
 
 	return null
 
 
-func get_closest_target() -> InteractionComponent:
-	var closest: InteractionComponent = null
+func get_closest_target() -> Node:
+	var closest: Node = null
 	var closest_distance: float = INF
 
-	for item in nearby_components.values():
-		var component: InteractionComponent = item as InteractionComponent
+	for item in nearby_targets.values():
+		var target: Node = item as Node
 
-		if not is_valid_target(component):
+		if not _is_valid_target(target):
 			continue
 
-		var owner_node: Node2D = component.owner as Node2D
+		var target_root: Node2D = _get_target_root(target)
 
-		if owner_node == null:
+		if target_root == null:
 			continue
 
-		var distance: float = actor.global_position.distance_to(owner_node.global_position)
+		var distance: float = actor.global_position.distance_to(target_root.global_position)
 
 		if distance < closest_distance:
 			closest_distance = distance
-			closest = component
+			closest = target
 
 	return closest
 
 
-func set_current_target(next_target: InteractionComponent) -> void:
+func set_current_target(next_target: Node) -> void:
 	if current_target == next_target:
 		return
 
 	if current_target != null and is_instance_valid(current_target):
-		current_target.set_highlighted(false)
+		_set_target_highlighted(current_target, false)
 
 	current_target = next_target
 
 	if current_target != null and is_instance_valid(current_target):
-		current_target.set_highlighted(true)
+		_set_target_highlighted(current_target, true)
 
 
-func is_mouse_over_component(component: InteractionComponent, mouse_pos: Vector2) -> bool:
-	if component == null:
+func _use_interaction_component(component: InteractionComponent) -> void:
+	var owner_node: Node = component.owner
+
+	if owner_node != null and owner_node.has_method("interact"):
+		owner_node.interact(actor)
+		return
+
+	if component.has_action(active_action_id):
+		component.execute_action(active_action_id, actor)
+		return
+
+	if component.has_action(&"hand"):
+		component.execute_action(&"hand", actor)
+		return
+
+	LoggerConsole.log("Target has no usable action.")
+
+
+func _find_target_from_area(area: Area2D) -> Node:
+	var root: Node = area.owner
+
+	if root == null:
+		root = area
+
+	var interaction_component: InteractionComponent = _find_interaction_component(root)
+
+	if interaction_component != null:
+		return interaction_component
+
+	if include_carryables:
+		var carryable_component: CarryableComponent = _find_carryable_component(root)
+
+		if carryable_component != null:
+			return carryable_component
+
+	return null
+
+
+func _is_valid_target(target: Node) -> bool:
+	if target == null:
 		return false
 
-	if component.hover_area != null:
-		return is_mouse_over_area(component.hover_area, mouse_pos)
-
-	var owner_node: Node2D = component.owner as Node2D
-
-	if owner_node == null:
+	if not is_instance_valid(target):
 		return false
 
-	return owner_node.global_position.distance_to(mouse_pos) <= component.hover_radius_px
+	if target is InteractionComponent:
+		return (target as InteractionComponent).can_interact()
+
+	if include_carryables and target is CarryableComponent:
+		return (target as CarryableComponent).can_carry()
+
+	return false
 
 
-func is_mouse_over_area(area: Area2D, mouse_pos: Vector2) -> bool:
+func _get_target_root(target: Node) -> Node2D:
+	if target is InteractionComponent:
+		return target.owner as Node2D
+
+	if target is CarryableComponent:
+		return (target as CarryableComponent).get_carried_root()
+
+	return target.owner as Node2D
+
+
+func _is_mouse_over_target(target: Node, mouse_pos: Vector2) -> bool:
+	if target is InteractionComponent:
+		var interaction_component := target as InteractionComponent
+
+		if interaction_component.hover_area != null:
+			return _is_mouse_over_area(interaction_component.hover_area, mouse_pos)
+
+		var owner_node := interaction_component.owner as Node2D
+
+		if owner_node == null:
+			return false
+
+		return owner_node.global_position.distance_to(mouse_pos) <= interaction_component.hover_radius_px
+
+	if target is CarryableComponent:
+		var carryable_component := target as CarryableComponent
+		return _is_mouse_over_area(carryable_component, mouse_pos)
+
+	return false
+
+
+func _is_mouse_over_area(area: Area2D, mouse_pos: Vector2) -> bool:
 	for child in area.get_children():
 		if child is CollisionPolygon2D:
-			var polygon: CollisionPolygon2D = child as CollisionPolygon2D
+			var polygon := child as CollisionPolygon2D
 			var local_mouse: Vector2 = polygon.to_local(mouse_pos)
 
 			if Geometry2D.is_point_in_polygon(local_mouse, polygon.polygon):
 				return true
 
 		if child is CollisionShape2D:
-			var collision_shape: CollisionShape2D = child as CollisionShape2D
+			var collision_shape := child as CollisionShape2D
 			var shape: Shape2D = collision_shape.shape
 
 			if shape == null:
@@ -194,51 +251,75 @@ func is_mouse_over_area(area: Area2D, mouse_pos: Vector2) -> bool:
 			var local_mouse_shape: Vector2 = collision_shape.to_local(mouse_pos)
 
 			if shape is RectangleShape2D:
-				var rectangle: RectangleShape2D = shape as RectangleShape2D
+				var rectangle := shape as RectangleShape2D
 				var half_size: Vector2 = rectangle.size * 0.5
 
 				if abs(local_mouse_shape.x) <= half_size.x and abs(local_mouse_shape.y) <= half_size.y:
 					return true
 
 			if shape is CircleShape2D:
-				var circle: CircleShape2D = shape as CircleShape2D
+				var circle := shape as CircleShape2D
 
 				if local_mouse_shape.length() <= circle.radius:
+					return true
+
+			if shape is CapsuleShape2D:
+				var capsule := shape as CapsuleShape2D
+				var half_height: float = maxf(0.0, (capsule.height * 0.5) - capsule.radius)
+
+				if abs(local_mouse_shape.y) <= half_height and abs(local_mouse_shape.x) <= capsule.radius:
+					return true
+
+				var top_center := Vector2(0.0, -half_height)
+				var bottom_center := Vector2(0.0, half_height)
+
+				if local_mouse_shape.distance_to(top_center) <= capsule.radius:
+					return true
+
+				if local_mouse_shape.distance_to(bottom_center) <= capsule.radius:
 					return true
 
 	return false
 
 
-func is_valid_target(component: InteractionComponent) -> bool:
-	if component == null:
-		return false
+func _set_target_highlighted(target: Node, value: bool) -> void:
+	if target == null:
+		return
 
-	if not is_instance_valid(component):
-		return false
+	if target is InteractionComponent:
+		(target as InteractionComponent).set_highlighted(value)
+		return
 
-	if not component.can_interact():
-		return false
-
-	var owner_node: Node = component.owner
-
-	if owner_node != null and owner_node.has_method("interact"):
-		return true
-
-	if component.has_action(active_action_id):
-		return true
-
-	if component.has_action(&"hand"):
-		return true
-
-	return false
+	if target is CarryableComponent:
+		(target as CarryableComponent).set_highlighted(value)
+		return
 
 
-func find_interaction_component(node: Node) -> InteractionComponent:
+func _find_interaction_component(node: Node) -> InteractionComponent:
+	if node == null:
+		return null
+
 	if node is InteractionComponent:
 		return node as InteractionComponent
 
 	for child in node.get_children():
-		var found: InteractionComponent = find_interaction_component(child)
+		var found := _find_interaction_component(child)
+
+		if found != null:
+			return found
+
+	return null
+
+
+func _find_carryable_component(node: Node) -> CarryableComponent:
+	if node == null:
+		return null
+
+	if node is CarryableComponent:
+		return node as CarryableComponent
+
+	for child in node.get_children():
+		var found := _find_carryable_component(child)
 
 		if found != null:
 			return found
