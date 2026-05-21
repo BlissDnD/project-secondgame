@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GOAPDeliverItemAction" format=3 uid="uid://d3ln7161eghjo"]
+
+[ext_resource type="Script" uid="uid://03ra2c0vumsp" path="res://systems/work/goap/actions/goap_deliver_item_action.gd" id="1_68i37"]
+
+[resource]
+script = ExtResource("1_68i37")
+action_id = &"deliver_item"
+display_name = "Deliver Item"
+preconditions = Dictionary[StringName, Variant]({
+&"at_target": true,
+&"has_item": true
+})
+effects = Dictionary[StringName, Variant]({
+&"has_item": false,
+&"item_delivered": true
+})
+metadata/_custom_type_script = "uid://03ra2c0vumsp"

@@ -12,6 +12,12 @@
 [ext_resource type="Script" uid="uid://bssfx7ccek50r" path="res://systems/work/goap/worker_need_component.gd" id="10_f51o5"]
 [ext_resource type="Script" uid="uid://dtl6k7k0kll8k" path="res://systems/work/goap/worker_sensor_2d.gd" id="11_j82ov"]
 [ext_resource type="Script" uid="uid://dom034yrmhg55" path="res://systems/work/goap/goap_brain.gd" id="12_5oyiq"]
+[ext_resource type="Script" uid="uid://bpl7loy70rpsy" path="res://systems/work/goap/goap_action.gd" id="13_4vlxc"]
+[ext_resource type="Resource" uid="uid://c50j1xa2ynlvp" path="res://systems/work/goap/actions/move_to_target_action.tres" id="14_lf01n"]
+[ext_resource type="Resource" uid="uid://bi1dq2qpqt03b" path="res://systems/work/goap/actions/rest_action.tres" id="15_lwa6c"]
+[ext_resource type="Resource" uid="uid://23capxcnx7h1" path="res://systems/work/goap/actions/interact_action.tres" id="16_ih8nm"]
+[ext_resource type="Resource" uid="uid://d3ln7161eghjo" path="res://systems/work/goap/actions/deliver_item_action.tres" id="17_8255w"]
+[ext_resource type="Resource" uid="uid://4pxltccw63wb" path="res://systems/work/goap/actions/idle_action.tres" id="18_ynsbi"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -48,12 +54,11 @@ metadata/_custom_type_script = "uid://bwkulnmcg4nk7"
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 64)
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "movement", "crystal_cargo_visual", "debug_label")]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
 state_machine = NodePath("WorkerStateMachine")
-needs = NodePath("")
 movement = NodePath("WorkerMovementComponent")
 crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
@@ -143,4 +148,5 @@ shape = SubResource("RectangleShape2D_lf01n")
 [node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
 script = ExtResource("12_5oyiq")
 blackboard_path = NodePath("../WorkerBlackboard")
+available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("14_lf01n"), ExtResource("15_lwa6c"), ExtResource("16_ih8nm"), ExtResource("17_8255w"), ExtResource("18_ynsbi")])
 metadata/_custom_type_script = "uid://dom034yrmhg55"

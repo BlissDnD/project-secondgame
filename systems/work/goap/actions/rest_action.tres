@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="GOAPRestAction" format=3 uid="uid://bi1dq2qpqt03b"]
+
+[ext_resource type="Script" uid="uid://bigqb8idlhxib" path="res://systems/work/goap/actions/goap_rest_action.gd" id="1_3sww1"]
+
+[resource]
+script = ExtResource("1_3sww1")
+action_id = &"rest"
+display_name = "Rest"
+preconditions = Dictionary[StringName, Variant]({
+&"needs_rest": true
+})
+effects = Dictionary[StringName, Variant]({
+&"needs_Rest": false
+})
+metadata/_custom_type_script = "uid://bigqb8idlhxib"

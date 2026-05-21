@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://dj3twycfgax3n"]
+[gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://cmgqvvegguhub"]
 
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="1_5pcgh"]
 [ext_resource type="Script" uid="uid://dawk15hoi5rwt" path="res://systems/dialogue/npc_dialogue_rule.gd" id="1_7cao3"]
@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://duife52k0exm3" path="res://systems/dialogue/dialogue_resource.gd" id="4_060ec"]
 [ext_resource type="Resource" uid="uid://cspgjt3v41pf2" path="res://systems/npc/kabala/dialogue/kabala_idle_dialogue_resource.tres" id="4_jup83"]
 [ext_resource type="Resource" uid="uid://ce1vrqdilwqus" path="res://systems/npc/kabala/dialogue/kabala_intro_script.tres" id="5_7cao3"]
-[ext_resource type="PackedScene" uid="uid://cel3ie1cvhufk" path="res://systems/npc/kabala/kabala.tscn" id="7_7cao3"]
+[ext_resource type="PackedScene" uid="uid://cel3ie1cvhufk" path="res://systems/npc/kabala/dialogue/kabala.tscn" id="7_7cao3"]
 [ext_resource type="Resource" uid="uid://b4lp4gjc2qyq2" path="res://systems/npc/kabala/dialogue/kabala_dialogue_repeat.tres" id="7_bsf3n"]
 
 [sub_resource type="Resource" id="Resource_k6acw"]
