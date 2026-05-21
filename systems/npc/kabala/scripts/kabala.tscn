@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cl62s4hu4eurf" path="res://systems/interaction/interaction_component.gd" id="1_84n67"]
 [ext_resource type="Script" uid="uid://bp660xcko1s8e" path="res://systems/npc/npc_controller.gd" id="1_oxbmb"]
 [ext_resource type="Script" uid="uid://scjl3g6m1ock" path="res://systems/interaction/interaction_action.gd" id="2_n262i"]
-[ext_resource type="Resource" uid="uid://bgqi10xspcvba" path="res://systems/npc/kabala/kabala_npc_definition.tres" id="2_oxbmb"]
+[ext_resource type="Resource" uid="uid://bgqi10xspcvba" path="res://systems/npc/kabala/resources/kabala_npc_definition.tres" id="2_oxbmb"]
 [ext_resource type="Texture2D" uid="uid://dm6u3s0al8rsj" path="res://assets/images/npc/kabala.png" id="5_mvx3l"]
 [ext_resource type="Resource" uid="uid://cc622rgmrhpo0" path="res://systems/interaction/dialogue_action.tres" id="6_h5drd"]
 [ext_resource type="Script" uid="uid://dscenf1rgm0rn" path="res://systems/npc/npc_wander_controller.gd" id="7_h5drd"]
