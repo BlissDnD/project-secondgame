@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://cjjaeefionpk4"]
+
+[ext_resource type="Script" uid="uid://dawk15hoi5rwt" path="res://systems/dialogue/npc_dialogue_rule.gd" id="1_lpbns"]
+[ext_resource type="Resource" uid="uid://ce1vrqdilwqus" path="res://systems/npc/kabala/dialogue/kabala_intro_script.tres" id="2_1oqwg"]
+[ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="2_5t5aa"]
+[ext_resource type="PackedScene" uid="uid://cel3ie1cvhufk" path="res://systems/npc/kabala/kabala.tscn" id="3_k3bvp"]
+[ext_resource type="Resource" uid="uid://0s70i4k34nva" path="res://systems/npc/kabala/dialogue/kabala_repeat_script.tres" id="4_k830j"]
+
+[resource]
+script = ExtResource("2_5t5aa")
+npc_id = &"kabala"
+display_name = "Kabala"
+npc_scene = ExtResource("3_k3bvp")
+intro_dialogue = ExtResource("2_1oqwg")
+repeat_dialogue = ExtResource("4_k830j")
+metadata/_custom_type_script = "uid://q0u1xspouqyd"

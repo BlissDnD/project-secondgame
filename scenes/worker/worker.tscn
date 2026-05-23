@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://c8h8edlxc3fjv"]
 
 [ext_resource type="Script" uid="uid://ekvktgh7xumo" path="res://systems/work/workers/worker.gd" id="1_nupkf"]
+[ext_resource type="Texture2D" uid="uid://mvxwy8btjimw" path="res://assets/images/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00004.png" id="2_j82ov"]
 [ext_resource type="Script" uid="uid://b7n5yeu6ahi74" path="res://systems/work/workers/worker_state_machine.gd" id="2_md8yx"]
-[ext_resource type="Texture2D" uid="uid://d0g8n3shatreo" path="res://assets/images/Plant Animations/BlueFlower1/BlueFlower_00000.png" id="2_sq3if"]
 [ext_resource type="Texture2D" uid="uid://db3w05vvlupcv" path="res://assets/images/Plant Animations/BlueFlower2/BluePlantClosed_00045.png" id="3_4pgqf"]
 [ext_resource type="Script" uid="uid://c1cycgosdi6gm" path="res://systems/work/workers/worker_movement_component.gd" id="4_4pgqf"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
@@ -21,7 +21,7 @@
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("2_sq3if")
+"texture": ExtResource("2_j82ov")
 }],
 "loop": true,
 "name": &"default",
@@ -40,17 +40,18 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ydra3"]
-size = Vector2(106, 100)
+size = Vector2(50, 54)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_4pgqf"]
-size = Vector2(20, 74)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5oyiq"]
+radius = 9.0
+height = 58.0
 
 [sub_resource type="Resource" id="Resource_4vlxc"]
 script = ExtResource("8_8hyuv")
 metadata/_custom_type_script = "uid://bwkulnmcg4nk7"
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
-size = Vector2(51, 64)
+size = Vector2(51, 54)
 
 [node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label", "idle_floor_ray", "idle_wall_ray", "idle_gap_ray")]
 collision_layer = 4
@@ -67,14 +68,14 @@ idle_wall_ray = NodePath("WallRay")
 idle_gap_ray = NodePath("GapRay")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
-position = Vector2(-17.000004, -143)
-rotation = 0.63314027
-scale = Vector2(0.32421875, 0.32421875)
+position = Vector2(-4.9471536, -33.93946)
+rotation = -0.012237191
+scale = Vector2(0.24574064, 0.24574062)
 sprite_frames = SubResource("SpriteFrames_nupkf")
 
 [node name="CrístalCargoVisual" type="AnimatedSprite2D" parent="." unique_id=984995345]
-position = Vector2(-85, -123)
-scale = Vector2(0.22526042, 0.22526042)
+position = Vector2(-16, -72)
+scale = Vector2(0.038411465, 0.038411465)
 sprite_frames = SubResource("SpriteFrames_ydra3")
 
 [node name="WorkerStateMachine" type="Node" parent="." unique_id=733597544]
@@ -91,6 +92,7 @@ wander_speed = 80.0
 step_check_forward_distance = 12.0
 step_up_pixel_increment = 2.0
 obstacle_jump_enabled = true
+wander_jump_on_wall = true
 metadata/_custom_type_script = "uid://c1cycgosdi6gm"
 
 [node name="FloorRay" type="RayCast2D" parent="." unique_id=1912104998]
@@ -121,12 +123,12 @@ highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.627451)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=767862528]
-position = Vector2(-1, -40)
+position = Vector2(-2, -27)
 shape = SubResource("RectangleShape2D_ydra3")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1787094264]
-position = Vector2(0, -27)
-shape = SubResource("RectangleShape2D_4pgqf")
+position = Vector2(-5, -29)
+shape = SubResource("CapsuleShape2D_5oyiq")
 
 [node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
 script = ExtResource("7_ock52")
@@ -138,7 +140,7 @@ script = ExtResource("11_j82ov")
 metadata/_custom_type_script = "uid://dtl6k7k0kll8k"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerSensor2D" unique_id=1679016499]
-position = Vector2(-1.5, -22)
+position = Vector2(-1.5, -27)
 shape = SubResource("RectangleShape2D_lf01n")
 
 [node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
