@@ -8,5 +8,6 @@ PTH={
 "res://scenes/": Color(1, 0.5974026, 0.8521713, 1),
 "res://scripts/": Color(0.6630276, 0.062337637, 1, 1),
 "res://systems/": Color(1, 0.574026, 0.90349025, 1),
+"res://systems/npc/kabala/dialogue/kabala_dialogue_intro.tres": Color(1, 0, 0, 1),
 "res://ui/": Color(0.55064934, 0.74724025, 1, 1)
 }
