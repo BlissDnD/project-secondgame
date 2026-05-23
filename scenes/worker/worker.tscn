@@ -88,11 +88,11 @@ worker_body = NodePath("..")
 floor_ray = NodePath("../FloorRay")
 wall_ray = NodePath("../WallRay")
 gap_ray = NodePath("../GapRay")
+wander_turn_on_wall = false
 wander_turn_on_gap = false
 metadata/_custom_type_script = "uid://c1cycgosdi6gm"
 
 [node name="FloorRay" type="RayCast2D" parent="." unique_id=1912104998]
-collide_with_areas = true
 
 [node name="WallRay" type="RayCast2D" parent="." unique_id=869070166]
 

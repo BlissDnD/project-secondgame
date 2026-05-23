@@ -188,9 +188,9 @@ func _update_state_behavior(delta: float) -> void:
 
 		WorkerStateMachine.IDLE:
 			if movement != null:
-				movement.clear_target()
-
-			_apply_idle_wander(delta)
+				movement.physics_update(delta)
+			else:
+				_apply_idle_physics(delta)
 
 		WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL:
 			if movement != null:

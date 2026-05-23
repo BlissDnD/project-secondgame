@@ -31,7 +31,7 @@ func enter(blackboard: WorkerBlackboard) -> void:
 		return
 
 	timer = randf_range(min_run_time, max_run_time)
-	blackboard.set_fact(&"is_idle", true)
+	blackboard.set_fact(&"is_wandering", true)
 	movement.start_wander()
 
 
@@ -56,5 +56,5 @@ func exit(blackboard: WorkerBlackboard) -> void:
 	if movement != null:
 		movement.stop_wander()
 
-	blackboard.set_fact(&"is_idle", false)
+	blackboard.set_fact(&"is_wandering", false)
 	super.exit(blackboard)
