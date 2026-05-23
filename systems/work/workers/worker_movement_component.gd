@@ -12,15 +12,18 @@ enum MovementMode {
 
 enum ObstacleResult {
 	NONE,
-	STEPPED_UP,
+	STEPPED,
 	JUMPED,
 	TURNED,
 	BLOCKED
 }
 
+@export_category("References")
 @export var worker_body: CharacterBody2D
 @export var floor_ray: RayCast2D
-@export var wall_ray: RayCast2D
+@export var step_ray: RayCast2D
+@export var step_height_ray: RayCast2D
+@export var clearance_ray: RayCast2D
 @export var gap_ray: RayCast2D
 
 @export_category("Horizontal Movement")
@@ -31,20 +34,18 @@ enum ObstacleResult {
 
 @export_category("Step Up")
 @export var step_up_enabled: bool = true
-@export var max_step_height: float = 32.0
-@export var step_check_forward_distance: float = 8.0
-@export var step_up_pixel_increment: float = 1.0
-
-@export_category("Smooth Step")
-@export var smooth_step_enabled: bool = true
-@export var step_smooth_speed: float = 90.0
+@export var step_climb_vertical_velocity: float = -90.0
+@export var step_climb_forward_multiplier: float = 2.0
+@export var step_climb_duration: float = 0.16
+@export var step_cooldown_time: float = 0.08
+@export var minimum_ground_time_before_step: float = 0.0
 
 @export_category("Jump")
-@export var obstacle_jump_enabled: bool = false
-@export var jump_velocity: float = -380.0
-@export var jump_cooldown_time: float = 1.0
-@export var minimum_ground_time_before_jump: float = 0.15
-@export var failed_jump_timeout: float = 0.9
+@export var obstacle_jump_enabled: bool = true
+@export var jump_velocity: float = -520.0
+@export var jump_forward_speed_multiplier: float = 1.15
+@export var jump_cooldown_time: float = 0.45
+@export var minimum_ground_time_before_jump: float = 0.05
 @export var max_jump_attempts_before_turn: int = 1
 
 @export_category("Wander")
@@ -54,8 +55,10 @@ enum ObstacleResult {
 @export var wander_pause_time_max: float = 1.4
 @export_range(0.0, 1.0, 0.01) var wander_turn_chance: float = 0.35
 @export var wander_turn_on_gap: bool = false
-@export var wander_jump_on_wall: bool = false
 @export var wander_turn_when_blocked: bool = true
+
+@export_category("Debug")
+@export var debug_obstacles: bool = false
 
 var target_position: Vector2
 var has_target: bool = false
@@ -65,13 +68,14 @@ var wander_direction: int = 1
 var wander_timer: float = 0.0
 var wander_paused: bool = false
 
-var jump_cooldown: float = 0.0
 var ground_time: float = 0.0
-var jump_attempts_on_current_obstacle: int = 0
-var jump_attempt_timer: float = 0.0
+var step_cooldown: float = 0.0
+var jump_cooldown: float = 0.0
+var jump_attempts: int = 0
 var last_obstacle_direction: float = 0.0
 
-var pending_step_up_height: float = 0.0
+var step_climb_timer: float = 0.0
+var step_climb_direction: float = 0.0
 
 
 func _ready() -> void:
@@ -122,11 +126,11 @@ func stop_all() -> void:
 	has_target = false
 	movement_mode = MovementMode.NONE
 	wander_paused = false
-	pending_step_up_height = 0.0
+	_stop_step_climb()
 	_reset_obstacle_memory()
 
 	if worker_body != null:
-		worker_body.velocity.x = 0.0
+		worker_body.velocity = Vector2.ZERO
 
 
 func physics_update(delta: float) -> void:
@@ -134,8 +138,12 @@ func physics_update(delta: float) -> void:
 		return
 
 	_update_timers(delta)
+
+	if step_climb_timer > 0.0:
+		_update_step_climb(delta)
+		return
+
 	_apply_gravity(delta)
-	_apply_smooth_step(delta)
 
 	match movement_mode:
 		MovementMode.TARGET:
@@ -150,13 +158,11 @@ func physics_update(delta: float) -> void:
 
 
 func _update_timers(delta: float) -> void:
+	if step_cooldown > 0.0:
+		step_cooldown -= delta
+
 	if jump_cooldown > 0.0:
 		jump_cooldown -= delta
-
-	if jump_attempt_timer > 0.0:
-		jump_attempt_timer -= delta
-	else:
-		jump_attempts_on_current_obstacle = 0
 
 	if worker_body != null and worker_body.is_on_floor():
 		ground_time += delta
@@ -184,8 +190,12 @@ func _target_update(_delta: float) -> void:
 	if direction == 0.0:
 		direction = 1.0
 
-	var handled := _handle_forward_obstacle(direction, false)
-	if handled == ObstacleResult.BLOCKED:
+	var result := _handle_forward_obstacle(direction, false)
+	if result == ObstacleResult.STEPPED or result == ObstacleResult.JUMPED:
+		worker_body.move_and_slide()
+		return
+
+	if result == ObstacleResult.BLOCKED:
 		_stop_as_blocked()
 		worker_body.move_and_slide()
 		return
@@ -209,16 +219,15 @@ func _wander_update(delta: float) -> void:
 		return
 
 	var direction := float(wander_direction)
+	_update_rays(direction)
 
-	if wander_turn_on_gap:
-		_update_rays(direction)
-		if _detect_gap():
-			_turn_wander()
-			worker_body.move_and_slide()
-			return
+	if wander_turn_on_gap and _detect_gap():
+		_turn_wander()
+		worker_body.move_and_slide()
+		return
 
-	var handled := _handle_forward_obstacle(direction, true)
-	if handled == ObstacleResult.TURNED:
+	var result := _handle_forward_obstacle(direction, true)
+	if result == ObstacleResult.STEPPED or result == ObstacleResult.JUMPED or result == ObstacleResult.TURNED:
 		worker_body.move_and_slide()
 		return
 
@@ -236,17 +245,38 @@ func _wander_update(delta: float) -> void:
 func _handle_forward_obstacle(direction: float, is_wander: bool) -> ObstacleResult:
 	_update_rays(direction)
 
-	if not _detect_wall():
+	var low_obstacle := _is_low_obstacle_detected()
+	var step_too_high := _is_step_too_high()
+	var high_obstacle := _is_high_obstacle_detected()
+
+	if debug_obstacles and low_obstacle:
+		print(
+			"Worker obstacle | low=", low_obstacle,
+			" step_too_high=", step_too_high,
+			" high=", high_obstacle,
+			" floor=", worker_body != null and worker_body.is_on_floor(),
+			" ground_time=", snappedf(ground_time, 0.01),
+			" step_cd=", snappedf(step_cooldown, 0.01),
+			" jump_cd=", snappedf(jump_cooldown, 0.01),
+			" jump_attempts=", jump_attempts
+		)
+
+	if not low_obstacle:
 		_reset_obstacle_memory()
 		return ObstacleResult.NONE
 
-	if step_up_enabled and worker_body.is_on_floor():
-		if _try_step_up(direction):
-			return ObstacleResult.STEPPED_UP
+	if last_obstacle_direction != 0.0 and signf(last_obstacle_direction) != signf(direction):
+		_reset_obstacle_memory()
 
-	if obstacle_jump_enabled and worker_body.is_on_floor():
-		if _can_try_jump_for_obstacle(direction):
-			_jump_for_obstacle(direction)
+	last_obstacle_direction = direction
+
+	if _can_step_up(step_too_high):
+		_start_step_climb(direction)
+		return ObstacleResult.STEPPED
+
+	if high_obstacle or step_too_high:
+		if _can_jump():
+			_jump(direction)
 			return ObstacleResult.JUMPED
 
 	if is_wander and wander_turn_when_blocked:
@@ -256,68 +286,67 @@ func _handle_forward_obstacle(direction: float, is_wander: bool) -> ObstacleResu
 	return ObstacleResult.BLOCKED
 
 
-func _try_step_up(direction: float) -> bool:
+func _can_step_up(step_too_high: bool) -> bool:
+	if not step_up_enabled:
+		return false
+
+	if step_too_high:
+		return false
+
 	if worker_body == null:
+		return false
+
+	if step_ray == null:
+		return false
+
+	if step_height_ray == null:
 		return false
 
 	if not worker_body.is_on_floor():
 		return false
 
-	var original_position := worker_body.global_position
-	var original_transform := worker_body.transform
-	var forward_offset := Vector2(direction * step_check_forward_distance, 0.0)
-
-	var found_height := 0.0
-	var height := step_up_pixel_increment
-
-	while height <= max_step_height:
-		var test_position := original_position + Vector2(0.0, -height)
-
-		worker_body.global_position = test_position
-		worker_body.force_update_transform()
-
-		var can_move_forward := not worker_body.test_move(worker_body.transform, forward_offset)
-
-		if can_move_forward:
-			found_height = height
-			break
-
-		height += step_up_pixel_increment
-
-	worker_body.global_position = original_position
-	worker_body.transform = original_transform
-	worker_body.force_update_transform()
-
-	if found_height <= 0.0:
+	if ground_time < minimum_ground_time_before_step:
 		return false
 
-	if smooth_step_enabled:
-		pending_step_up_height = maxf(pending_step_up_height, found_height)
-	else:
-		worker_body.global_position.y -= found_height
+	if step_cooldown > 0.0:
+		return false
 
-	return true
+	return step_ray.is_colliding() and not step_height_ray.is_colliding()
 
 
-func _apply_smooth_step(delta: float) -> void:
+func _start_step_climb(direction: float) -> void:
+	step_climb_direction = direction
+	step_climb_timer = step_climb_duration
+	step_cooldown = step_cooldown_time
+	ground_time = 0.0
+
+	_update_step_climb(0.0)
+
+
+func _update_step_climb(delta: float) -> void:
+	step_climb_timer -= delta
+
+	var base_speed := maxf(move_speed, wander_speed)
+
+	worker_body.velocity.x = step_climb_direction * base_speed * step_climb_forward_multiplier
+	worker_body.velocity.y = step_climb_vertical_velocity
+
+	worker_body.move_and_slide()
+
+	if step_climb_timer <= 0.0:
+		_stop_step_climb()
+
+
+func _stop_step_climb() -> void:
+	step_climb_timer = 0.0
+	step_climb_direction = 0.0
+
+
+func _can_jump() -> bool:
+	if not obstacle_jump_enabled:
+		return false
+
 	if worker_body == null:
-		return
-
-	if pending_step_up_height <= 0.0:
-		return
-
-	var amount := step_smooth_speed * delta
-	amount = minf(amount, pending_step_up_height)
-
-	worker_body.global_position.y -= amount
-	pending_step_up_height -= amount
-
-	if pending_step_up_height <= 0.1:
-		pending_step_up_height = 0.0
-
-
-func _can_try_jump_for_obstacle(direction: float) -> bool:
-	if not wander_jump_on_wall:
 		return false
 
 	if not worker_body.is_on_floor():
@@ -329,29 +358,55 @@ func _can_try_jump_for_obstacle(direction: float) -> bool:
 	if jump_cooldown > 0.0:
 		return false
 
-	if last_obstacle_direction != 0.0 and signf(last_obstacle_direction) != signf(direction):
-		jump_attempts_on_current_obstacle = 0
-
-	if jump_attempts_on_current_obstacle >= max_jump_attempts_before_turn:
+	if jump_attempts >= max_jump_attempts_before_turn:
 		return false
 
 	return true
 
 
-func _jump_for_obstacle(direction: float) -> void:
+func _jump(direction: float) -> void:
+	var base_speed := maxf(move_speed, wander_speed)
+
+	worker_body.velocity.x = direction * base_speed * jump_forward_speed_multiplier
 	worker_body.velocity.y = jump_velocity
+
 	jump_cooldown = jump_cooldown_time
+	jump_attempts += 1
 	ground_time = 0.0
-	jump_attempts_on_current_obstacle += 1
-	jump_attempt_timer = failed_jump_timeout
-	last_obstacle_direction = direction
+
+
+func _is_low_obstacle_detected() -> bool:
+	if step_ray == null:
+		return false
+
+	return step_ray.is_colliding()
+
+
+func _is_step_too_high() -> bool:
+	if step_ray == null:
+		return false
+
+	if step_height_ray == null:
+		return false
+
+	return step_ray.is_colliding() and step_height_ray.is_colliding()
+
+
+func _is_high_obstacle_detected() -> bool:
+	if step_ray == null:
+		return false
+
+	if clearance_ray == null:
+		return false
+
+	return step_ray.is_colliding() and clearance_ray.is_colliding()
 
 
 func _turn_wander() -> void:
 	wander_direction *= -1
 	wander_timer = randf_range(wander_move_time_min, wander_move_time_max)
 	wander_paused = false
-	pending_step_up_height = 0.0
+	_stop_step_climb()
 	_reset_obstacle_memory()
 	_update_rays(float(wander_direction))
 
@@ -360,14 +415,13 @@ func _randomize_wander() -> void:
 	wander_direction = 1 if randf() > 0.5 else -1
 	wander_timer = randf_range(wander_move_time_min, wander_move_time_max)
 	wander_paused = false
-	pending_step_up_height = 0.0
+	_stop_step_climb()
 	_reset_obstacle_memory()
 	_update_rays(float(wander_direction))
 
 
 func _reset_obstacle_memory() -> void:
-	jump_attempts_on_current_obstacle = 0
-	jump_attempt_timer = 0.0
+	jump_attempts = 0
 	last_obstacle_direction = 0.0
 
 
@@ -383,9 +437,17 @@ func _apply_gravity(delta: float) -> void:
 
 
 func _update_rays(direction: float) -> void:
-	if wall_ray != null:
-		wall_ray.target_position.x = absf(wall_ray.target_position.x) * direction
-		wall_ray.force_raycast_update()
+	if step_ray != null:
+		step_ray.target_position.x = absf(step_ray.target_position.x) * direction
+		step_ray.force_raycast_update()
+
+	if step_height_ray != null:
+		step_height_ray.target_position.x = absf(step_height_ray.target_position.x) * direction
+		step_height_ray.force_raycast_update()
+
+	if clearance_ray != null:
+		clearance_ray.target_position.x = absf(clearance_ray.target_position.x) * direction
+		clearance_ray.force_raycast_update()
 
 	if gap_ray != null:
 		gap_ray.position.x = absf(gap_ray.position.x) * direction
@@ -408,19 +470,12 @@ func _detect_gap() -> bool:
 	return not gap_ray.is_colliding()
 
 
-func _detect_wall() -> bool:
-	if wall_ray == null:
-		return false
-
-	return wall_ray.is_colliding()
-
-
 func _stop_as_blocked() -> void:
 	if worker_body == null:
 		return
 
 	has_target = false
 	movement_mode = MovementMode.NONE
-	pending_step_up_height = 0.0
+	_stop_step_climb()
 	worker_body.velocity.x = 0.0
 	blocked.emit()

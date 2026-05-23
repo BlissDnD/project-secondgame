@@ -68,13 +68,13 @@ idle_wall_ray = NodePath("WallRay")
 idle_gap_ray = NodePath("GapRay")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
-position = Vector2(-4.9471536, -33.93946)
+position = Vector2(4.7683716e-07, -35)
 rotation = -0.012237191
 scale = Vector2(0.24574064, 0.24574062)
 sprite_frames = SubResource("SpriteFrames_nupkf")
 
 [node name="CrístalCargoVisual" type="AnimatedSprite2D" parent="." unique_id=984995345]
-position = Vector2(-16, -72)
+position = Vector2(-9, -73)
 scale = Vector2(0.038411465, 0.038411465)
 sprite_frames = SubResource("SpriteFrames_ydra3")
 
@@ -82,22 +82,42 @@ sprite_frames = SubResource("SpriteFrames_ydra3")
 script = ExtResource("2_md8yx")
 metadata/_custom_type_script = "uid://b7n5yeu6ahi74"
 
-[node name="WorkerMovementComponent" type="Node" parent="." unique_id=1461913073 node_paths=PackedStringArray("worker_body", "floor_ray", "wall_ray", "gap_ray")]
+[node name="WorkerMovementComponent" type="Node" parent="." unique_id=1461913073 node_paths=PackedStringArray("worker_body", "floor_ray", "step_ray", "step_height_ray", "clearance_ray", "gap_ray")]
 script = ExtResource("4_4pgqf")
 worker_body = NodePath("..")
 floor_ray = NodePath("../FloorRay")
-wall_ray = NodePath("../WallRay")
+step_ray = NodePath("../WallRay")
+step_height_ray = NodePath("../StepHeightRay")
+clearance_ray = NodePath("../ClearenceRay")
 gap_ray = NodePath("../GapRay")
 wander_speed = 80.0
-step_check_forward_distance = 12.0
-step_up_pixel_increment = 2.0
-obstacle_jump_enabled = true
-wander_jump_on_wall = true
+step_climb_vertical_velocity = -150.0
+step_climb_forward_multiplier = 1.0
+step_climb_duration = 0.1
+step_cooldown_time = 0.0
+obstacle_jump_enabled = false
+jump_velocity = -500.0
+max_jump_attempts_before_turn = 2
+wander_move_time_min = 2.0
+wander_move_time_max = 7.0
+wander_pause_time_max = 7.0
+wander_turn_chance = 0.15
+wander_turn_on_gap = true
 metadata/_custom_type_script = "uid://c1cycgosdi6gm"
 
 [node name="FloorRay" type="RayCast2D" parent="." unique_id=1912104998]
+target_position = Vector2(0, 44)
 
 [node name="WallRay" type="RayCast2D" parent="." unique_id=869070166]
+position = Vector2(0, -20)
+target_position = Vector2(22, 0)
+
+[node name="StepHeightRay" type="RayCast2D" parent="." unique_id=908497520]
+position = Vector2(0, -40)
+target_position = Vector2(22, 0)
+
+[node name="ClearenceRay" type="RayCast2D" parent="." unique_id=1299418248]
+position = Vector2(0, -33)
 target_position = Vector2(18, 0)
 
 [node name="GapRay" type="RayCast2D" parent="." unique_id=2040998195]
@@ -127,7 +147,7 @@ position = Vector2(-2, -27)
 shape = SubResource("RectangleShape2D_ydra3")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1787094264]
-position = Vector2(-5, -29)
+position = Vector2(0, -29)
 shape = SubResource("CapsuleShape2D_5oyiq")
 
 [node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]

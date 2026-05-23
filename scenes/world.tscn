@@ -314,7 +314,8 @@ spawn_origin = NodePath("../Player")
 terrain_provider = NodePath("../WorldTerrainGenerator")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
-object_spacing_tiles = 40
+spawn_offset_tiles = 5
+object_spacing_tiles = 20
 metadata/_custom_type_script = "uid://padt2g1f7e1y"
 
 [node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap") groups=["placement_preview", "placement_validator", "terrain_layer"]]

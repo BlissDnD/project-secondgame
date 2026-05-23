@@ -186,7 +186,6 @@ func _update_needs(delta: float) -> void:
 		_:
 			pass
 
-
 func _update_state_behavior(delta: float) -> void:
 	if state_machine == null:
 		return
