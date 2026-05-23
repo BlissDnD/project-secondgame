@@ -8,23 +8,14 @@
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
 [ext_resource type="Script" uid="uid://oe6rx48tfp1c" path="res://systems/work/goap/worker_blackboard.gd" id="7_ock52"]
 [ext_resource type="Script" uid="uid://bwkulnmcg4nk7" path="res://systems/work/goap/worker_stats.gd" id="8_8hyuv"]
-[ext_resource type="Script" uid="uid://bdnd3v60f5cx6" path="res://systems/work/goap/worker_motor_2d.gd" id="9_304bw"]
-[ext_resource type="Script" uid="uid://bssfx7ccek50r" path="res://systems/work/goap/worker_need_component.gd" id="10_f51o5"]
 [ext_resource type="Script" uid="uid://dtl6k7k0kll8k" path="res://systems/work/goap/worker_sensor_2d.gd" id="11_j82ov"]
 [ext_resource type="Script" uid="uid://dom034yrmhg55" path="res://systems/work/goap/goap_brain.gd" id="12_5oyiq"]
 [ext_resource type="Script" uid="uid://bpl7loy70rpsy" path="res://systems/work/goap/goap_action.gd" id="13_4vlxc"]
-[ext_resource type="Resource" uid="uid://c50j1xa2ynlvp" path="res://systems/work/goap/actions/move_to_target_action.tres" id="14_lf01n"]
-[ext_resource type="Resource" uid="uid://bi1dq2qpqt03b" path="res://systems/work/goap/actions/rest_action.tres" id="15_lwa6c"]
-[ext_resource type="Resource" uid="uid://23capxcnx7h1" path="res://systems/work/goap/actions/interact_action.tres" id="16_ih8nm"]
-[ext_resource type="Resource" uid="uid://d3ln7161eghjo" path="res://systems/work/goap/actions/deliver_item_action.tres" id="17_8255w"]
-[ext_resource type="Resource" uid="uid://4pxltccw63wb" path="res://systems/work/goap/actions/idle_action.tres" id="18_ynsbi"]
+[ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
+[ext_resource type="Script" uid="uid://ddf3tn23ax6ie" path="res://systems/work/workers/worker_needs_component.gd" id="19_lf01n"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
 [ext_resource type="Resource" uid="uid://cppffm3iwkmdb" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
-[ext_resource type="Resource" uid="uid://ds13lisub11su" path="res://systems/work/goap/goals/rest_goal.tres" id="21_u3vbd"]
-[ext_resource type="Resource" uid="uid://c30f1qfu2d8e4" path="res://systems/work/goap/goals/interact_goal.tres" id="22_pge6d"]
-[ext_resource type="Resource" uid="uid://b0waduod5oi50" path="res://systems/work/goap/goals/delivery_item_goal.tres" id="23_hkv3j"]
-[ext_resource type="Script" uid="uid://bbioi78q6kxm8" path="res://systems/work/goap/actions/worker_side_wander_control.gd" id="25_pge6d"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -61,14 +52,16 @@ metadata/_custom_type_script = "uid://bwkulnmcg4nk7"
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 64)
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "movement", "crystal_cargo_visual", "debug_label", "idle_floor_ray", "idle_wall_ray", "idle_gap_ray")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label", "idle_floor_ray", "idle_wall_ray", "idle_gap_ray")]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
 state_machine = NodePath("WorkerStateMachine")
+needs = NodePath("WorkerNeedsComponent")
 movement = NodePath("WorkerMovementComponent")
 crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
+idle_wander_enabled = false
 idle_wander_turn_on_gap = false
 idle_floor_ray = NodePath("FloorRay")
 idle_wall_ray = NodePath("WallRay")
@@ -95,9 +88,11 @@ worker_body = NodePath("..")
 floor_ray = NodePath("../FloorRay")
 wall_ray = NodePath("../WallRay")
 gap_ray = NodePath("../GapRay")
+wander_turn_on_gap = false
 metadata/_custom_type_script = "uid://c1cycgosdi6gm"
 
 [node name="FloorRay" type="RayCast2D" parent="." unique_id=1912104998]
+collide_with_areas = true
 
 [node name="WallRay" type="RayCast2D" parent="." unique_id=869070166]
 
@@ -130,23 +125,10 @@ shape = SubResource("RectangleShape2D_ydra3")
 position = Vector2(0, -27)
 shape = SubResource("RectangleShape2D_4pgqf")
 
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1821003176]
-
 [node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
 script = ExtResource("7_ock52")
 stats = SubResource("Resource_4vlxc")
 metadata/_custom_type_script = "uid://oe6rx48tfp1c"
-
-[node name="WorkerMotor2D" type="Node" parent="." unique_id=1652161077]
-script = ExtResource("9_304bw")
-actor_path = NodePath("..")
-navigation_agent_path = NodePath("../NavigationAgent2D")
-metadata/_custom_type_script = "uid://bdnd3v60f5cx6"
-
-[node name="WorkerNeedComponent" type="Node" parent="." unique_id=703939084]
-script = ExtResource("10_f51o5")
-blackboard_path = NodePath("../WorkerBlackboard")
-metadata/_custom_type_script = "uid://bssfx7ccek50r"
 
 [node name="WorkerSensor2D" type="Area2D" parent="." unique_id=1197924075]
 script = ExtResource("11_j82ov")
@@ -159,10 +141,15 @@ shape = SubResource("RectangleShape2D_lf01n")
 [node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
 script = ExtResource("12_5oyiq")
 blackboard_path = NodePath("../WorkerBlackboard")
-available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("14_lf01n"), ExtResource("15_lwa6c"), ExtResource("16_ih8nm"), ExtResource("17_8255w"), ExtResource("18_ynsbi"), ExtResource("19_u3vbd")])
-goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_ir7vy"), ExtResource("21_u3vbd"), ExtResource("22_pge6d"), ExtResource("23_hkv3j")])
+available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd")])
+goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_ir7vy")])
 metadata/_custom_type_script = "uid://dom034yrmhg55"
 
-[node name="WorkerSideWanderMotor" type="Node" parent="." unique_id=639164820]
-script = ExtResource("25_pge6d")
-metadata/_custom_type_script = "uid://bbioi78q6kxm8"
+[node name="WorkerNeedsComponent" type="Node" parent="." unique_id=1902545397]
+script = ExtResource("19_lf01n")
+blackboard_path = NodePath("../WorkerBlackboard")
+metadata/_custom_type_script = "uid://ddf3tn23ax6ie"
+
+[node name="WorkerGOAPAdapter" type="Node" parent="." unique_id=1642598976]
+script = ExtResource("16_j82ov")
+metadata/_custom_type_script = "uid://bwnkuuafp8tdv"

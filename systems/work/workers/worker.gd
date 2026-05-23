@@ -160,7 +160,10 @@ func _update_needs(delta: float) -> void:
 
 	match state_machine.current_state:
 		WorkerStateMachine.IDLE:
-			needs.apply_idle_decay(delta)
+			if movement != null:
+				movement.physics_update(delta)
+			else:
+				_apply_idle_physics(delta)
 
 		WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
 			needs.apply_idle_decay(delta)
