@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="NPCDefinition" format=3 uid="uid://1l57cp0bbhmf"]
 
 [ext_resource type="Script" uid="uid://dawk15hoi5rwt" path="res://systems/dialogue/npc_dialogue_rule.gd" id="1_hv2ss"]
-[ext_resource type="Resource" uid="uid://cspgjt3v41pf2" path="res://systems/npc/kabala/dialogue/kabala_idle_dialogue_resource.tres" id="2_i2mbl"]
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="2_p23ct"]
 [ext_resource type="Resource" uid="uid://ce1vrqdilwqus" path="res://systems/npc/kabala/dialogue/kabala_intro_script.tres" id="3_63ufi"]
+[ext_resource type="PackedScene" uid="uid://cel3ie1cvhufk" path="res://systems/npc/kabala/kabala.tscn" id="3_oxwek"]
+[ext_resource type="Resource" uid="uid://0s70i4k34nva" path="res://systems/npc/kabala/dialogue/kabala_repeat_script.tres" id="4_ehr2p"]
 
 [resource]
 script = ExtResource("2_p23ct")
+npc_scene = ExtResource("3_oxwek")
 intro_dialogue = ExtResource("3_63ufi")
-idle_dialogue_resource = ExtResource("2_i2mbl")
+repeat_dialogue = ExtResource("4_ehr2p")
 metadata/_custom_type_script = "uid://q0u1xspouqyd"
