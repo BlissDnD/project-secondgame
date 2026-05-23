@@ -3,7 +3,10 @@ class_name Worker
 
 @export var state_machine: WorkerStateMachine
 @export var needs: WorkerNeedsComponent
-@export var movement: WorkerMovementComponent
+
+# Node-ra hagyjuk, hogy Godot Inspectorban biztosan behúzható legyen.
+# Runtime ellenőrizzük, hogy van-e rajta a szükséges API.
+@export var movement: Node
 
 @export var crystal_cargo_visual: Node2D
 @export var debug_label: Label
@@ -13,8 +16,10 @@ class_name Worker
 
 @export var gravity: float = 900.0
 
-@export_category("Idle Wander")
-@export var idle_wander_enabled: bool = true
+# Régi root idle wander mezők. Most csak fallbackként maradnak.
+# Normál esetben a WorkerMovementComponent mozgat.
+@export_category("Legacy Idle Wander Fallback")
+@export var idle_wander_enabled: bool = false
 @export var idle_wander_speed: float = 35.0
 @export var idle_wander_move_time_min: float = 1.0
 @export var idle_wander_move_time_max: float = 3.0
@@ -24,7 +29,7 @@ class_name Worker
 @export var idle_wander_turn_on_wall: bool = true
 @export var idle_wander_turn_on_gap: bool = true
 
-@export_category("Idle Wander Rays")
+@export_category("Legacy Idle Wander Rays")
 @export var idle_floor_ray: RayCast2D
 @export var idle_wall_ray: RayCast2D
 @export var idle_gap_ray: RayCast2D
@@ -42,32 +47,42 @@ func _ready() -> void:
 	add_to_group("worker")
 
 	if state_machine == null:
-		state_machine = get_node_or_null("WorkerStateMachine")
+		state_machine = get_node_or_null("WorkerStateMachine") as WorkerStateMachine
 
 	if needs == null:
-		needs = get_node_or_null("WorkerNeedsComponent")
+		needs = get_node_or_null("WorkerNeedsComponent") as WorkerNeedsComponent
 
 	if movement == null:
 		movement = get_node_or_null("WorkerMovementComponent")
 
 	if idle_floor_ray == null:
-		idle_floor_ray = get_node_or_null("FloorRay")
+		idle_floor_ray = get_node_or_null("FloorRay") as RayCast2D
 
 	if idle_wall_ray == null:
-		idle_wall_ray = get_node_or_null("WallRay")
+		idle_wall_ray = get_node_or_null("WallRay") as RayCast2D
 
 	if idle_gap_ray == null:
-		idle_gap_ray = get_node_or_null("GapRay")
+		idle_gap_ray = get_node_or_null("GapRay") as RayCast2D
+
+	if crystal_cargo_visual == null:
+		crystal_cargo_visual = get_node_or_null("CristalCargoVisual") as Node2D
+		if crystal_cargo_visual == null:
+			crystal_cargo_visual = get_node_or_null("CrystalCargoVisual") as Node2D
+
+	if debug_label == null:
+		debug_label = get_node_or_null("DebugLabel") as Label
 
 	if crystal_cargo_visual != null:
 		crystal_cargo_visual.visible = false
 
 	if movement != null:
-		if not movement.reached_target.is_connected(_on_movement_reached_target):
-			movement.reached_target.connect(_on_movement_reached_target)
+		if movement.has_signal("reached_target"):
+			if not movement.reached_target.is_connected(_on_movement_reached_target):
+				movement.reached_target.connect(_on_movement_reached_target)
 
-		if not movement.blocked.is_connected(_on_movement_blocked):
-			movement.blocked.connect(_on_movement_blocked)
+		if movement.has_signal("blocked"):
+			if not movement.blocked.is_connected(_on_movement_blocked):
+				movement.blocked.connect(_on_movement_blocked)
 
 	if state_machine != null:
 		if not state_machine.state_changed.is_connected(_on_state_changed):
@@ -116,8 +131,8 @@ func receive_crystal_cargo() -> void:
 		set_worker_state(WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL)
 		return
 
-	if movement != null:
-		movement.set_target(main_crystal_target.global_position)
+	if _movement_has_method(&"set_target"):
+		movement.call("set_target", main_crystal_target.global_position)
 
 	set_worker_state(WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN)
 
@@ -126,8 +141,8 @@ func on_inserted_into_socket(socket: Node) -> void:
 	current_socket = socket
 	velocity = Vector2.ZERO
 
-	if movement != null:
-		movement.clear_target()
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
 
 
 func on_removed_from_socket(socket: Node) -> void:
@@ -139,16 +154,16 @@ func on_removed_from_socket(socket: Node) -> void:
 
 
 func on_picked_up() -> void:
-	if movement != null:
-		movement.clear_target()
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
 
 	set_worker_state(WorkerStateMachine.CARRIED)
 	velocity = Vector2.ZERO
 
 
 func on_dropped() -> void:
-	if movement != null:
-		movement.clear_target()
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
 
 	velocity = Vector2.ZERO
 	set_worker_state(WorkerStateMachine.IDLE)
@@ -160,10 +175,7 @@ func _update_needs(delta: float) -> void:
 
 	match state_machine.current_state:
 		WorkerStateMachine.IDLE:
-			if movement != null:
-				movement.physics_update(delta)
-			else:
-				_apply_idle_physics(delta)
+			needs.apply_idle_decay(delta)
 
 		WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
 			needs.apply_idle_decay(delta)
@@ -181,46 +193,48 @@ func _update_state_behavior(delta: float) -> void:
 
 	match state_machine.current_state:
 		WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
-			if movement != null:
-				movement.physics_update(delta)
+			if _movement_has_method(&"physics_update"):
+				movement.call("physics_update", delta)
+			else:
+				_apply_idle_physics(delta)
 
 			_try_deposit_crystal()
 
 		WorkerStateMachine.IDLE:
-			if movement != null:
-				movement.physics_update(delta)
+			if _movement_has_method(&"physics_update"):
+				movement.call("physics_update", delta)
 			else:
-				_apply_idle_physics(delta)
+				_apply_idle_wander(delta)
 
 		WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL:
-			if movement != null:
-				movement.clear_target()
+			if _movement_has_method(&"clear_target"):
+				movement.call("clear_target")
 
 			velocity.x = 0.0
 			_apply_gravity(delta)
 			move_and_slide()
 
 		WorkerStateMachine.CARRIED:
-			if movement != null:
-				movement.clear_target()
+			if _movement_has_method(&"clear_target"):
+				movement.call("clear_target")
 
 			velocity = Vector2.ZERO
 
 		WorkerStateMachine.WORKING_CRYSTAL_NODE:
-			if movement != null:
-				movement.clear_target()
+			if _movement_has_method(&"clear_target"):
+				movement.call("clear_target")
 
 			velocity = Vector2.ZERO
 
 		WorkerStateMachine.DEPOSITING_CRYSTAL:
-			if movement != null:
-				movement.clear_target()
+			if _movement_has_method(&"clear_target"):
+				movement.call("clear_target")
 
 			velocity = Vector2.ZERO
 
 		WorkerStateMachine.SLEEPING:
-			if movement != null:
-				movement.clear_target()
+			if _movement_has_method(&"clear_target"):
+				movement.call("clear_target")
 
 			_apply_idle_physics(delta)
 
@@ -228,6 +242,10 @@ func _update_state_behavior(delta: float) -> void:
 			velocity.x = 0.0
 			_apply_gravity(delta)
 			move_and_slide()
+
+
+func _movement_has_method(method_name: StringName) -> bool:
+	return movement != null and movement.has_method(method_name)
 
 
 func _apply_idle_wander(delta: float) -> void:
@@ -379,7 +397,8 @@ func _update_debug_label() -> void:
 	if has_crystal_cargo:
 		state_text += "\nCargo: Crystal"
 
-	state_text += "\nIdleDir: " + str(idle_wander_direction)
-	state_text += "\nIdlePaused: " + str(idle_wander_paused)
+	if movement != null:
+		if movement.has_method("get"):
+			state_text += "\nMovement: " + str(movement.name)
 
 	debug_label.text = state_text

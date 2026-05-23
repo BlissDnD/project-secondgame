@@ -52,19 +52,10 @@ metadata/_custom_type_script = "uid://bwkulnmcg4nk7"
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 64)
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label", "idle_floor_ray", "idle_wall_ray", "idle_gap_ray")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
-state_machine = NodePath("WorkerStateMachine")
-needs = NodePath("WorkerNeedsComponent")
-movement = NodePath("WorkerMovementComponent")
-crystal_cargo_visual = NodePath("CrístalCargoVisual")
-debug_label = NodePath("DebugLabel")
-idle_wander_speed = 80.0
-idle_floor_ray = NodePath("FloorRay")
-idle_wall_ray = NodePath("WallRay")
-idle_gap_ray = NodePath("GapRay")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
 position = Vector2(-17.000004, -143)
@@ -87,19 +78,13 @@ worker_body = NodePath("..")
 floor_ray = NodePath("../FloorRay")
 wall_ray = NodePath("../WallRay")
 gap_ray = NodePath("../GapRay")
-wander_speed = 80.0
-step_check_forward_distance = 12.0
-step_up_pixel_increment = 2.0
-obstacle_jump_enabled = true
 metadata/_custom_type_script = "uid://c1cycgosdi6gm"
 
 [node name="FloorRay" type="RayCast2D" parent="." unique_id=1912104998]
 
 [node name="WallRay" type="RayCast2D" parent="." unique_id=869070166]
-target_position = Vector2(18, 0)
 
 [node name="GapRay" type="RayCast2D" parent="." unique_id=2040998195]
-position = Vector2(16, 0)
 
 [node name="DebugLabel" type="Label" parent="." unique_id=794019635]
 offset_left = -1.0
