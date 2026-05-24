@@ -45,6 +45,7 @@ func _input(event: InputEvent) -> void:
 			return
 
 
+
 func _on_area_entered(area: Area2D) -> void:
 	if area == null:
 		return

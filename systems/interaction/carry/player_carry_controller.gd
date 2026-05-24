@@ -7,6 +7,12 @@ class_name PlayerCarryController
 
 @export var drop_offset: Vector2 = Vector2(32, 0)
 
+@export_range(0.01, 10000.0, 0.01) var player_base_weight: float = 70.0
+@export_range(0.01, 10000.0, 0.01) var lift_strength: float = 25.0
+@export_range(0.01, 10000.0, 0.01) var carry_strength: float = 30.0
+@export_range(0.01, 10000.0, 0.01) var throw_strength: float = 20.0
+@export_range(0.0, 10000.0, 1.0) var base_throw_impulse: float = 650.0
+
 var carried_component: CarryableComponent
 
 
@@ -39,6 +45,10 @@ func try_interact() -> void:
 
 	var carryable := _find_nearest_carryable()
 	if carryable != null:
+		if not carryable.can_be_lifted_by(lift_strength):
+			LoggerConsole.log("Too heavy to lift: " + str(carryable.get_weight()))
+			return
+
 		if carryable.pickup(player_body):
 			carried_component = carryable
 			return
@@ -53,12 +63,54 @@ func cancel_current_action() -> void:
 		_drop_carried()
 
 
+func throw_carried(direction: Vector2) -> void:
+	if carried_component == null:
+		return
+
+	var throw_position := player_body.global_position + drop_offset
+	var inherited_velocity := _get_player_velocity()
+
+	carried_component.throw_from(
+		throw_position,
+		direction,
+		base_throw_impulse,
+		throw_strength,
+		inherited_velocity
+	)
+
+	carried_component = null
+
+
+func is_carrying() -> bool:
+	return carried_component != null
+
+
+func get_carried_weight() -> float:
+	if carried_component == null:
+		return 0.0
+
+	return carried_component.get_weight()
+
+
+func get_effective_player_weight() -> float:
+	return player_base_weight + get_carried_weight()
+
+
+func get_movement_speed_multiplier() -> float:
+	if carried_component == null:
+		return 1.0
+
+	return carried_component.get_carry_speed_multiplier(carry_strength)
+
+
 func _drop_carried() -> void:
 	if carried_component == null:
 		return
 
 	var drop_position := player_body.global_position + drop_offset
-	carried_component.drop(drop_position)
+	var inherited_velocity := _get_player_velocity()
+
+	carried_component.drop(drop_position, inherited_velocity)
 	carried_component = null
 
 
@@ -79,7 +131,6 @@ func _try_insert_carried_worker_into_socket() -> bool:
 
 	carried_component.is_carried = false
 	carried_component.carrier = null
-	carried_component = null
 
 	return socket.insert_worker(worker)
 
@@ -88,12 +139,21 @@ func _find_nearest_carryable() -> CarryableComponent:
 	var best: CarryableComponent = null
 	var best_distance := INF
 
+	if interaction_area == null or player_body == null:
+		return null
+
 	for area in interaction_area.get_overlapping_areas():
 		if area is CarryableComponent:
-			var distance := player_body.global_position.distance_to(area.global_position)
+			var carryable := area as CarryableComponent
+
+			if not carryable.can_carry():
+				continue
+
+			var distance := player_body.global_position.distance_to(carryable.global_position)
+
 			if distance < best_distance:
 				best_distance = distance
-				best = area
+				best = carryable
 
 	return best
 
@@ -102,12 +162,17 @@ func _find_nearest_placeable_pickup() -> PlaceablePickupComponent:
 	var best: PlaceablePickupComponent = null
 	var best_distance := INF
 
+	if interaction_area == null or player_body == null:
+		return null
+
 	for area in interaction_area.get_overlapping_areas():
 		if area is PlaceablePickupComponent:
-			var distance := player_body.global_position.distance_to(area.global_position)
+			var pickup := area as PlaceablePickupComponent
+			var distance := player_body.global_position.distance_to(pickup.global_position)
+
 			if distance < best_distance:
 				best_distance = distance
-				best = area
+				best = pickup
 
 	return best
 
@@ -116,12 +181,17 @@ func _find_nearest_worker_socket() -> WorkerSocket:
 	var best: WorkerSocket = null
 	var best_distance := INF
 
+	if interaction_area == null or player_body == null:
+		return null
+
 	for area in interaction_area.get_overlapping_areas():
 		if area is WorkerSocket:
-			var distance := player_body.global_position.distance_to(area.global_position)
+			var socket := area as WorkerSocket
+			var distance := player_body.global_position.distance_to(socket.global_position)
+
 			if distance < best_distance:
 				best_distance = distance
-				best = area
+				best = socket
 
 	return best
 
@@ -129,7 +199,15 @@ func _find_nearest_worker_socket() -> WorkerSocket:
 func _get_player_place_target_position() -> Vector2:
 	var facing := 1.0
 
-	if player_body.has_method("get_facing_direction"):
-		facing = player_body.get_facing_direction()
+	if player_body != null and player_body.has_method("get_facing_direction"):
+		facing = float(player_body.get_facing_direction())
 
 	return player_body.global_position + Vector2(48.0 * facing, 0.0)
+
+
+func _get_player_velocity() -> Vector2:
+	var character := player_body as CharacterBody2D
+	if character != null:
+		return character.velocity
+
+	return Vector2.ZERO

@@ -53,6 +53,7 @@
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
 [ext_resource type="Script" uid="uid://cwcv247t2cv0x" path="res://systems/interaction/carry/carry_manager.gd" id="53_vb1ce"]
+[ext_resource type="Script" uid="uid://ct0l8tix2e53" path="res://systems/interaction/carry/player_carry_controller.gd" id="54_0ncpa"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
 size = Vector2(58, 116)
@@ -278,3 +279,9 @@ animation = &"running"
 autoplay = "idle"
 frame = 2
 frame_progress = 0.18713756
+
+[node name="PlayerCarryController" type="Node" parent="." unique_id=73168991 node_paths=PackedStringArray("player_body", "interaction_area")]
+script = ExtResource("54_0ncpa")
+player_body = NodePath("..")
+interaction_area = NodePath("../FlipContainer/InteractionArea")
+metadata/_custom_type_script = "uid://ct0l8tix2e53"

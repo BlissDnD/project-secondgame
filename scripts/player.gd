@@ -4,15 +4,23 @@ extends CharacterBody2D
 @onready var jump_sound: AudioStreamPlayer2D = $JumpSound
 @onready var flip_container: Node2D = $FlipContainer
 
+@export var carry_controller: PlayerCarryController
 @export var noclip_speed: float = 600.0
+@export_range(0.01, 10000.0, 0.01) var base_player_weight: float = 70.0
 
-const SPEED = 800.0
-const JUMP_VELOCITY = -400.0
+const SPEED: float = 800.0
+const JUMP_VELOCITY: float = -400.0
 
 var godmode_enabled: bool = false
 
-func _ready()-> void:
+
+func _ready() -> void:
 	BarkManager.set_player(self)
+
+	if carry_controller != null:
+		carry_controller.player_base_weight = base_player_weight
+
+
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_godmode"):
 		godmode_enabled = !godmode_enabled
@@ -23,6 +31,11 @@ func _input(event: InputEvent) -> void:
 		velocity = Vector2.ZERO
 
 		LoggerConsole.log("Godmode: " + str(godmode_enabled))
+
+	if event.is_action_pressed("throw_carried"):
+		if carry_controller != null:
+			var direction := Vector2(get_facing_direction(), -0.25)
+			carry_controller.throw_carried(direction)
 
 
 func _physics_process(delta: float) -> void:
@@ -53,7 +66,10 @@ func handle_noclip(delta: float) -> void:
 
 
 func handle_normal_movement(delta: float) -> void:
-	if velocity.x > 1 or velocity.x < -1:
+	var speed_multiplier := get_carry_speed_multiplier()
+	var current_speed := SPEED * speed_multiplier
+
+	if absf(velocity.x) > 1.0:
 		animated_sprite_2d.animation = "running"
 	else:
 		animated_sprite_2d.animation = "idle"
@@ -69,37 +85,34 @@ func handle_normal_movement(delta: float) -> void:
 	var direction := Input.get_axis("ui_left", "ui_right")
 
 	if direction:
-		velocity.x = direction * SPEED
+		velocity.x = direction * current_speed
 	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
+		velocity.x = move_toward(velocity.x, 0.0, current_speed)
 
 	move_and_slide()
-	#
-	#for i in range(get_slide_collision_count()):
-		#var collision := get_slide_collision(i)
-		#var collider := collision.get_collider()
-#
-		#if collider == null:
-			#continue
-#
-		#var layer_text := "n/a"
-		#var mask_text := "n/a"
-#
-		#if collider is CollisionObject2D:
-			#layer_text = str(collider.collision_layer)
-			#mask_text = str(collider.collision_mask)
-#
-		#print(
-			#"PLAYER COLLIDING WITH: ",
-			#collider.name,
-			#" path=",
-			#collider.get_path(),
-			#" layer=",
-			#layer_text,
-			#" mask=",
-			#mask_text
-		#)
+
 	if direction > 0:
 		flip_container.scale.x = 1
 	elif direction < 0:
 		flip_container.scale.x = -1
+
+
+func get_facing_direction() -> float:
+	if flip_container.scale.x < 0.0:
+		return -1.0
+
+	return 1.0
+
+
+func get_carry_speed_multiplier() -> float:
+	if carry_controller == null:
+		return 1.0
+
+	return carry_controller.get_movement_speed_multiplier()
+
+
+func get_effective_weight() -> float:
+	if carry_controller == null:
+		return base_player_weight
+
+	return carry_controller.get_effective_player_weight()

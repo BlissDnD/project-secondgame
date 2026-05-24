@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="PhysicalBodyProfile" format=3 uid="uid://c2croebje8g7d"]
+
+[ext_resource type="Script" uid="uid://c6ahwummnwg5y" path="res://systems/physics/physical_body_profile.gd" id="1_ypwc2"]
+
+[resource]
+script = ExtResource("1_ypwc2")
+metadata/_custom_type_script = "uid://c6ahwummnwg5y"
