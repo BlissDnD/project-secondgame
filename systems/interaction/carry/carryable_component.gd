@@ -6,7 +6,7 @@ signal dropped(carrier: Node2D)
 signal thrown(carrier: Node2D, impulse: Vector2)
 
 @export var root_node: Node2D
-@export var hold_offset: Vector2 = Vector2(24, -16)
+@export var hold_offset: Vector2 = Vector2(0, -48)
 
 @export var can_be_carried: bool = true
 @export var can_be_thrown: bool = true
@@ -180,10 +180,7 @@ func carry_update() -> void:
 	if not is_carried:
 		return
 
-	if carrier == null:
-		return
-
-	if root_node == null:
+	if carrier == null or root_node == null:
 		return
 
 	root_node.global_position = carrier.global_position + hold_offset
@@ -198,26 +195,21 @@ func set_highlighted(value: bool) -> void:
 	if highlight_target == null:
 		return
 
-	if value:
-		highlight_target.modulate = highlight_color
-	else:
-		highlight_target.modulate = _default_modulate
+	highlight_target.modulate = highlight_color if value else _default_modulate
 
 
 func is_highlighted() -> bool:
 	return _is_highlighted
 
 
-func on_picked_up(_by_actor: Node2D) -> void:
-	pass
+func get_collision_shapes_for_proxy() -> Array[CollisionShape2D]:
+	var result: Array[CollisionShape2D] = []
 
+	if root_node == null:
+		return result
 
-func on_dropped(_by_actor: Node2D) -> void:
-	pass
-
-
-func on_placed(_by_actor: Node2D) -> void:
-	pass
+	_collect_collision_shapes(root_node, result)
+	return result
 
 
 func _set_physics_carried_state(value: bool) -> void:
@@ -240,6 +232,19 @@ func _set_physics_carried_state(value: bool) -> void:
 		if value:
 			rigid_body.linear_velocity = Vector2.ZERO
 			rigid_body.angular_velocity = 0.0
+
+
+func _collect_collision_shapes(node: Node, result: Array[CollisionShape2D]) -> void:
+	for child in node.get_children():
+		if child is CarryableComponent:
+			continue
+
+		if child is CollisionShape2D:
+			var shape_node := child as CollisionShape2D
+			if shape_node.shape != null:
+				result.append(shape_node)
+
+		_collect_collision_shapes(child, result)
 
 
 func _find_first_canvas_item(node: Node) -> CanvasItem:

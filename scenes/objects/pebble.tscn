@@ -31,10 +31,6 @@ position = Vector2(-8, -11)
 scale = Vector2(0.72584796, 0.36)
 shape = SubResource("CircleShape2D_08f38")
 
-[node name="PhysicsForceReceiver" type="Node" parent="PhysicalItemBody" unique_id=229821050]
-script = ExtResource("4_xcv58")
-metadata/_custom_type_script = "uid://dw74ttpxnxuy"
-
 [node name="CarryableComponent" type="Area2D" parent="PhysicalItemBody" unique_id=1150361070 node_paths=PackedStringArray("root_node", "highlight_target")]
 script = ExtResource("5_v8mqs")
 root_node = NodePath("..")
@@ -46,3 +42,7 @@ metadata/_custom_type_script = "uid://c0acc3v16fne0"
 position = Vector2(-4, -13)
 scale = Vector2(6.063349, 5.5585184)
 shape = SubResource("CircleShape2D_a6epn")
+
+[node name="PhysicsForceReceiver" type="Node" parent="PhysicalItemBody" unique_id=229821050]
+script = ExtResource("4_xcv58")
+metadata/_custom_type_script = "uid://dw74ttpxnxuy"

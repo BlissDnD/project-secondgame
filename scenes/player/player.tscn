@@ -52,7 +52,6 @@
 [ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
-[ext_resource type="Script" uid="uid://cwcv247t2cv0x" path="res://systems/interaction/carry/carry_manager.gd" id="53_vb1ce"]
 [ext_resource type="Script" uid="uid://ct0l8tix2e53" path="res://systems/interaction/carry/player_carry_controller.gd" id="54_0ncpa"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
@@ -223,9 +222,10 @@ animations = [{
 "speed": 30.0
 }]
 
-[node name="Player" type="CharacterBody2D" unique_id=677817848]
+[node name="Player" type="CharacterBody2D" unique_id=677817848 node_paths=PackedStringArray("carry_controller")]
 collision_layer = 2
 script = ExtResource("1_1u1sw")
+carry_controller = NodePath("PlayerCarryController")
 noclip_speed = 1200.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=641959194]
@@ -248,20 +248,6 @@ actor = NodePath("..")
 [node name="DebugOverlay" parent="." unique_id=182094769 instance=ExtResource("52_ahqnk")]
 visible = false
 position = Vector2(-700, -600)
-
-[node name="CarrySocket" type="Node2D" parent="." unique_id=591920792]
-position = Vector2(32, -24)
-
-[node name="DropSocket" type="Node2D" parent="." unique_id=1277985867]
-visible = false
-position = Vector2(64, 0)
-
-[node name="CarryManager" type="Node" parent="." unique_id=1916650998 node_paths=PackedStringArray("detection_area", "actor", "carry_socket", "drop_socket") groups=["placement_preview", "placement_validator", "terrain_layer"]]
-script = ExtResource("53_vb1ce")
-detection_area = NodePath("../FlipContainer/InteractionArea")
-actor = NodePath("..")
-carry_socket = NodePath("../CarrySocket")
-drop_socket = NodePath("../DropSocket")
 
 [node name="FlipContainer" type="Node2D" parent="." unique_id=595349572]
 

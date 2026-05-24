@@ -6,6 +6,7 @@ class_name PlayerCarryController
 @export var placement_controller: PlacementController
 
 @export var drop_offset: Vector2 = Vector2(32, 0)
+@export var hold_offset: Vector2 = Vector2(0, -48)
 
 @export_range(0.01, 10000.0, 0.01) var player_base_weight: float = 70.0
 @export_range(0.01, 10000.0, 0.01) var lift_strength: float = 25.0
@@ -15,9 +16,12 @@ class_name PlayerCarryController
 
 var carried_component: CarryableComponent
 
+var _carry_collision_shapes: Array[CollisionShape2D] = []
+
 
 func _process(_delta: float) -> void:
 	if carried_component != null:
+		carried_component.hold_offset = hold_offset
 		carried_component.carry_update()
 
 	if placement_controller != null and placement_controller.is_placing:
@@ -32,6 +36,7 @@ func try_interact() -> void:
 
 	if carried_component != null:
 		if _try_insert_carried_worker_into_socket():
+			_clear_carry_collision_proxy()
 			carried_component = null
 			return
 
@@ -51,6 +56,8 @@ func try_interact() -> void:
 
 		if carryable.pickup(player_body):
 			carried_component = carryable
+			carried_component.hold_offset = hold_offset
+			_create_carry_collision_proxy(carried_component)
 			return
 
 
@@ -67,7 +74,9 @@ func throw_carried(direction: Vector2) -> void:
 	if carried_component == null:
 		return
 
-	var throw_position := player_body.global_position + drop_offset
+	_clear_carry_collision_proxy()
+
+	var throw_position := player_body.global_position + hold_offset
 	var inherited_velocity := _get_player_velocity()
 
 	carried_component.throw_from(
@@ -107,11 +116,49 @@ func _drop_carried() -> void:
 	if carried_component == null:
 		return
 
+	_clear_carry_collision_proxy()
+
 	var drop_position := player_body.global_position + drop_offset
 	var inherited_velocity := _get_player_velocity()
 
 	carried_component.drop(drop_position, inherited_velocity)
 	carried_component = null
+
+
+func _create_carry_collision_proxy(carryable: CarryableComponent) -> void:
+	_clear_carry_collision_proxy()
+
+	if player_body == null:
+		return
+
+	var player_collision_object := player_body as CollisionObject2D
+	if player_collision_object == null:
+		return
+
+	var source_shapes := carryable.get_collision_shapes_for_proxy()
+
+	for source_shape in source_shapes:
+		if source_shape == null or source_shape.shape == null:
+			continue
+
+		var proxy_shape := CollisionShape2D.new()
+		proxy_shape.name = "CarryCollisionProxy"
+		proxy_shape.shape = source_shape.shape.duplicate(true)
+		proxy_shape.position = hold_offset + source_shape.position
+		proxy_shape.rotation = source_shape.rotation
+		proxy_shape.scale = source_shape.scale
+		proxy_shape.disabled = false
+
+		player_collision_object.add_child(proxy_shape)
+		_carry_collision_shapes.append(proxy_shape)
+
+
+func _clear_carry_collision_proxy() -> void:
+	for shape in _carry_collision_shapes:
+		if is_instance_valid(shape):
+			shape.queue_free()
+
+	_carry_collision_shapes.clear()
 
 
 func _try_insert_carried_worker_into_socket() -> bool:
@@ -128,6 +175,8 @@ func _try_insert_carried_worker_into_socket() -> bool:
 
 	if not socket.can_accept_worker(worker):
 		return false
+
+	_clear_carry_collision_proxy()
 
 	carried_component.is_carried = false
 	carried_component.carrier = null
