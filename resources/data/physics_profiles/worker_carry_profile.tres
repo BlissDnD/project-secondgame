@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="CarryProfile" format=3 uid="uid://cpdejhbwxdlqo"]
+
+[ext_resource type="Script" uid="uid://0dvivduhknqa" path="res://systems/interaction/carry/carry_profile.gd" id="1_1nl8g"]
+
+[resource]
+script = ExtResource("1_1nl8g")
+weight_source = 1
+can_insert_into_worker_socket = true
+metadata/_custom_type_script = "uid://0dvivduhknqa"

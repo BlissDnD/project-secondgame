@@ -2,14 +2,17 @@
 
 [ext_resource type="Script" uid="uid://duk2mru75qcx6" path="res://systems/physics/physical_item_body.gd" id="1_2yx05"]
 [ext_resource type="Resource" uid="uid://c2croebje8g7d" path="res://resources/data/physics_profiles/pebble_physics_profile.tres" id="2_778ep"]
-[ext_resource type="Texture2D" uid="uid://ls3huc5n2s10" path="res://assets/images/Items/ore_silver.png" id="3_fxtap"]
+[ext_resource type="Texture2D" uid="uid://da102a2vl1281" path="res://assets/images/Props/Rocks.png" id="3_2yx05"]
 [ext_resource type="Script" uid="uid://dw74ttpxnxuy" path="res://systems/physics/physics_force_receiver.gd" id="4_xcv58"]
+[ext_resource type="Resource" uid="uid://co5et7bnif0b7" path="res://resources/data/physics_profiles/pebble_carry_profile.tres" id="5_778ep"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_v8mqs"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_08f38"]
-radius = 44.181442
+[sub_resource type="CircleShape2D" id="CircleShape2D_778ep"]
+radius = 26.323256
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_a6epn"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fxtap"]
+radius = 1.8630875
+height = 3.8326375
 
 [node name="PebbleScene" type="Node2D" unique_id=893672506]
 
@@ -21,27 +24,31 @@ profile = ExtResource("2_778ep")
 metadata/_custom_type_script = "uid://duk2mru75qcx6"
 
 [node name="Sprite2D" type="Sprite2D" parent="PhysicalItemBody" unique_id=1547501359]
-position = Vector2(-10, -10)
-rotation = -0.32422733
+position = Vector2(-1.0000038, -12)
+rotation = -0.4881926
 scale = Vector2(0.84375, 0.84375)
-texture = ExtResource("3_fxtap")
+texture = ExtResource("3_2yx05")
+region_enabled = true
+region_rect = Rect2(80, 70, 37, 35)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PhysicalItemBody" unique_id=530655403]
-position = Vector2(-8, -11)
-scale = Vector2(0.72584796, 0.36)
-shape = SubResource("CircleShape2D_08f38")
+position = Vector2(0, -13.000001)
+scale = Vector2(0.5806744, 0.50727284)
+shape = SubResource("CircleShape2D_778ep")
 
 [node name="CarryableComponent" type="Area2D" parent="PhysicalItemBody" unique_id=1150361070 node_paths=PackedStringArray("root_node", "highlight_target")]
+position = Vector2(0, -13)
 script = ExtResource("5_v8mqs")
 root_node = NodePath("..")
+carry_profile = ExtResource("5_778ep")
 highlight_target = NodePath("../Sprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.7764706)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PhysicalItemBody/CarryableComponent" unique_id=1953864881]
-position = Vector2(-4, -13)
-scale = Vector2(6.063349, 5.5585184)
-shape = SubResource("CircleShape2D_a6epn")
+position = Vector2(1.0000038, -1.0000038)
+scale = Vector2(-37.572037, 7.686763)
+shape = SubResource("CapsuleShape2D_fxtap")
 
 [node name="PhysicsForceReceiver" type="Node" parent="PhysicalItemBody" unique_id=229821050 node_paths=PackedStringArray("physical_body")]
 script = ExtResource("4_xcv58")

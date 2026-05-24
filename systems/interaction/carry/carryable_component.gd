@@ -3,26 +3,16 @@ class_name CarryableComponent
 
 signal picked_up(carrier: Node2D)
 signal dropped(carrier: Node2D)
-signal thrown(carrier: Node2D, impulse: Vector2)
+signal thrown(carrier: Node2D, velocity: Vector2)
 
 @export var root_node: Node2D
 @export var hold_offset: Vector2 = Vector2(0, -48)
 
-var _original_global_scale: Vector2 = Vector2.ONE
-@export var can_be_carried: bool = true
-@export var can_be_thrown: bool = true
-@export var can_drop_freely: bool = true
-@export var requires_ground: bool = false
+@export var carry_profile: CarryProfile
 
 @export var supports_grid_placement: bool = false
-@export var can_insert_into_worker_socket: bool = false
-
 @export var placeable_definition: PlaceableDefinition
 @export var footprint_tiles: Vector2i = Vector2i.ONE
-
-@export_range(0.01, 10000.0, 0.01) var pickup_weight_limit: float = 25.0
-@export_range(0.01, 10000.0, 0.01) var comfortable_weight_limit: float = 8.0
-@export_range(0.0, 1.0, 0.01) var throw_efficiency: float = 1.0
 
 @export var disable_body_collision_while_carried: bool = true
 @export var enable_body_collision_when_dropped: bool = true
@@ -40,6 +30,7 @@ var original_parent: Node = null
 
 var _default_modulate: Color = Color.WHITE
 var _is_highlighted: bool = false
+var _original_global_scale: Vector2 = Vector2.ONE
 
 
 func _ready() -> void:
@@ -54,50 +45,74 @@ func _ready() -> void:
 
 
 func can_carry() -> bool:
-	return can_be_carried and root_node != null
+	if carry_profile == null:
+		return false
+
+	return carry_profile.can_be_carried and root_node != null
 
 
 func can_be_lifted_by(lift_strength: float) -> bool:
 	if not can_carry():
 		return false
 
-	var weight := get_weight()
-	return weight <= lift_strength and weight <= pickup_weight_limit
+	return get_weight() <= lift_strength
+
+
+func can_be_thrown() -> bool:
+	if carry_profile == null:
+		return false
+
+	return carry_profile.can_be_thrown
+
+
+func can_drop_freely() -> bool:
+	if carry_profile == null:
+		return true
+
+	return carry_profile.can_drop_freely
+
+
+func can_insert_into_worker_socket() -> bool:
+	if carry_profile == null:
+		return false
+
+	return carry_profile.can_insert_into_worker_socket
 
 
 func get_weight() -> float:
-	var physical_body := root_node as PhysicalItemBody
-	if physical_body != null:
-		return physical_body.get_weight()
+	if carry_profile == null:
+		return 0.0
 
-	var rigid_body := root_node as RigidBody2D
-	if rigid_body != null:
-		return rigid_body.mass
-
-	return 0.0
+	return carry_profile.get_weight(root_node)
 
 
 func get_carry_speed_multiplier(carry_strength: float) -> float:
-	var weight := get_weight()
-
-	if weight <= comfortable_weight_limit:
+	if carry_profile == null:
 		return 1.0
 
-	var overload := weight - comfortable_weight_limit
+	var weight := get_weight()
+
+	if weight <= carry_profile.comfortable_weight_limit:
+		return 1.0
+
+	var overload := weight - carry_profile.comfortable_weight_limit
 	var penalty := overload / maxf(carry_strength, 0.01)
 
 	return clampf(1.0 - penalty, 0.25, 1.0)
 
 
 func get_throw_multiplier(throw_strength: float) -> float:
-	if not can_be_thrown:
+	if carry_profile == null:
+		return 0.0
+
+	if not carry_profile.can_be_thrown:
 		return 0.0
 
 	var weight := get_weight()
 	var strength_base := maxf(throw_strength, 0.01)
 	var mass_factor := strength_base / (strength_base + weight)
 
-	return clampf(mass_factor * throw_efficiency, 0.0, 1.0)
+	return clampf(mass_factor * carry_profile.throw_efficiency, 0.0, 1.0)
 
 
 func get_carried_root() -> Node2D:
@@ -134,10 +149,7 @@ func pickup(new_carrier: Node2D, hold_parent: Node2D = null) -> bool:
 	return true
 
 
-func drop(
-	drop_position: Vector2,
-	inherited_velocity: Vector2 = Vector2.ZERO
-) -> void:
+func drop(drop_position: Vector2, inherited_velocity: Vector2 = Vector2.ZERO) -> void:
 	if root_node == null:
 		return
 
@@ -172,6 +184,44 @@ func drop(
 
 	dropped.emit(old_carrier)
 
+
+func throw_with_velocity(
+	throw_position: Vector2,
+	throw_velocity: Vector2,
+	ignored_body: PhysicsBody2D = null
+) -> void:
+	if not can_be_thrown():
+		return
+
+	var old_carrier := carrier
+
+	drop(throw_position, Vector2.ZERO)
+
+	var physical_body := root_node as PhysicalItemBody
+	if physical_body != null:
+		_apply_thrower_collision_grace(physical_body, ignored_body)
+		physical_body.linear_velocity = throw_velocity
+		physical_body.angular_velocity = 0.0
+		thrown.emit(old_carrier, throw_velocity)
+		return
+
+	var rigid_body := root_node as RigidBody2D
+	if rigid_body != null:
+		if ignored_body != null:
+			rigid_body.add_collision_exception_with(ignored_body)
+
+			var timer := get_tree().create_timer(0.15)
+			timer.timeout.connect(
+				func() -> void:
+					if is_instance_valid(rigid_body) and is_instance_valid(ignored_body):
+						rigid_body.remove_collision_exception_with(ignored_body)
+			)
+
+		rigid_body.linear_velocity = throw_velocity
+		rigid_body.angular_velocity = 0.0
+		thrown.emit(old_carrier, throw_velocity)
+
+
 func throw_from(
 	throw_position: Vector2,
 	direction: Vector2,
@@ -180,6 +230,9 @@ func throw_from(
 	inherited_velocity: Vector2 = Vector2.ZERO,
 	ignored_body: PhysicsBody2D = null
 ) -> void:
+	if not can_be_thrown():
+		return
+
 	var old_carrier := carrier
 	var multiplier := get_throw_multiplier(throw_strength)
 
@@ -199,15 +252,6 @@ func throw_from(
 
 	var rigid_body := root_node as RigidBody2D
 	if rigid_body != null:
-		if ignored_body != null:
-			rigid_body.add_collision_exception_with(ignored_body)
-			var timer := get_tree().create_timer(0.15)
-			timer.timeout.connect(
-				func() -> void:
-					if is_instance_valid(rigid_body) and is_instance_valid(ignored_body):
-						rigid_body.remove_collision_exception_with(ignored_body)
-			)
-
 		rigid_body.apply_central_impulse(impulse)
 		thrown.emit(old_carrier, impulse)
 

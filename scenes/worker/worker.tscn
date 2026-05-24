@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://db3w05vvlupcv" path="res://assets/images/Plant Animations/BlueFlower2/BluePlantClosed_00045.png" id="3_4pgqf"]
 [ext_resource type="Script" uid="uid://c1cycgosdi6gm" path="res://systems/work/workers/worker_movement_component.gd" id="4_4pgqf"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
+[ext_resource type="Resource" uid="uid://cpdejhbwxdlqo" path="res://resources/data/physics_profiles/worker_carry_profile.tres" id="7_5oyiq"]
 [ext_resource type="Script" uid="uid://oe6rx48tfp1c" path="res://systems/work/goap/worker_blackboard.gd" id="7_ock52"]
 [ext_resource type="Script" uid="uid://bwkulnmcg4nk7" path="res://systems/work/goap/worker_stats.gd" id="8_8hyuv"]
 [ext_resource type="Script" uid="uid://dtl6k7k0kll8k" path="res://systems/work/goap/worker_sensor_2d.gd" id="11_j82ov"]
@@ -131,13 +132,12 @@ offset_bottom = 18.0
 
 [node name="GroundAnchor" type="Node2D" parent="." unique_id=166947312]
 
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1125259685 node_paths=PackedStringArray("root_node", "ground_anchor", "highlight_target")]
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1125259685 node_paths=PackedStringArray("root_node", "highlight_target")]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("7_4pgqf")
 root_node = NodePath("..")
-can_insert_into_worker_socket = true
-ground_anchor = NodePath("../GroundAnchor")
+carry_profile = ExtResource("7_5oyiq")
 highlight_target = NodePath("../WorkerSprite")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.627451)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
