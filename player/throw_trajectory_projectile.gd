@@ -64,29 +64,33 @@ func _update_trajectory() -> void:
 
 	var mouse_position := player.get_global_mouse_position()
 	var current_position := carry_controller.get_throw_origin()
-	var throw_direction := mouse_position - current_position
-
-	if throw_direction.length() <= 1.0:
-		return
-
-	var current_velocity := carry_controller.get_preview_throw_velocity_for_mouse(
-		mouse_position
-	)
+	var current_velocity := carry_controller.get_preview_throw_velocity_for_mouse(mouse_position)
 
 	if current_velocity.length() <= 0.0:
 		return
 
-	var gravity := _get_gravity_for_carried(carried)
+	var gravity := carried.get_throw_gravity()
 	var step_time := _get_simulation_step_time()
 
 	add_point(current_position)
-
+	if carry_controller.is_charging_throw():
+		LoggerConsole.log(
+			"PREVIEW "
+			+ str(carried.name)
+			+ " weight="
+			+ str(carried.get_weight())
+			+ " gravity="
+			+ str(gravity)
+			+ " velocity="
+			+ str(current_velocity)
+		)
 	var travelled_distance: float = 0.0
 
 	for i in range(simulation_steps):
 		var previous_position := current_position
 
 		current_velocity += gravity * step_time
+		current_velocity = carried.apply_motion_damping(current_velocity, step_time)
 		current_position += current_velocity * step_time
 
 		travelled_distance += previous_position.distance_to(current_position)
@@ -95,10 +99,7 @@ func _update_trajectory() -> void:
 			break
 
 		if stop_on_collision:
-			var hit_result: Dictionary = _check_collision(
-				previous_position,
-				current_position
-			)
+			var hit_result := _check_collision(previous_position, current_position)
 
 			if not hit_result.is_empty():
 				add_point(hit_result.position)
@@ -114,23 +115,6 @@ func _get_simulation_step_time() -> float:
 	return custom_simulation_step_time
 
 
-func _get_gravity_for_carried(carried: CarryableComponent) -> Vector2:
-	var carried_root := carried.get_carried_root()
-	var external_motion := _find_external_motion_component(carried_root)
-
-	if external_motion != null:
-		return external_motion.get_prediction_gravity()
-
-	var physical_body := carried_root as PhysicalItemBody
-
-	if physical_body != null and physical_body.profile != null:
-		var gravity_value := float(ProjectSettings.get_setting("physics/2d/default_gravity"))
-		var gravity_vector := ProjectSettings.get_setting("physics/2d/default_gravity_vector") as Vector2
-		return gravity_vector.normalized() * gravity_value * physical_body.profile.gravity_scale
-
-	return player.get_gravity()
-
-
 func _check_collision(from: Vector2, to: Vector2) -> Dictionary:
 	var query := PhysicsRayQueryParameters2D.create(from, to)
 
@@ -139,19 +123,3 @@ func _check_collision(from: Vector2, to: Vector2) -> Dictionary:
 	query.collide_with_bodies = true
 
 	return _space_state.intersect_ray(query)
-
-
-func _find_external_motion_component(node: Node) -> WorkerExternalMotionComponent:
-	if node == null:
-		return null
-
-	if node is WorkerExternalMotionComponent:
-		return node as WorkerExternalMotionComponent
-
-	for child in node.get_children():
-		var found := _find_external_motion_component(child)
-
-		if found != null:
-			return found
-
-	return null

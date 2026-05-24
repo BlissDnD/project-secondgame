@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
 [ext_resource type="Script" uid="uid://csthjkstoc633" path="res://systems/work/workers/worker_external_motion_component.gd" id="18_4vlxc"]
 [ext_resource type="Script" uid="uid://ddf3tn23ax6ie" path="res://systems/work/workers/worker_needs_component.gd" id="19_lf01n"]
+[ext_resource type="Resource" uid="uid://c0275fwt1mdne" path="res://resources/data/physics_profiles/worker_motion_profile.tres" id="19_lwa6c"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
 [ext_resource type="Resource" uid="uid://cppffm3iwkmdb" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
@@ -183,5 +184,7 @@ metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
 [node name="WorkerExternalMotionComponent" type="Node" parent="." unique_id=1027011063 node_paths=PackedStringArray("worker_body", "nodes_to_disable_while_external_motion")]
 script = ExtResource("18_4vlxc")
 worker_body = NodePath("..")
+motion_profile = ExtResource("19_lwa6c")
+minimum_air_time = 0.0
 nodes_to_disable_while_external_motion = [NodePath("../WorkerMovementComponent"), NodePath("../GOAPBrain"), NodePath("../WorkerStateMachine")]
 metadata/_custom_type_script = "uid://csthjkstoc633"

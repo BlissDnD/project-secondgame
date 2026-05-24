@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://bvos6ltf1vvsp"]
 
 [ext_resource type="Script" uid="uid://duk2mru75qcx6" path="res://systems/physics/physical_item_body.gd" id="1_2yx05"]
-[ext_resource type="Resource" uid="uid://c2croebje8g7d" path="res://resources/data/physics_profiles/pebble_physics_profile.tres" id="2_778ep"]
+[ext_resource type="Resource" uid="uid://mgtnfp0tlsow" path="res://resources/data/physics_profiles/pebble_motion_profile.tres" id="2_778ep"]
 [ext_resource type="Texture2D" uid="uid://da102a2vl1281" path="res://assets/images/Props/Rocks.png" id="3_2yx05"]
 [ext_resource type="Script" uid="uid://dw74ttpxnxuy" path="res://systems/physics/physics_force_receiver.gd" id="4_xcv58"]
 [ext_resource type="Resource" uid="uid://co5et7bnif0b7" path="res://resources/data/physics_profiles/pebble_carry_profile.tres" id="5_778ep"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_v8mqs"]
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_778ep"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fxtap"]
 friction = 0.8
 bounce = 0.5
 
@@ -22,16 +22,15 @@ height = 3.8326375
 scale = Vector2(0.36, 0.36)
 
 [node name="PhysicalItemBody" type="RigidBody2D" parent="." unique_id=596505902]
-mass = 0.1
-physics_material_override = SubResource("PhysicsMaterial_778ep")
-gravity_scale = 2.0
+mass = 0.5
+physics_material_override = SubResource("PhysicsMaterial_fxtap")
 continuous_cd = 2
 contact_monitor = true
 max_contacts_reported = 4
 linear_damp = 0.3
 angular_damp = 2.5
 script = ExtResource("1_2yx05")
-profile = ExtResource("2_778ep")
+motion_profile = ExtResource("2_778ep")
 metadata/_custom_type_script = "uid://duk2mru75qcx6"
 
 [node name="Sprite2D" type="Sprite2D" parent="PhysicalItemBody" unique_id=1547501359]

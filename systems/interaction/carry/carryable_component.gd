@@ -79,11 +79,55 @@ func can_insert_into_worker_socket() -> bool:
 	return carry_profile.can_insert_into_worker_socket
 
 
-func get_weight() -> float:
-	if carry_profile == null:
-		return 0.0
+func get_motion_profile() -> PhysicalMotionProfile:
+	var physical_body := root_node as PhysicalItemBody
+	if physical_body != null:
+		return physical_body.get_motion_profile()
 
-	return carry_profile.get_weight(root_node)
+	var external_motion := _find_external_motion_component()
+	if external_motion != null:
+		return external_motion.get_motion_profile()
+
+	return null
+
+
+func get_weight() -> float:
+	var motion_profile := get_motion_profile()
+
+	if motion_profile != null:
+		return motion_profile.weight
+
+	return 0.0
+
+
+func get_throw_gravity() -> Vector2:
+	var motion_profile := get_motion_profile()
+
+	if motion_profile != null:
+		return motion_profile.get_gravity()
+
+	var gravity_value := float(ProjectSettings.get_setting("physics/2d/default_gravity"))
+	var gravity_vector := ProjectSettings.get_setting("physics/2d/default_gravity_vector") as Vector2
+
+	return gravity_vector.normalized() * gravity_value
+
+
+func get_max_throw_speed() -> float:
+	var motion_profile := get_motion_profile()
+
+	if motion_profile != null:
+		return motion_profile.max_throw_speed
+
+	return 2200.0
+
+
+func apply_motion_damping(velocity: Vector2, delta: float) -> Vector2:
+	var motion_profile := get_motion_profile()
+
+	if motion_profile == null:
+		return velocity
+
+	return motion_profile.apply_linear_damping(velocity, delta)
 
 
 func get_carry_speed_multiplier(carry_strength: float) -> float:
@@ -151,7 +195,7 @@ func pickup(new_carrier: Node2D, hold_parent: Node2D = null) -> bool:
 
 
 func drop(drop_position: Vector2, inherited_velocity: Vector2 = Vector2.ZERO) -> void:
-	_drop_internal(drop_position, inherited_velocity, true)
+	_drop_internal(drop_position, inherited_velocity, true, true)
 
 
 func throw_with_velocity(
@@ -164,7 +208,9 @@ func throw_with_velocity(
 
 	var old_carrier := carrier
 
-	_drop_internal(throw_position, Vector2.ZERO, false)
+	# Throw release is not a normal drop.
+	# Do not call on_dropped(), because NPCs may return to idle immediately.
+	_drop_internal(throw_position, Vector2.ZERO, false, false)
 
 	var physical_body := root_node as PhysicalItemBody
 	if physical_body != null:
@@ -176,16 +222,6 @@ func throw_with_velocity(
 
 	var rigid_body := root_node as RigidBody2D
 	if rigid_body != null:
-		if ignored_body != null:
-			rigid_body.add_collision_exception_with(ignored_body)
-
-			var timer := get_tree().create_timer(0.15)
-			timer.timeout.connect(
-				func() -> void:
-					if is_instance_valid(rigid_body) and is_instance_valid(ignored_body):
-						rigid_body.remove_collision_exception_with(ignored_body)
-			)
-
 		rigid_body.linear_velocity = throw_velocity
 		rigid_body.angular_velocity = 0.0
 		thrown.emit(old_carrier, throw_velocity)
@@ -195,26 +231,10 @@ func throw_with_velocity(
 	if external_motion != null:
 		external_motion.start_external_motion(throw_velocity)
 
+	if root_node.has_method("on_thrown"):
+		root_node.on_thrown(throw_velocity)
+
 	thrown.emit(old_carrier, throw_velocity)
-
-
-func throw_from(
-	throw_position: Vector2,
-	direction: Vector2,
-	base_impulse: float,
-	throw_strength: float,
-	inherited_velocity: Vector2 = Vector2.ZERO,
-	ignored_body: PhysicsBody2D = null
-) -> void:
-	if not can_be_thrown():
-		return
-
-	var weight := maxf(get_weight(), 0.01)
-	var multiplier := get_throw_multiplier(throw_strength)
-	var throw_velocity := direction.normalized() * base_impulse * multiplier / weight
-	throw_velocity += inherited_velocity
-
-	throw_with_velocity(throw_position, throw_velocity, ignored_body)
 
 
 func set_highlighted(value: bool) -> void:
@@ -246,7 +266,8 @@ func get_collision_shapes_for_proxy() -> Array[CollisionShape2D]:
 func _drop_internal(
 	drop_position: Vector2,
 	inherited_velocity: Vector2,
-	end_external_carried_state: bool
+	end_external_carried_state: bool,
+	emit_drop_lifecycle: bool
 ) -> void:
 	if root_node == null:
 		return
@@ -280,10 +301,11 @@ func _drop_internal(
 	if rigid_body != null:
 		rigid_body.linear_velocity = inherited_velocity
 
-	if root_node.has_method("on_dropped"):
-		root_node.on_dropped()
+	if emit_drop_lifecycle:
+		if root_node.has_method("on_dropped"):
+			root_node.on_dropped()
 
-	dropped.emit(old_carrier)
+		dropped.emit(old_carrier)
 
 
 func _set_physics_carried_state(value: bool) -> void:
@@ -309,10 +331,11 @@ func _set_physics_carried_state(value: bool) -> void:
 
 
 func _reset_rotation_for_carry() -> void:
-	var physical_body := root_node as PhysicalItemBody
-	if physical_body != null:
-		if physical_body.profile == null or physical_body.profile.reset_rotation_on_pickup:
-			root_node.rotation = physical_body.profile.carried_rotation if physical_body.profile != null else 0.0
+	var motion_profile := get_motion_profile()
+
+	if motion_profile != null:
+		if motion_profile.reset_rotation_on_pickup:
+			root_node.rotation = motion_profile.carried_rotation
 		return
 
 	root_node.rotation = 0.0

@@ -57,36 +57,16 @@ func try_interact() -> void:
 		_drop_carried()
 		return
 
-	var placeable_pickup := _find_nearest_placeable_pickup()
-	if placeable_pickup != null:
-		if placeable_pickup.pickup_for_placement(placement_controller):
-			return
-
 	var carryable := _find_nearest_carryable()
 	if carryable != null:
 		if not carryable.can_be_lifted_by(lift_strength):
-			LoggerConsole.log(
-				"Too heavy to lift: "
-				+ str(carryable.get_weight())
-				+ " / lift strength: "
-				+ str(lift_strength)
-			)
+			LoggerConsole.log("Too heavy to lift: " + str(carryable.get_weight()))
 			return
 
 		if carryable.pickup(player_body, hold_point):
 			carried_component = carryable
 			_create_carry_collision_proxy(carried_component)
 			return
-
-
-func cancel_current_action() -> void:
-	if placement_controller != null and placement_controller.is_placing:
-		placement_controller.cancel_placement()
-		return
-
-	if carried_component != null:
-		cancel_throw_charge()
-		_drop_carried()
 
 
 func start_throw_charge() -> void:
@@ -114,10 +94,6 @@ func release_charged_throw(direction: Vector2, mouse_position: Vector2) -> void:
 		cancel_throw_charge()
 		return
 
-	if direction.length() <= 0.0:
-		cancel_throw_charge()
-		return
-
 	var power_ratio := get_current_throw_power_ratio_for_mouse(mouse_position)
 	var charged_impulse := base_throw_impulse * power_ratio
 
@@ -125,17 +101,6 @@ func release_charged_throw(direction: Vector2, mouse_position: Vector2) -> void:
 	_throw_charge = 0.0
 
 	_throw_carried_with_impulse(direction.normalized(), charged_impulse)
-
-
-func throw_carried(direction: Vector2, mouse_position: Vector2) -> void:
-	if carried_component == null:
-		return
-
-	if not carried_component.can_be_thrown():
-		return
-
-	var power_ratio := get_current_throw_power_ratio_for_mouse(mouse_position)
-	_throw_carried_with_impulse(direction.normalized(), base_throw_impulse * power_ratio)
 
 
 func get_throw_origin() -> Vector2:
@@ -235,7 +200,16 @@ func _throw_carried_with_impulse(direction: Vector2, throw_impulse: float) -> vo
 	var throw_position := get_throw_origin()
 	var player_physics_body := player_body as PhysicsBody2D
 	var throw_velocity := _get_throw_velocity_for_direction(direction, throw_impulse)
-
+	LoggerConsole.log(
+		"THROW "
+		+ str(carried_component.name)
+		+ " weight="
+		+ str(carried_component.get_weight())
+		+ " gravity="
+		+ str(carried_component.get_throw_gravity())
+		+ " velocity="
+		+ str(throw_velocity)
+	)
 	carried_component.throw_with_velocity(
 		throw_position,
 		throw_velocity,
@@ -249,9 +223,6 @@ func _get_throw_velocity_for_direction(direction: Vector2, throw_impulse: float)
 	if carried_component == null:
 		return Vector2.ZERO
 
-	if direction.length() <= 0.0:
-		return Vector2.ZERO
-
 	var weight := maxf(carried_component.get_weight(), 0.01)
 	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
 
@@ -261,7 +232,7 @@ func _get_throw_velocity_for_direction(direction: Vector2, throw_impulse: float)
 		* throw_multiplier
 	) / weight
 
-	var max_speed := _get_carried_max_throw_speed()
+	var max_speed := carried_component.get_max_throw_speed()
 
 	if local_throw_velocity.length() > max_speed:
 		local_throw_velocity = local_throw_velocity.normalized() * max_speed
@@ -285,16 +256,11 @@ func _drop_carried() -> void:
 func _create_carry_collision_proxy(carryable: CarryableComponent) -> void:
 	_clear_carry_collision_proxy()
 
-	if player_body == null:
-		return
-
 	var player_collision_object := player_body as CollisionObject2D
 	if player_collision_object == null:
 		return
 
-	var source_shapes := carryable.get_collision_shapes_for_proxy()
-
-	for source_shape in source_shapes:
+	for source_shape in carryable.get_collision_shapes_for_proxy():
 		if source_shape == null or source_shape.shape == null:
 			continue
 
@@ -381,7 +347,6 @@ func _find_carryable_from_area(area: Area2D) -> CarryableComponent:
 		return area as CarryableComponent
 
 	var root := area.owner
-
 	if root == null:
 		root = area
 
@@ -404,25 +369,6 @@ func _find_carryable_component_recursive(node: Node) -> CarryableComponent:
 	return null
 
 
-func _find_nearest_placeable_pickup() -> PlaceablePickupComponent:
-	var best: PlaceablePickupComponent = null
-	var best_distance := INF
-
-	if interaction_area == null or player_body == null:
-		return null
-
-	for area in interaction_area.get_overlapping_areas():
-		if area is PlaceablePickupComponent:
-			var pickup := area as PlaceablePickupComponent
-			var distance := player_body.global_position.distance_to(pickup.global_position)
-
-			if distance < best_distance:
-				best_distance = distance
-				best = pickup
-
-	return best
-
-
 func _find_nearest_worker_socket() -> WorkerSocket:
 	var best: WorkerSocket = null
 	var best_distance := INF
@@ -440,17 +386,6 @@ func _find_nearest_worker_socket() -> WorkerSocket:
 				best = socket
 
 	return best
-
-
-func _get_carried_max_throw_speed() -> float:
-	if carried_component == null:
-		return 2200.0
-
-	var physical_body := carried_component.root_node as PhysicalItemBody
-	if physical_body == null:
-		return 2200.0
-
-	return physical_body.get_max_throw_speed()
 
 
 func _get_player_place_target_position() -> Vector2:

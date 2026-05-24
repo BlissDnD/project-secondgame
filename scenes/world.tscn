@@ -13,7 +13,7 @@
 [ext_resource type="Script" uid="uid://b2ipxvu3m6o8s" path="res://systems/world_generation/world_spawn_definition.gd" id="10_oo54l"]
 [ext_resource type="PackedScene" uid="uid://bvos6ltf1vvsp" path="res://scenes/objects/pebble.tscn" id="11_kpybi"]
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="14_ctatt"]
-[ext_resource type="Resource" path="res://systems/npc/kabala/kabaladefi2.tres" id="15_xgqkh"]
+[ext_resource type="Resource" uid="uid://dtfaq7udnq3wb" path="res://systems/npc/kabala/kabaladefi2.tres" id="15_xgqkh"]
 [ext_resource type="Script" uid="uid://db531sowljlst" path="res://systems/npc/npc_spawner.gd" id="16_lakw3"]
 [ext_resource type="PackedScene" uid="uid://bax6bvt62mhs3" path="res://ui/dialogue_box.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://brnv2uy6xj3yi" path="res://ui/bark_bubble.tscn" id="19_pm21f"]
@@ -273,7 +273,7 @@ sources/1 = SubResource("TileSetAtlasSource_7r4gi")
 
 [sub_resource type="Resource" id="Resource_lakw3"]
 script = ExtResource("9_7t5mc")
-noise_seed = 2323
+noise_seed = 2222
 metadata/_custom_type_script = "uid://cjfpel04g0fbq"
 
 [sub_resource type="Resource" id="Resource_ctatt"]

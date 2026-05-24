@@ -4,7 +4,5 @@
 
 [resource]
 script = ExtResource("1_1nl8g")
-weight_source = 1
-carried_weight = 0.7
 can_insert_into_worker_socket = true
 metadata/_custom_type_script = "uid://0dvivduhknqa"
