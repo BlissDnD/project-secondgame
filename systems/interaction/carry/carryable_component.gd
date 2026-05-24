@@ -8,6 +8,7 @@ signal thrown(carrier: Node2D, impulse: Vector2)
 @export var root_node: Node2D
 @export var hold_offset: Vector2 = Vector2(0, -48)
 
+var _original_global_scale: Vector2 = Vector2.ONE
 @export var can_be_carried: bool = true
 @export var can_be_thrown: bool = true
 @export var can_drop_freely: bool = true
@@ -103,16 +104,28 @@ func get_carried_root() -> Node2D:
 	return root_node
 
 
-func pickup(new_carrier: Node2D) -> bool:
+func pickup(new_carrier: Node2D, hold_parent: Node2D = null) -> bool:
 	if not can_carry():
 		return false
 
 	original_parent = root_node.get_parent()
+	_original_global_scale = root_node.global_scale
+
 	carrier = new_carrier
 	is_carried = true
 
 	set_highlighted(false)
 	_set_physics_carried_state(true)
+	_reset_rotation_for_carry()
+
+	if hold_parent != null:
+		root_node.reparent(hold_parent, false)
+		root_node.position = Vector2.ZERO
+		root_node.global_scale = _original_global_scale
+		root_node.rotation = 0.0
+	else:
+		root_node.global_position = carrier.global_position + hold_offset
+		root_node.global_scale = _original_global_scale
 
 	if root_node.has_method("on_picked_up"):
 		root_node.on_picked_up()
@@ -121,9 +134,22 @@ func pickup(new_carrier: Node2D) -> bool:
 	return true
 
 
-func drop(drop_position: Vector2, inherited_velocity: Vector2 = Vector2.ZERO) -> void:
+func drop(
+	drop_position: Vector2,
+	inherited_velocity: Vector2 = Vector2.ZERO
+) -> void:
 	if root_node == null:
 		return
+
+	if original_parent != null:
+		var previous_global := root_node.global_position
+
+		if root_node.get_parent() != null:
+			root_node.get_parent().remove_child(root_node)
+
+		original_parent.add_child(root_node)
+		root_node.global_position = previous_global
+		root_node.global_scale = _original_global_scale
 
 	root_node.global_position = drop_position
 
@@ -146,13 +172,13 @@ func drop(drop_position: Vector2, inherited_velocity: Vector2 = Vector2.ZERO) ->
 
 	dropped.emit(old_carrier)
 
-
 func throw_from(
 	throw_position: Vector2,
 	direction: Vector2,
 	base_impulse: float,
 	throw_strength: float,
-	inherited_velocity: Vector2 = Vector2.ZERO
+	inherited_velocity: Vector2 = Vector2.ZERO,
+	ignored_body: PhysicsBody2D = null
 ) -> void:
 	var old_carrier := carrier
 	var multiplier := get_throw_multiplier(throw_strength)
@@ -166,24 +192,24 @@ func throw_from(
 
 	var physical_body := root_node as PhysicalItemBody
 	if physical_body != null:
+		_apply_thrower_collision_grace(physical_body, ignored_body)
 		physical_body.apply_external_impulse(impulse)
 		thrown.emit(old_carrier, impulse)
 		return
 
 	var rigid_body := root_node as RigidBody2D
 	if rigid_body != null:
+		if ignored_body != null:
+			rigid_body.add_collision_exception_with(ignored_body)
+			var timer := get_tree().create_timer(0.15)
+			timer.timeout.connect(
+				func() -> void:
+					if is_instance_valid(rigid_body) and is_instance_valid(ignored_body):
+						rigid_body.remove_collision_exception_with(ignored_body)
+			)
+
 		rigid_body.apply_central_impulse(impulse)
 		thrown.emit(old_carrier, impulse)
-
-
-func carry_update() -> void:
-	if not is_carried:
-		return
-
-	if carrier == null or root_node == null:
-		return
-
-	root_node.global_position = carrier.global_position + hold_offset
 
 
 func set_highlighted(value: bool) -> void:
@@ -232,6 +258,27 @@ func _set_physics_carried_state(value: bool) -> void:
 		if value:
 			rigid_body.linear_velocity = Vector2.ZERO
 			rigid_body.angular_velocity = 0.0
+
+
+func _reset_rotation_for_carry() -> void:
+	var physical_body := root_node as PhysicalItemBody
+	if physical_body != null:
+		if physical_body.profile == null or physical_body.profile.reset_rotation_on_pickup:
+			root_node.rotation = physical_body.profile.carried_rotation if physical_body.profile != null else 0.0
+		return
+
+	root_node.rotation = 0.0
+
+
+func _apply_thrower_collision_grace(
+	physical_body: PhysicalItemBody,
+	ignored_body: PhysicsBody2D
+) -> void:
+	if ignored_body == null:
+		return
+
+	var duration := physical_body.get_thrower_collision_grace_time()
+	physical_body.temporarily_ignore_body(ignored_body, duration)
 
 
 func _collect_collision_shapes(node: Node, result: Array[CollisionShape2D]) -> void:

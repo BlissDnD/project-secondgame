@@ -8,8 +8,8 @@ extends CharacterBody2D
 @export var noclip_speed: float = 600.0
 @export_range(0.01, 10000.0, 0.01) var base_player_weight: float = 70.0
 
-const SPEED: float = 800.0
-const JUMP_VELOCITY: float = -400.0
+const SPEED: float = 700.0
+const JUMP_VELOCITY: float = -500.0
 
 var godmode_enabled: bool = false
 

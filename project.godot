@@ -121,8 +121,10 @@ carry_action={
 
 [physics]
 
+common/physics_ticks_per_second=80
 3d/physics_engine="Jolt Physics"
 2d/default_gravity=890.0
+common/physics_interpolation=true
 
 [rendering]
 

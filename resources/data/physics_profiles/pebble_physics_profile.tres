@@ -4,8 +4,9 @@
 
 [resource]
 script = ExtResource("1_xnl2f")
-weight = 0.2
+weight = 0.09999999999999999
 angular_damping = 2.5
 bounce = 0.5
 rolls_when_moving = true
+thrower_collision_grace_time = 0.05
 metadata/_custom_type_script = "uid://c6ahwummnwg5y"

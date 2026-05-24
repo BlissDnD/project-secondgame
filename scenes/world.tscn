@@ -271,6 +271,7 @@ sources/1 = SubResource("TileSetAtlasSource_7r4gi")
 
 [sub_resource type="Resource" id="Resource_lakw3"]
 script = ExtResource("9_7t5mc")
+noise_seed = 2323
 metadata/_custom_type_script = "uid://cjfpel04g0fbq"
 
 [sub_resource type="Resource" id="Resource_ctatt"]

@@ -55,8 +55,9 @@
 [ext_resource type="Script" uid="uid://ct0l8tix2e53" path="res://systems/interaction/carry/player_carry_controller.gd" id="54_0ncpa"]
 [ext_resource type="Script" uid="uid://x87sltqeft72" path="res://player/throw_trajectory_projectile.gd" id="54_upxxc"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
-size = Vector2(58, 116)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0ncpa"]
+radius = 13.777775
+height = 114.888855
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_2t3bg"]
 radius = 49.0408
@@ -224,21 +225,24 @@ animations = [{
 }]
 
 [node name="Player" type="CharacterBody2D" unique_id=677817848 node_paths=PackedStringArray("carry_controller")]
+position = Vector2(0, -50)
+scale = Vector2(0.72, 0.72)
 collision_layer = 2
 script = ExtResource("1_1u1sw")
 carry_controller = NodePath("PlayerCarryController")
 noclip_speed = 1200.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=641959194]
-position = Vector2(-1, 12)
-shape = SubResource("RectangleShape2D_1u1sw")
+position = Vector2(2.8888888, 12.000008)
+scale = Vector2(1.0000001, 1.0000001)
+shape = SubResource("CapsuleShape2D_0ncpa")
 
 [node name="JumpSound" type="AudioStreamPlayer2D" parent="." unique_id=947266257]
 stream = ExtResource("50_2t3bg")
 volume_db = -19.114
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1547749065]
-zoom = Vector2(0.65, 0.65)
+zoom = Vector2(0.82, 0.82)
 position_smoothing_enabled = true
 
 [node name="InteractionManager" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor", "player_carry_controller")]
@@ -265,13 +269,14 @@ scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_vlhku")
 animation = &"running"
 autoplay = "idle"
-frame = 2
-frame_progress = 0.18713756
+frame = 12
+frame_progress = 0.7395813
 
-[node name="PlayerCarryController" type="Node" parent="." unique_id=73168991 node_paths=PackedStringArray("player_body", "interaction_area")]
+[node name="PlayerCarryController" type="Node" parent="." unique_id=73168991 node_paths=PackedStringArray("player_body", "interaction_area", "hold_point")]
 script = ExtResource("54_0ncpa")
 player_body = NodePath("..")
 interaction_area = NodePath("../FlipContainer/InteractionArea")
+hold_point = NodePath("../HoldPoint")
 minimum_throw_power = 0.1
 base_full_charge_time = 1.0
 metadata/_custom_type_script = "uid://ct0l8tix2e53"
@@ -282,3 +287,6 @@ player = NodePath("..")
 carry_controller = NodePath("../PlayerCarryController")
 simulation_steps = 72
 line_width = 2.0
+
+[node name="HoldPoint" type="Node2D" parent="." unique_id=1514846231]
+position = Vector2(0, -48)

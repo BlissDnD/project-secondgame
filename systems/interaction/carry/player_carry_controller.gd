@@ -7,7 +7,7 @@ class_name PlayerCarryController
 
 @export var drop_offset: Vector2 = Vector2(32, 0)
 @export var hold_offset: Vector2 = Vector2(0, -48)
-
+@export var hold_point: Node2D
 @export_range(0.01, 10000.0, 0.01) var player_base_weight: float = 70.0
 @export_range(0.01, 10000.0, 0.01) var lift_strength: float = 25.0
 @export_range(0.01, 10000.0, 0.01) var carry_strength: float = 30.0
@@ -29,11 +29,12 @@ var _throw_charge: float = 0.0
 
 func _process(delta: float) -> void:
 	if carried_component != null:
-		carried_component.hold_offset = hold_offset
-		carried_component.carry_update()
+		if _is_charging_throw:
+			_update_throw_charge(delta)
 
-	if _is_charging_throw:
-		_update_throw_charge(delta)
+		if placement_controller != null and placement_controller.is_placing:
+			var target_position := _get_player_place_target_position()
+			placement_controller.update_preview_from_world_position(target_position)
 
 	if placement_controller != null and placement_controller.is_placing:
 		var target_position := _get_player_place_target_position()
@@ -67,9 +68,8 @@ func try_interact() -> void:
 			LoggerConsole.log("Too heavy to lift: " + str(carryable.get_weight()))
 			return
 
-		if carryable.pickup(player_body):
+		if carryable.pickup(player_body, hold_point):
 			carried_component = carryable
-			carried_component.hold_offset = hold_offset
 			_create_carry_collision_proxy(carried_component)
 			return
 
@@ -150,13 +150,12 @@ func get_max_throw_velocity_for_direction(direction: Vector2) -> Vector2:
 
 	var weight := maxf(carried_component.get_weight(), 0.01)
 	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
-	var throw_impulse := (
-		direction.normalized()
-		* base_throw_impulse
-		* throw_multiplier
-	)
-
+	var throw_impulse := direction.normalized() * base_throw_impulse * throw_multiplier
 	var throw_velocity := throw_impulse / weight
+	var max_speed := _get_carried_max_throw_speed()
+
+	if throw_velocity.length() > max_speed:
+		throw_velocity = throw_velocity.normalized() * max_speed
 
 	return throw_velocity + _get_player_velocity()
 
@@ -170,15 +169,15 @@ func get_current_throw_velocity_for_direction(direction: Vector2) -> Vector2:
 
 	var weight := maxf(carried_component.get_weight(), 0.01)
 	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
-	var throw_impulse := (
-		direction.normalized()
-		* get_current_throw_impulse()
-		* throw_multiplier
-	)
-
+	var throw_impulse := direction.normalized() * get_current_throw_impulse() * throw_multiplier
 	var throw_velocity := throw_impulse / weight
+	var max_speed := _get_carried_max_throw_speed()
+
+	if throw_velocity.length() > max_speed:
+		throw_velocity = throw_velocity.normalized() * max_speed
 
 	return throw_velocity + _get_player_velocity()
+
 
 func get_carried_weight() -> float:
 	if carried_component == null:
@@ -218,13 +217,15 @@ func _throw_carried_with_impulse(direction: Vector2, throw_impulse: float) -> vo
 
 	var throw_position := player_body.global_position + hold_offset
 	var inherited_velocity := _get_player_velocity()
+	var player_physics_body := player_body as PhysicsBody2D
 
 	carried_component.throw_from(
 		throw_position,
 		direction,
 		throw_impulse,
 		throw_strength,
-		inherited_velocity
+		inherited_velocity,
+		player_physics_body
 	)
 
 	carried_component = null
@@ -263,7 +264,7 @@ func _create_carry_collision_proxy(carryable: CarryableComponent) -> void:
 		proxy_shape.name = "CarryCollisionProxy"
 		proxy_shape.shape = source_shape.shape.duplicate(true)
 		proxy_shape.position = hold_offset + source_shape.position
-		proxy_shape.rotation = source_shape.rotation
+		proxy_shape.rotation = 0.0
 		proxy_shape.scale = source_shape.scale
 		proxy_shape.disabled = false
 
@@ -361,6 +362,17 @@ func _find_nearest_worker_socket() -> WorkerSocket:
 				best = socket
 
 	return best
+
+
+func _get_carried_max_throw_speed() -> float:
+	if carried_component == null:
+		return 2200.0
+
+	var physical_body := carried_component.root_node as PhysicalItemBody
+	if physical_body == null:
+		return 2200.0
+
+	return physical_body.get_max_throw_speed()
 
 
 func _get_player_place_target_position() -> Vector2:

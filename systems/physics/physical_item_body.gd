@@ -56,6 +56,7 @@ func apply_profile() -> void:
 	physics_material_override = material
 
 	lock_rotation = profile.slides_when_moving and not profile.rolls_when_moving
+	_apply_continuous_collision_detection()
 
 	_last_profile_signature = _get_profile_signature()
 
@@ -67,11 +68,28 @@ func get_weight() -> float:
 	return mass
 
 
+func get_thrower_collision_grace_time() -> float:
+	if profile == null:
+		return 0.15
+
+	return profile.thrower_collision_grace_time
+
+
+func get_max_throw_speed() -> float:
+	if profile == null:
+		return 2200.0
+
+	return profile.max_throw_speed
+
+
 func set_carried_state(enabled: bool) -> void:
 	if enabled:
 		freeze = true
 		linear_velocity = Vector2.ZERO
 		angular_velocity = 0.0
+
+		if profile == null or profile.reset_rotation_on_pickup:
+			rotation = profile.carried_rotation if profile != null else 0.0
 	else:
 		freeze = false
 		apply_profile()
@@ -100,6 +118,37 @@ func apply_external_force(force: Vector2) -> void:
 	apply_central_force(force)
 
 
+func temporarily_ignore_body(body: PhysicsBody2D, duration: float) -> void:
+	if body == null:
+		return
+
+	add_collision_exception_with(body)
+
+	if duration <= 0.0:
+		return
+
+	var timer := get_tree().create_timer(duration)
+	timer.timeout.connect(
+		func() -> void:
+			if is_instance_valid(self) and is_instance_valid(body):
+				remove_collision_exception_with(body)
+	)
+
+
+func _apply_continuous_collision_detection() -> void:
+	if profile == null:
+		return
+
+	if not profile.use_continuous_collision_detection:
+		continuous_cd = RigidBody2D.CCD_MODE_DISABLED
+		return
+
+	if profile.use_shape_cast_ccd:
+		continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
+	else:
+		continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
+
+
 func _connect_profile_changed() -> void:
 	if profile == null:
 		return
@@ -125,6 +174,12 @@ func _get_profile_signature() -> String:
 		profile.friction,
 		profile.rolls_when_moving,
 		profile.slides_when_moving,
+		profile.reset_rotation_on_pickup,
+		profile.carried_rotation,
+		profile.thrower_collision_grace_time,
+		profile.use_continuous_collision_detection,
+		profile.use_shape_cast_ccd,
+		profile.max_throw_speed,
 		profile.sticks_on_heavy_impact,
 		profile.heavy_impact_speed_threshold,
 		profile.heavy_impact_velocity_keep_ratio
