@@ -1,9 +1,11 @@
 extends Node
+class_name InteractionManager
 
 @export var interaction_area: Area2D
 @export var actor: Node2D
 @export var active_action_id: StringName = &"hand"
 @export var include_carryables: bool = true
+@export var player_carry_controller: PlayerCarryController
 
 var nearby_targets: Dictionary = {}
 var current_target: Node = null
@@ -18,6 +20,9 @@ func _ready() -> void:
 		push_error("InteractionManager: actor is not assigned.")
 		return
 
+	if player_carry_controller == null:
+		player_carry_controller = actor.get_node_or_null("PlayerCarryController") as PlayerCarryController
+
 	if not interaction_area.area_entered.is_connected(_on_area_entered):
 		interaction_area.area_entered.connect(_on_area_entered)
 
@@ -31,6 +36,11 @@ func _physics_process(_delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("carry_action"):
+		if player_carry_controller != null:
+			player_carry_controller.try_interact()
+		return
+
 	if event.is_action_pressed("interact"):
 		if current_target == null:
 			LoggerConsole.log("No interaction target.")
@@ -40,10 +50,7 @@ func _input(event: InputEvent) -> void:
 			_use_interaction_component(current_target as InteractionComponent)
 			return
 
-		if include_carryables and current_target is CarryableComponent:
-			LoggerConsole.log("Carryable target: " + str(current_target.owner.name))
-			return
-
+		LoggerConsole.log("Target has no interaction action.")
 
 
 func _on_area_entered(area: Area2D) -> void:
@@ -97,6 +104,9 @@ func get_best_target() -> Node:
 
 
 func get_hovered_target() -> Node:
+	if actor == null:
+		return null
+
 	var mouse_pos: Vector2 = actor.get_global_mouse_position()
 
 	for item in nearby_targets.values():
@@ -114,6 +124,9 @@ func get_hovered_target() -> Node:
 func get_closest_target() -> Node:
 	var closest: Node = null
 	var closest_distance: float = INF
+
+	if actor == null:
+		return null
 
 	for item in nearby_targets.values():
 		var target: Node = item as Node
@@ -235,13 +248,6 @@ func _is_mouse_over_target(target: Node, mouse_pos: Vector2) -> bool:
 
 func _is_mouse_over_area(area: Area2D, mouse_pos: Vector2) -> bool:
 	for child in area.get_children():
-		if child is CollisionPolygon2D:
-			var polygon := child as CollisionPolygon2D
-			var local_mouse: Vector2 = polygon.to_local(mouse_pos)
-
-			if Geometry2D.is_point_in_polygon(local_mouse, polygon.polygon):
-				return true
-
 		if child is CollisionShape2D:
 			var collision_shape := child as CollisionShape2D
 			var shape: Shape2D = collision_shape.shape
@@ -255,29 +261,13 @@ func _is_mouse_over_area(area: Area2D, mouse_pos: Vector2) -> bool:
 				var rectangle := shape as RectangleShape2D
 				var half_size: Vector2 = rectangle.size * 0.5
 
-				if abs(local_mouse_shape.x) <= half_size.x and abs(local_mouse_shape.y) <= half_size.y:
+				if absf(local_mouse_shape.x) <= half_size.x and absf(local_mouse_shape.y) <= half_size.y:
 					return true
 
 			if shape is CircleShape2D:
 				var circle := shape as CircleShape2D
 
 				if local_mouse_shape.length() <= circle.radius:
-					return true
-
-			if shape is CapsuleShape2D:
-				var capsule := shape as CapsuleShape2D
-				var half_height: float = maxf(0.0, (capsule.height * 0.5) - capsule.radius)
-
-				if abs(local_mouse_shape.y) <= half_height and abs(local_mouse_shape.x) <= capsule.radius:
-					return true
-
-				var top_center := Vector2(0.0, -half_height)
-				var bottom_center := Vector2(0.0, half_height)
-
-				if local_mouse_shape.distance_to(top_center) <= capsule.radius:
-					return true
-
-				if local_mouse_shape.distance_to(bottom_center) <= capsule.radius:
 					return true
 
 	return false

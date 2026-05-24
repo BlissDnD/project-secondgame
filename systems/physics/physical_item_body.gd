@@ -1,21 +1,39 @@
+@tool
 extends RigidBody2D
 class_name PhysicalItemBody
 
 signal heavy_impact(body: PhysicalItemBody, impact_speed: float)
 
-@export var profile: PhysicalBodyProfile
+@export var profile: PhysicalBodyProfile:
+	set(value):
+		profile = value
+		_connect_profile_changed()
+		apply_profile()
 
 var _default_collision_layer: int = 0
 var _default_collision_mask: int = 0
+var _last_profile_signature: String = ""
 
 
 func _ready() -> void:
 	_default_collision_layer = collision_layer
 	_default_collision_mask = collision_mask
+	_connect_profile_changed()
 	apply_profile()
 
 
+func _process(_delta: float) -> void:
+	if not Engine.is_editor_hint():
+		return
+
+	if _get_profile_signature() != _last_profile_signature:
+		apply_profile()
+
+
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	if Engine.is_editor_hint():
+		return
+
 	if profile == null:
 		return
 
@@ -38,6 +56,8 @@ func apply_profile() -> void:
 	physics_material_override = material
 
 	lock_rotation = profile.slides_when_moving and not profile.rolls_when_moving
+
+	_last_profile_signature = _get_profile_signature()
 
 
 func get_weight() -> float:
@@ -78,6 +98,37 @@ func apply_external_force(force: Vector2) -> void:
 		return
 
 	apply_central_force(force)
+
+
+func _connect_profile_changed() -> void:
+	if profile == null:
+		return
+
+	if not profile.changed.is_connected(_on_profile_changed):
+		profile.changed.connect(_on_profile_changed)
+
+
+func _on_profile_changed() -> void:
+	apply_profile()
+
+
+func _get_profile_signature() -> String:
+	if profile == null:
+		return ""
+
+	return str([
+		profile.weight,
+		profile.gravity_scale,
+		profile.linear_damping,
+		profile.angular_damping,
+		profile.bounce,
+		profile.friction,
+		profile.rolls_when_moving,
+		profile.slides_when_moving,
+		profile.sticks_on_heavy_impact,
+		profile.heavy_impact_speed_threshold,
+		profile.heavy_impact_velocity_keep_ratio
+	])
 
 
 func _handle_heavy_impact(state: PhysicsDirectBodyState2D) -> void:

@@ -13,9 +13,15 @@ const JUMP_VELOCITY: float = -400.0
 
 var godmode_enabled: bool = false
 
+var _default_collision_layer: int = 0
+var _default_collision_mask: int = 0
+
 
 func _ready() -> void:
 	BarkManager.set_player(self)
+
+	_default_collision_layer = collision_layer
+	_default_collision_mask = collision_mask
 
 	if carry_controller != null:
 		carry_controller.player_base_weight = base_player_weight
@@ -23,19 +29,17 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_godmode"):
-		godmode_enabled = !godmode_enabled
-
-		set_collision_layer_value(1, not godmode_enabled)
-		set_collision_mask_value(1, not godmode_enabled)
-
-		velocity = Vector2.ZERO
-
-		LoggerConsole.log("Godmode: " + str(godmode_enabled))
+		_set_godmode_enabled(not godmode_enabled)
+		return
 
 	if event.is_action_pressed("throw_carried"):
 		if carry_controller != null:
-			var direction := Vector2(get_facing_direction(), -0.25)
-			carry_controller.throw_carried(direction)
+			carry_controller.start_throw_charge()
+		return
+
+	if event.is_action_released("throw_carried"):
+		_release_charged_throw()
+		return
 
 
 func _physics_process(delta: float) -> void:
@@ -46,21 +50,31 @@ func _physics_process(delta: float) -> void:
 	handle_normal_movement(delta)
 
 
+func _set_godmode_enabled(value: bool) -> void:
+	godmode_enabled = value
+	velocity = Vector2.ZERO
+
+	if godmode_enabled:
+		collision_layer = 0
+		collision_mask = 0
+	else:
+		collision_layer = _default_collision_layer
+		collision_mask = _default_collision_mask
+		velocity = Vector2.ZERO
+
+	LoggerConsole.log("Godmode: " + str(godmode_enabled))
+
+
 func handle_noclip(delta: float) -> void:
-	var direction := Input.get_vector(
-		"ui_left",
-		"ui_right",
-		"ui_up",
-		"ui_down"
-	)
+	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
 	global_position += direction * noclip_speed * delta
 	velocity = Vector2.ZERO
 
-	if direction.x > 0:
-		flip_container.scale.x = 1
-	elif direction.x < 0:
-		flip_container.scale.x = -1
+	if direction.x > 0.0:
+		flip_container.scale.x = 1.0
+	elif direction.x < 0.0:
+		flip_container.scale.x = -1.0
 
 	animated_sprite_2d.animation = "idle"
 
@@ -84,17 +98,17 @@ func handle_normal_movement(delta: float) -> void:
 
 	var direction := Input.get_axis("ui_left", "ui_right")
 
-	if direction:
+	if direction != 0.0:
 		velocity.x = direction * current_speed
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, current_speed)
 
 	move_and_slide()
 
-	if direction > 0:
-		flip_container.scale.x = 1
-	elif direction < 0:
-		flip_container.scale.x = -1
+	if direction > 0.0:
+		flip_container.scale.x = 1.0
+	elif direction < 0.0:
+		flip_container.scale.x = -1.0
 
 
 func get_facing_direction() -> float:
@@ -116,3 +130,20 @@ func get_effective_weight() -> float:
 		return base_player_weight
 
 	return carry_controller.get_effective_player_weight()
+
+
+func _release_charged_throw() -> void:
+	if carry_controller == null:
+		return
+
+	if not carry_controller.is_carrying():
+		return
+
+	var throw_origin := global_position + carry_controller.hold_offset
+	var direction := get_global_mouse_position() - throw_origin
+
+	if direction.length() <= 1.0:
+		carry_controller.cancel_throw_charge()
+		return
+
+	carry_controller.release_charged_throw(direction.normalized())

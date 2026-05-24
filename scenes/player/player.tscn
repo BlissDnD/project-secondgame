@@ -53,6 +53,7 @@
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
 [ext_resource type="Script" uid="uid://ct0l8tix2e53" path="res://systems/interaction/carry/player_carry_controller.gd" id="54_0ncpa"]
+[ext_resource type="Script" uid="uid://x87sltqeft72" path="res://player/throw_trajectory_projectile.gd" id="54_upxxc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1u1sw"]
 size = Vector2(58, 116)
@@ -240,10 +241,11 @@ volume_db = -19.114
 zoom = Vector2(0.65, 0.65)
 position_smoothing_enabled = true
 
-[node name="InteractionManager" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor")]
+[node name="InteractionManager" type="Node" parent="." unique_id=93725671 node_paths=PackedStringArray("interaction_area", "actor", "player_carry_controller")]
 script = ExtResource("51_jrbya")
 interaction_area = NodePath("../FlipContainer/InteractionArea")
 actor = NodePath("..")
+player_carry_controller = NodePath("../PlayerCarryController")
 
 [node name="DebugOverlay" parent="." unique_id=182094769 instance=ExtResource("52_ahqnk")]
 visible = false
@@ -270,4 +272,13 @@ frame_progress = 0.18713756
 script = ExtResource("54_0ncpa")
 player_body = NodePath("..")
 interaction_area = NodePath("../FlipContainer/InteractionArea")
+minimum_throw_power = 0.1
+base_full_charge_time = 1.0
 metadata/_custom_type_script = "uid://ct0l8tix2e53"
+
+[node name="ThrowTrajectoryPreview" type="Line2D" parent="." unique_id=54783806 node_paths=PackedStringArray("player", "carry_controller")]
+script = ExtResource("54_upxxc")
+player = NodePath("..")
+carry_controller = NodePath("../PlayerCarryController")
+simulation_steps = 72
+line_width = 2.0

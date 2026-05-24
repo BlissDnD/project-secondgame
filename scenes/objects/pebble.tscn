@@ -43,6 +43,7 @@ position = Vector2(-4, -13)
 scale = Vector2(6.063349, 5.5585184)
 shape = SubResource("CircleShape2D_a6epn")
 
-[node name="PhysicsForceReceiver" type="Node" parent="PhysicalItemBody" unique_id=229821050]
+[node name="PhysicsForceReceiver" type="Node" parent="PhysicalItemBody" unique_id=229821050 node_paths=PackedStringArray("physical_body")]
 script = ExtResource("4_xcv58")
+physical_body = NodePath("..")
 metadata/_custom_type_script = "uid://dw74ttpxnxuy"

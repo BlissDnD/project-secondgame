@@ -12,17 +12,28 @@ class_name PlayerCarryController
 @export_range(0.01, 10000.0, 0.01) var lift_strength: float = 25.0
 @export_range(0.01, 10000.0, 0.01) var carry_strength: float = 30.0
 @export_range(0.01, 10000.0, 0.01) var throw_strength: float = 20.0
+
 @export_range(0.0, 10000.0, 1.0) var base_throw_impulse: float = 650.0
+
+@export_group("Throw Charge")
+@export_range(0.05, 1.0, 0.01) var minimum_throw_power: float = 0.25
+@export_range(0.1, 10.0, 0.01) var base_full_charge_time: float = 0.75
+@export_range(0.1, 5.0, 0.01) var heavy_item_charge_penalty: float = 1.0
 
 var carried_component: CarryableComponent
 
 var _carry_collision_shapes: Array[CollisionShape2D] = []
+var _is_charging_throw: bool = false
+var _throw_charge: float = 0.0
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if carried_component != null:
 		carried_component.hold_offset = hold_offset
 		carried_component.carry_update()
+
+	if _is_charging_throw:
+		_update_throw_charge(delta)
 
 	if placement_controller != null and placement_controller.is_placing:
 		var target_position := _get_player_place_target_position()
@@ -35,6 +46,8 @@ func try_interact() -> void:
 		return
 
 	if carried_component != null:
+		cancel_throw_charge()
+
 		if _try_insert_carried_worker_into_socket():
 			_clear_carry_collision_proxy()
 			carried_component = null
@@ -67,32 +80,105 @@ func cancel_current_action() -> void:
 		return
 
 	if carried_component != null:
+		cancel_throw_charge()
 		_drop_carried()
+
+
+func start_throw_charge() -> void:
+	if carried_component == null:
+		return
+
+	_is_charging_throw = true
+	_throw_charge = 0.0
+
+
+func cancel_throw_charge() -> void:
+	_is_charging_throw = false
+	_throw_charge = 0.0
+
+
+func release_charged_throw(direction: Vector2) -> void:
+	if carried_component == null:
+		cancel_throw_charge()
+		return
+
+	if direction.length() <= 0.0:
+		cancel_throw_charge()
+		return
+
+	var charged_impulse := get_current_throw_impulse()
+
+	_is_charging_throw = false
+	_throw_charge = 0.0
+
+	_throw_carried_with_impulse(direction.normalized(), charged_impulse)
 
 
 func throw_carried(direction: Vector2) -> void:
 	if carried_component == null:
 		return
 
-	_clear_carry_collision_proxy()
-
-	var throw_position := player_body.global_position + hold_offset
-	var inherited_velocity := _get_player_velocity()
-
-	carried_component.throw_from(
-		throw_position,
-		direction,
-		base_throw_impulse,
-		throw_strength,
-		inherited_velocity
-	)
-
-	carried_component = null
+	_throw_carried_with_impulse(direction.normalized(), get_current_throw_impulse())
 
 
 func is_carrying() -> bool:
 	return carried_component != null
 
+
+func is_charging_throw() -> bool:
+	return _is_charging_throw
+
+
+func get_throw_charge() -> float:
+	return clampf(_throw_charge, 0.0, 1.0)
+
+
+func get_current_throw_power_ratio() -> float:
+	return lerpf(minimum_throw_power, 1.0, get_throw_charge())
+
+
+func get_current_throw_impulse() -> float:
+	return base_throw_impulse * get_current_throw_power_ratio()
+
+
+func get_max_throw_velocity_for_direction(direction: Vector2) -> Vector2:
+	if carried_component == null:
+		return Vector2.ZERO
+
+	if direction.length() <= 0.0:
+		return Vector2.ZERO
+
+	var weight := maxf(carried_component.get_weight(), 0.01)
+	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
+	var throw_impulse := (
+		direction.normalized()
+		* base_throw_impulse
+		* throw_multiplier
+	)
+
+	var throw_velocity := throw_impulse / weight
+
+	return throw_velocity + _get_player_velocity()
+
+
+func get_current_throw_velocity_for_direction(direction: Vector2) -> Vector2:
+	if carried_component == null:
+		return Vector2.ZERO
+
+	if direction.length() <= 0.0:
+		return Vector2.ZERO
+
+	var weight := maxf(carried_component.get_weight(), 0.01)
+	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
+	var throw_impulse := (
+		direction.normalized()
+		* get_current_throw_impulse()
+		* throw_multiplier
+	)
+
+	var throw_velocity := throw_impulse / weight
+
+	return throw_velocity + _get_player_velocity()
 
 func get_carried_weight() -> float:
 	if carried_component == null:
@@ -110,6 +196,38 @@ func get_movement_speed_multiplier() -> float:
 		return 1.0
 
 	return carried_component.get_carry_speed_multiplier(carry_strength)
+
+
+func _update_throw_charge(delta: float) -> void:
+	if carried_component == null:
+		cancel_throw_charge()
+		return
+
+	var weight := maxf(carried_component.get_weight(), 0.01)
+	var strength_ratio := throw_strength / (throw_strength + weight * heavy_item_charge_penalty)
+	var charge_time := base_full_charge_time / maxf(strength_ratio, 0.05)
+
+	_throw_charge = clampf(_throw_charge + delta / charge_time, 0.0, 1.0)
+
+
+func _throw_carried_with_impulse(direction: Vector2, throw_impulse: float) -> void:
+	if carried_component == null:
+		return
+
+	_clear_carry_collision_proxy()
+
+	var throw_position := player_body.global_position + hold_offset
+	var inherited_velocity := _get_player_velocity()
+
+	carried_component.throw_from(
+		throw_position,
+		direction,
+		throw_impulse,
+		throw_strength,
+		inherited_velocity
+	)
+
+	carried_component = null
 
 
 func _drop_carried() -> void:
