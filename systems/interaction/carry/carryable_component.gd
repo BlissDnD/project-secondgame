@@ -132,6 +132,7 @@ func pickup(new_carrier: Node2D, hold_parent: Node2D = null) -> bool:
 	set_highlighted(false)
 	_set_physics_carried_state(true)
 	_reset_rotation_for_carry()
+	_notify_external_motion_begin_carried()
 
 	if hold_parent != null:
 		root_node.reparent(hold_parent, false)
@@ -150,39 +151,7 @@ func pickup(new_carrier: Node2D, hold_parent: Node2D = null) -> bool:
 
 
 func drop(drop_position: Vector2, inherited_velocity: Vector2 = Vector2.ZERO) -> void:
-	if root_node == null:
-		return
-
-	if original_parent != null:
-		var previous_global := root_node.global_position
-
-		if root_node.get_parent() != null:
-			root_node.get_parent().remove_child(root_node)
-
-		original_parent.add_child(root_node)
-		root_node.global_position = previous_global
-		root_node.global_scale = _original_global_scale
-
-	root_node.global_position = drop_position
-
-	var old_carrier := carrier
-	carrier = null
-	is_carried = false
-
-	_set_physics_carried_state(false)
-
-	var physical_body := root_node as PhysicalItemBody
-	if physical_body != null:
-		physical_body.linear_velocity = inherited_velocity
-
-	var rigid_body := root_node as RigidBody2D
-	if rigid_body != null:
-		rigid_body.linear_velocity = inherited_velocity
-
-	if root_node.has_method("on_dropped"):
-		root_node.on_dropped()
-
-	dropped.emit(old_carrier)
+	_drop_internal(drop_position, inherited_velocity, true)
 
 
 func throw_with_velocity(
@@ -195,7 +164,7 @@ func throw_with_velocity(
 
 	var old_carrier := carrier
 
-	drop(throw_position, Vector2.ZERO)
+	_drop_internal(throw_position, Vector2.ZERO, false)
 
 	var physical_body := root_node as PhysicalItemBody
 	if physical_body != null:
@@ -220,6 +189,13 @@ func throw_with_velocity(
 		rigid_body.linear_velocity = throw_velocity
 		rigid_body.angular_velocity = 0.0
 		thrown.emit(old_carrier, throw_velocity)
+		return
+
+	var external_motion := _find_external_motion_component()
+	if external_motion != null:
+		external_motion.start_external_motion(throw_velocity)
+
+	thrown.emit(old_carrier, throw_velocity)
 
 
 func throw_from(
@@ -233,27 +209,12 @@ func throw_from(
 	if not can_be_thrown():
 		return
 
-	var old_carrier := carrier
+	var weight := maxf(get_weight(), 0.01)
 	var multiplier := get_throw_multiplier(throw_strength)
+	var throw_velocity := direction.normalized() * base_impulse * multiplier / weight
+	throw_velocity += inherited_velocity
 
-	drop(throw_position, inherited_velocity)
-
-	if direction.length() <= 0.0:
-		return
-
-	var impulse := direction.normalized() * base_impulse * multiplier
-
-	var physical_body := root_node as PhysicalItemBody
-	if physical_body != null:
-		_apply_thrower_collision_grace(physical_body, ignored_body)
-		physical_body.apply_external_impulse(impulse)
-		thrown.emit(old_carrier, impulse)
-		return
-
-	var rigid_body := root_node as RigidBody2D
-	if rigid_body != null:
-		rigid_body.apply_central_impulse(impulse)
-		thrown.emit(old_carrier, impulse)
+	throw_with_velocity(throw_position, throw_velocity, ignored_body)
 
 
 func set_highlighted(value: bool) -> void:
@@ -280,6 +241,49 @@ func get_collision_shapes_for_proxy() -> Array[CollisionShape2D]:
 
 	_collect_collision_shapes(root_node, result)
 	return result
+
+
+func _drop_internal(
+	drop_position: Vector2,
+	inherited_velocity: Vector2,
+	end_external_carried_state: bool
+) -> void:
+	if root_node == null:
+		return
+
+	if original_parent != null:
+		var previous_global := root_node.global_position
+
+		if root_node.get_parent() != null:
+			root_node.get_parent().remove_child(root_node)
+
+		original_parent.add_child(root_node)
+		root_node.global_position = previous_global
+		root_node.global_scale = _original_global_scale
+
+	root_node.global_position = drop_position
+
+	var old_carrier := carrier
+	carrier = null
+	is_carried = false
+
+	_set_physics_carried_state(false)
+
+	if end_external_carried_state:
+		_notify_external_motion_end_carried()
+
+	var physical_body := root_node as PhysicalItemBody
+	if physical_body != null:
+		physical_body.linear_velocity = inherited_velocity
+
+	var rigid_body := root_node as RigidBody2D
+	if rigid_body != null:
+		rigid_body.linear_velocity = inherited_velocity
+
+	if root_node.has_method("on_dropped"):
+		root_node.on_dropped()
+
+	dropped.emit(old_carrier)
 
 
 func _set_physics_carried_state(value: bool) -> void:
@@ -323,6 +327,43 @@ func _apply_thrower_collision_grace(
 
 	var duration := physical_body.get_thrower_collision_grace_time()
 	physical_body.temporarily_ignore_body(ignored_body, duration)
+
+
+func _notify_external_motion_begin_carried() -> void:
+	var external_motion := _find_external_motion_component()
+
+	if external_motion != null:
+		external_motion.begin_carried()
+
+
+func _notify_external_motion_end_carried() -> void:
+	var external_motion := _find_external_motion_component()
+
+	if external_motion != null:
+		external_motion.end_carried()
+
+
+func _find_external_motion_component() -> WorkerExternalMotionComponent:
+	if root_node == null:
+		return null
+
+	return _find_external_motion_component_recursive(root_node)
+
+
+func _find_external_motion_component_recursive(node: Node) -> WorkerExternalMotionComponent:
+	if node == null:
+		return null
+
+	if node is WorkerExternalMotionComponent:
+		return node as WorkerExternalMotionComponent
+
+	for child in node.get_children():
+		var found := _find_external_motion_component_recursive(child)
+
+		if found != null:
+			return found
+
+	return null
 
 
 func _collect_collision_shapes(node: Node, result: Array[CollisionShape2D]) -> void:

@@ -7,8 +7,10 @@ script = ExtResource("1_wl0fn")
 label = NodePath("RichTextLabel")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="." unique_id=1249762549]
-offset_right = 400.0
-offset_bottom = 200.0
+offset_left = -807.0
+offset_top = -240.0
+offset_right = -407.0
+offset_bottom = -40.0
 scale = Vector2(2, 2)
 theme_override_font_sizes/normal_font_size = 8
 bbcode_enabled = true

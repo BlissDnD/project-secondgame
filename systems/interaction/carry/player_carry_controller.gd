@@ -4,10 +4,11 @@ class_name PlayerCarryController
 @export var player_body: Node2D
 @export var interaction_area: Area2D
 @export var placement_controller: PlacementController
+@export var hold_point: Node2D
 
 @export var drop_offset: Vector2 = Vector2(32, 0)
 @export var hold_offset: Vector2 = Vector2(0, -48)
-@export var hold_point: Node2D
+
 @export_range(0.01, 10000.0, 0.01) var player_base_weight: float = 70.0
 @export_range(0.01, 10000.0, 0.01) var lift_strength: float = 25.0
 @export_range(0.01, 10000.0, 0.01) var carry_strength: float = 30.0
@@ -20,6 +21,10 @@ class_name PlayerCarryController
 @export_range(0.1, 10.0, 0.01) var base_full_charge_time: float = 0.75
 @export_range(0.1, 5.0, 0.01) var heavy_item_charge_penalty: float = 1.0
 
+@export_group("Mouse Throw Targeting")
+@export_range(16.0, 4000.0, 1.0) var mouse_distance_for_max_power: float = 900.0
+@export_range(0.0, 512.0, 1.0) var mouse_distance_dead_zone: float = 32.0
+
 var carried_component: CarryableComponent
 
 var _carry_collision_shapes: Array[CollisionShape2D] = []
@@ -27,14 +32,9 @@ var _is_charging_throw: bool = false
 var _throw_charge: float = 0.0
 
 
-func _process(delta: float) -> void:
-	if carried_component != null:
-		if _is_charging_throw:
-			_update_throw_charge(delta)
-
-		if placement_controller != null and placement_controller.is_placing:
-			var target_position := _get_player_place_target_position()
-			placement_controller.update_preview_from_world_position(target_position)
+func _physics_process(delta: float) -> void:
+	if _is_charging_throw:
+		_update_throw_charge(delta)
 
 	if placement_controller != null and placement_controller.is_placing:
 		var target_position := _get_player_place_target_position()
@@ -65,7 +65,12 @@ func try_interact() -> void:
 	var carryable := _find_nearest_carryable()
 	if carryable != null:
 		if not carryable.can_be_lifted_by(lift_strength):
-			LoggerConsole.log("Too heavy to lift: " + str(carryable.get_weight()))
+			LoggerConsole.log(
+				"Too heavy to lift: "
+				+ str(carryable.get_weight())
+				+ " / lift strength: "
+				+ str(lift_strength)
+			)
 			return
 
 		if carryable.pickup(player_body, hold_point):
@@ -88,6 +93,9 @@ func start_throw_charge() -> void:
 	if carried_component == null:
 		return
 
+	if not carried_component.can_be_thrown():
+		return
+
 	_is_charging_throw = true
 	_throw_charge = 0.0
 
@@ -97,8 +105,12 @@ func cancel_throw_charge() -> void:
 	_throw_charge = 0.0
 
 
-func release_charged_throw(direction: Vector2) -> void:
+func release_charged_throw(direction: Vector2, mouse_position: Vector2) -> void:
 	if carried_component == null:
+		cancel_throw_charge()
+		return
+
+	if not carried_component.can_be_thrown():
 		cancel_throw_charge()
 		return
 
@@ -106,7 +118,8 @@ func release_charged_throw(direction: Vector2) -> void:
 		cancel_throw_charge()
 		return
 
-	var charged_impulse := get_current_throw_impulse()
+	var power_ratio := get_current_throw_power_ratio_for_mouse(mouse_position)
+	var charged_impulse := base_throw_impulse * power_ratio
 
 	_is_charging_throw = false
 	_throw_charge = 0.0
@@ -114,11 +127,27 @@ func release_charged_throw(direction: Vector2) -> void:
 	_throw_carried_with_impulse(direction.normalized(), charged_impulse)
 
 
-func throw_carried(direction: Vector2) -> void:
+func throw_carried(direction: Vector2, mouse_position: Vector2) -> void:
 	if carried_component == null:
 		return
 
-	_throw_carried_with_impulse(direction.normalized(), get_current_throw_impulse())
+	if not carried_component.can_be_thrown():
+		return
+
+	var power_ratio := get_current_throw_power_ratio_for_mouse(mouse_position)
+	_throw_carried_with_impulse(direction.normalized(), base_throw_impulse * power_ratio)
+
+
+func get_throw_origin() -> Vector2:
+	if carried_component != null:
+		var root := carried_component.get_carried_root()
+		if root != null:
+			return root.global_position
+
+	if player_body != null:
+		return player_body.global_position + hold_offset
+
+	return Vector2.ZERO
 
 
 func is_carrying() -> bool:
@@ -133,50 +162,38 @@ func get_throw_charge() -> float:
 	return clampf(_throw_charge, 0.0, 1.0)
 
 
-func get_current_throw_power_ratio() -> float:
-	return lerpf(minimum_throw_power, 1.0, get_throw_charge())
+func get_target_throw_power_ratio_for_mouse(mouse_position: Vector2) -> float:
+	var origin := get_throw_origin()
+	var distance := maxf(origin.distance_to(mouse_position) - mouse_distance_dead_zone, 0.0)
+	var distance_ratio := clampf(distance / maxf(mouse_distance_for_max_power, 1.0), 0.0, 1.0)
+
+	return lerpf(minimum_throw_power, 1.0, distance_ratio)
 
 
-func get_current_throw_impulse() -> float:
-	return base_throw_impulse * get_current_throw_power_ratio()
+func get_current_throw_power_ratio_for_mouse(mouse_position: Vector2) -> float:
+	var target_power := get_target_throw_power_ratio_for_mouse(mouse_position)
+
+	if not _is_charging_throw:
+		return target_power
+
+	var charged_power := lerpf(minimum_throw_power, 1.0, get_throw_charge())
+	return minf(charged_power, target_power)
 
 
-func get_max_throw_velocity_for_direction(direction: Vector2) -> Vector2:
+func get_preview_throw_velocity_for_mouse(mouse_position: Vector2) -> Vector2:
 	if carried_component == null:
 		return Vector2.ZERO
 
-	if direction.length() <= 0.0:
+	var origin := get_throw_origin()
+	var direction := mouse_position - origin
+
+	if direction.length() <= 1.0:
 		return Vector2.ZERO
 
-	var weight := maxf(carried_component.get_weight(), 0.01)
-	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
-	var throw_impulse := direction.normalized() * base_throw_impulse * throw_multiplier
-	var throw_velocity := throw_impulse / weight
-	var max_speed := _get_carried_max_throw_speed()
+	var power_ratio := get_current_throw_power_ratio_for_mouse(mouse_position)
+	var impulse := base_throw_impulse * power_ratio
 
-	if throw_velocity.length() > max_speed:
-		throw_velocity = throw_velocity.normalized() * max_speed
-
-	return throw_velocity + _get_player_velocity()
-
-
-func get_current_throw_velocity_for_direction(direction: Vector2) -> Vector2:
-	if carried_component == null:
-		return Vector2.ZERO
-
-	if direction.length() <= 0.0:
-		return Vector2.ZERO
-
-	var weight := maxf(carried_component.get_weight(), 0.01)
-	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
-	var throw_impulse := direction.normalized() * get_current_throw_impulse() * throw_multiplier
-	var throw_velocity := throw_impulse / weight
-	var max_speed := _get_carried_max_throw_speed()
-
-	if throw_velocity.length() > max_speed:
-		throw_velocity = throw_velocity.normalized() * max_speed
-
-	return throw_velocity + _get_player_velocity()
+	return _get_throw_velocity_for_direction(direction.normalized(), impulse)
 
 
 func get_carried_weight() -> float:
@@ -215,20 +232,41 @@ func _throw_carried_with_impulse(direction: Vector2, throw_impulse: float) -> vo
 
 	_clear_carry_collision_proxy()
 
-	var throw_position := player_body.global_position + hold_offset
-	var inherited_velocity := _get_player_velocity()
+	var throw_position := get_throw_origin()
 	var player_physics_body := player_body as PhysicsBody2D
+	var throw_velocity := _get_throw_velocity_for_direction(direction, throw_impulse)
 
-	carried_component.throw_from(
+	carried_component.throw_with_velocity(
 		throw_position,
-		direction,
-		throw_impulse,
-		throw_strength,
-		inherited_velocity,
+		throw_velocity,
 		player_physics_body
 	)
 
 	carried_component = null
+
+
+func _get_throw_velocity_for_direction(direction: Vector2, throw_impulse: float) -> Vector2:
+	if carried_component == null:
+		return Vector2.ZERO
+
+	if direction.length() <= 0.0:
+		return Vector2.ZERO
+
+	var weight := maxf(carried_component.get_weight(), 0.01)
+	var throw_multiplier := carried_component.get_throw_multiplier(throw_strength)
+
+	var local_throw_velocity := (
+		direction.normalized()
+		* throw_impulse
+		* throw_multiplier
+	) / weight
+
+	var max_speed := _get_carried_max_throw_speed()
+
+	if local_throw_velocity.length() > max_speed:
+		local_throw_velocity = local_throw_velocity.normalized() * max_speed
+
+	return local_throw_velocity + _get_player_velocity()
 
 
 func _drop_carried() -> void:
@@ -284,6 +322,9 @@ func _try_insert_carried_worker_into_socket() -> bool:
 	if carried_component == null:
 		return false
 
+	if not carried_component.can_insert_into_worker_socket():
+		return false
+
 	var worker := carried_component.root_node
 	if worker == null:
 		return false
@@ -311,19 +352,56 @@ func _find_nearest_carryable() -> CarryableComponent:
 		return null
 
 	for area in interaction_area.get_overlapping_areas():
-		if area is CarryableComponent:
-			var carryable := area as CarryableComponent
+		var carryable := _find_carryable_from_area(area)
 
-			if not carryable.can_carry():
-				continue
+		if carryable == null:
+			continue
 
-			var distance := player_body.global_position.distance_to(carryable.global_position)
+		if not carryable.can_carry():
+			continue
 
-			if distance < best_distance:
-				best_distance = distance
-				best = carryable
+		var root := carryable.get_carried_root()
+		if root == null:
+			continue
+
+		var distance := player_body.global_position.distance_to(root.global_position)
+
+		if distance < best_distance:
+			best_distance = distance
+			best = carryable
 
 	return best
+
+
+func _find_carryable_from_area(area: Area2D) -> CarryableComponent:
+	if area == null:
+		return null
+
+	if area is CarryableComponent:
+		return area as CarryableComponent
+
+	var root := area.owner
+
+	if root == null:
+		root = area
+
+	return _find_carryable_component_recursive(root)
+
+
+func _find_carryable_component_recursive(node: Node) -> CarryableComponent:
+	if node == null:
+		return null
+
+	if node is CarryableComponent:
+		return node as CarryableComponent
+
+	for child in node.get_children():
+		var found := _find_carryable_component_recursive(child)
+
+		if found != null:
+			return found
+
+	return null
 
 
 func _find_nearest_placeable_pickup() -> PlaceablePickupComponent:

@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://dom034yrmhg55" path="res://systems/work/goap/goap_brain.gd" id="12_5oyiq"]
 [ext_resource type="Script" uid="uid://bpl7loy70rpsy" path="res://systems/work/goap/goap_action.gd" id="13_4vlxc"]
 [ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
+[ext_resource type="Script" uid="uid://csthjkstoc633" path="res://systems/work/workers/worker_external_motion_component.gd" id="18_4vlxc"]
 [ext_resource type="Script" uid="uid://ddf3tn23ax6ie" path="res://systems/work/workers/worker_needs_component.gd" id="19_lf01n"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
@@ -178,3 +179,9 @@ metadata/_custom_type_script = "uid://ddf3tn23ax6ie"
 [node name="WorkerGOAPAdapter" type="Node" parent="." unique_id=1642598976]
 script = ExtResource("16_j82ov")
 metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
+
+[node name="WorkerExternalMotionComponent" type="Node" parent="." unique_id=1027011063 node_paths=PackedStringArray("worker_body", "nodes_to_disable_while_external_motion")]
+script = ExtResource("18_4vlxc")
+worker_body = NodePath("..")
+nodes_to_disable_while_external_motion = [NodePath("../WorkerMovementComponent"), NodePath("../GOAPBrain"), NodePath("../WorkerStateMachine")]
+metadata/_custom_type_script = "uid://csthjkstoc633"

@@ -4,8 +4,9 @@ class_name ThrowTrajectoryPreview
 @export var player: CharacterBody2D
 @export var carry_controller: PlayerCarryController
 
-@export_range(8, 256, 1) var simulation_steps: int = 64
-@export_range(0.001, 0.1, 0.001) var simulation_step_time: float = 0.03
+@export_range(8, 512, 1) var simulation_steps: int = 160
+@export var use_project_physics_step: bool = true
+@export_range(0.001, 0.1, 0.001) var custom_simulation_step_time: float = 0.0125
 @export_range(0.0, 10000.0, 1.0) var max_draw_distance: float = 4000.0
 
 @export var show_only_while_carrying: bool = true
@@ -29,7 +30,7 @@ func _ready() -> void:
 	_space_state = get_world_2d().direct_space_state
 
 
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if player == null or carry_controller == null:
 		visible = false
 		clear_points()
@@ -61,29 +62,22 @@ func _update_trajectory() -> void:
 	if carried == null:
 		return
 
-	var throw_origin := player.global_position + carry_controller.hold_offset
 	var mouse_position := player.get_global_mouse_position()
-	var throw_direction := mouse_position - throw_origin
+	var current_position := carry_controller.get_throw_origin()
+	var throw_direction := mouse_position - current_position
 
 	if throw_direction.length() <= 1.0:
 		return
 
-	throw_direction = throw_direction.normalized()
-
-	var initial_velocity := carry_controller.get_max_throw_velocity_for_direction(
-		throw_direction
+	var current_velocity := carry_controller.get_preview_throw_velocity_for_mouse(
+		mouse_position
 	)
 
-	var gravity_scale: float = 1.0
-	var physical_body := carried.root_node as PhysicalItemBody
+	if current_velocity.length() <= 0.0:
+		return
 
-	if physical_body != null and physical_body.profile != null:
-		gravity_scale = physical_body.profile.gravity_scale
-
-	var gravity := float(ProjectSettings.get_setting("physics/2d/default_gravity"))
-
-	var current_position := throw_origin
-	var current_velocity := initial_velocity
+	var gravity := _get_gravity_for_carried(carried)
+	var step_time := _get_simulation_step_time()
 
 	add_point(current_position)
 
@@ -92,8 +86,8 @@ func _update_trajectory() -> void:
 	for i in range(simulation_steps):
 		var previous_position := current_position
 
-		current_velocity.y += gravity * gravity_scale * simulation_step_time
-		current_position += current_velocity * simulation_step_time
+		current_velocity += gravity * step_time
+		current_position += current_velocity * step_time
 
 		travelled_distance += previous_position.distance_to(current_position)
 
@@ -113,6 +107,30 @@ func _update_trajectory() -> void:
 		add_point(current_position)
 
 
+func _get_simulation_step_time() -> float:
+	if use_project_physics_step:
+		return 1.0 / float(Engine.physics_ticks_per_second)
+
+	return custom_simulation_step_time
+
+
+func _get_gravity_for_carried(carried: CarryableComponent) -> Vector2:
+	var carried_root := carried.get_carried_root()
+	var external_motion := _find_external_motion_component(carried_root)
+
+	if external_motion != null:
+		return external_motion.get_prediction_gravity()
+
+	var physical_body := carried_root as PhysicalItemBody
+
+	if physical_body != null and physical_body.profile != null:
+		var gravity_value := float(ProjectSettings.get_setting("physics/2d/default_gravity"))
+		var gravity_vector := ProjectSettings.get_setting("physics/2d/default_gravity_vector") as Vector2
+		return gravity_vector.normalized() * gravity_value * physical_body.profile.gravity_scale
+
+	return player.get_gravity()
+
+
 func _check_collision(from: Vector2, to: Vector2) -> Dictionary:
 	var query := PhysicsRayQueryParameters2D.create(from, to)
 
@@ -121,3 +139,19 @@ func _check_collision(from: Vector2, to: Vector2) -> Dictionary:
 	query.collide_with_bodies = true
 
 	return _space_state.intersect_ray(query)
+
+
+func _find_external_motion_component(node: Node) -> WorkerExternalMotionComponent:
+	if node == null:
+		return null
+
+	if node is WorkerExternalMotionComponent:
+		return node as WorkerExternalMotionComponent
+
+	for child in node.get_children():
+		var found := _find_external_motion_component(child)
+
+		if found != null:
+			return found
+
+	return null

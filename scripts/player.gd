@@ -8,8 +8,8 @@ extends CharacterBody2D
 @export var noclip_speed: float = 600.0
 @export_range(0.01, 10000.0, 0.01) var base_player_weight: float = 70.0
 
-const SPEED: float = 700.0
-const JUMP_VELOCITY: float = -500.0
+const SPEED: float = 800.0
+const JUMP_VELOCITY: float = -400.0
 
 var godmode_enabled: bool = false
 
@@ -139,11 +139,12 @@ func _release_charged_throw() -> void:
 	if not carry_controller.is_carrying():
 		return
 
-	var throw_origin := global_position + carry_controller.hold_offset
-	var direction := get_global_mouse_position() - throw_origin
+	var mouse_position := get_global_mouse_position()
+	var throw_origin := carry_controller.get_throw_origin()
+	var direction := mouse_position - throw_origin
 
 	if direction.length() <= 1.0:
 		carry_controller.cancel_throw_charge()
 		return
 
-	carry_controller.release_charged_throw(direction.normalized())
+	carry_controller.release_charged_throw(direction.normalized(), mouse_position)
