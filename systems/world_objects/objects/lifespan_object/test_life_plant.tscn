@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://chcow0yhn7efq"]
 
 [ext_resource type="Script" uid="uid://b30iftbd8ge6y" path="res://systems/lifespan/lifespan_component.gd" id="1_6ch17"]
-[ext_resource type="Script" uid="uid://dn7vxfpm33cpc" path="res://systems/lifespan/test/test_life_plant_debug.gd" id="1_wfaik"]
-[ext_resource type="Resource" uid="uid://dna6mj8wp6235" path="res://systems/lifespan/test/test_plant_lifespan.tres" id="2_jjf4b"]
+[ext_resource type="Script" uid="uid://dn7vxfpm33cpc" path="res://systems/world_objects/objects/lifespan_object/test_life_plant_debug.gd" id="1_wfaik"]
+[ext_resource type="Resource" uid="uid://dna6mj8wp6235" path="res://systems/world_objects/objects/lifespan_object/test_plant_lifespan.tres" id="2_jjf4b"]
 [ext_resource type="Script" uid="uid://dnxly5usuugx6" path="res://systems/lifespan/lifespan_stage_scene_adapter.gd" id="3_se7we"]
 [ext_resource type="Script" uid="uid://b1icj57qpw33k" path="res://systems/world_generation/simulation/simulation_entity_component.gd" id="4_jjf4b"]
 [ext_resource type="Script" uid="uid://ocw3xgfvtmv2" path="res://systems/world_generation/simulation/visibility_culling_component.gd" id="6_32l8a"]

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LifeSpanStageDefinition" format=3 uid="uid://doqc37m8h67bv"]
 
 [ext_resource type="Script" uid="uid://bh8j226ani5cw" path="res://systems/lifespan/lifespan_stage_definition.gd" id="1_0om8k"]
-[ext_resource type="PackedScene" uid="uid://4wfvlwat1vlk" path="res://systems/lifespan/test/stages/mature_scene.tscn" id="2_cbctu"]
+[ext_resource type="PackedScene" uid="uid://4wfvlwat1vlk" path="res://systems/world_objects/objects/lifespan_object/stages/mature_scene.tscn" id="2_cbctu"]
 
 [resource]
 script = ExtResource("1_0om8k")

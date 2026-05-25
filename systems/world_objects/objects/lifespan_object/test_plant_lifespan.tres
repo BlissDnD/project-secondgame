@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://85sd3nctedn1" path="res://systems/lifespan/lifespan_definition.gd" id="1_1lc6b"]
 [ext_resource type="Script" uid="uid://bh8j226ani5cw" path="res://systems/lifespan/lifespan_stage_definition.gd" id="2_lpfhk"]
-[ext_resource type="Resource" uid="uid://d0b10ku3vmjot" path="res://systems/lifespan/test/test_stage_seed.tres" id="3_d2d2s"]
-[ext_resource type="Resource" uid="uid://otvwdbr6mjy3" path="res://systems/lifespan/test/test_stage_young.tres" id="4_5ug6l"]
-[ext_resource type="Resource" uid="uid://doqc37m8h67bv" path="res://systems/lifespan/test/test_stage_mature.tres" id="5_54d7y"]
+[ext_resource type="Resource" uid="uid://d0b10ku3vmjot" path="res://systems/world_objects/objects/lifespan_object/stages/test_stage_seed.tres" id="3_d2d2s"]
+[ext_resource type="Resource" uid="uid://otvwdbr6mjy3" path="res://systems/world_objects/objects/lifespan_object/stages/test_stage_young.tres" id="4_5ug6l"]
+[ext_resource type="Resource" uid="uid://doqc37m8h67bv" path="res://systems/world_objects/objects/lifespan_object/stages/test_stage_mature.tres" id="5_54d7y"]
 
 [resource]
 script = ExtResource("1_1lc6b")

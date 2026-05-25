@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://cjfpel04g0fbq" path="res://systems/world_generation/world_terrain_config.gd" id="9_7t5mc"]
 [ext_resource type="Script" uid="uid://b2ipxvu3m6o8s" path="res://systems/world_generation/world_spawn_definition.gd" id="10_oo54l"]
 [ext_resource type="PackedScene" uid="uid://bvos6ltf1vvsp" path="res://scenes/objects/pebble.tscn" id="11_kpybi"]
-[ext_resource type="PackedScene" uid="uid://chcow0yhn7efq" path="res://systems/lifespan/test/test_life_plant.tscn" id="12_0nbtd"]
+[ext_resource type="PackedScene" uid="uid://chcow0yhn7efq" path="res://systems/world_objects/objects/lifespan_object/test_life_plant.tscn" id="12_0nbtd"]
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="14_ctatt"]
 [ext_resource type="Resource" path="res://systems/npc/kabala/kabaladefi2.tres" id="15_xgqkh"]
 [ext_resource type="Script" uid="uid://db531sowljlst" path="res://systems/npc/npc_spawner.gd" id="16_lakw3"]
