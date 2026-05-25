@@ -9,4 +9,5 @@ linear_damping = 0.3
 angular_damping = 2.5
 bounce = 0.5
 friction = 0.8
+rolls_when_moving = true
 metadata/_custom_type_script = "uid://bidufgjf2n13v"

@@ -8,6 +8,15 @@ PTH={
 "res://scenes/": Color(1, 0.5974026, 0.8521713, 1),
 "res://scripts/": Color(0.6630276, 0.062337637, 1, 1),
 "res://systems/": Color(1, 0.574026, 0.90349025, 1),
+"res://systems/dialogue/": Color(0.44415587, 0.9739448, 1, 1),
+"res://systems/interaction/": Color(1, 0.44415587, 0.44415587, 1),
+"res://systems/npc/": Color(1, 0.9237013, 0.51168835, 1),
 "res://systems/npc/kabala/dialogue/kabala_dialogue_intro.tres": Color(1, 0, 0, 1),
+"res://systems/physics/": Color(0.8474026, 0.51168835, 1, 1),
+"res://systems/state/": Color(1, 0.51168835, 0.53457797, 1),
+"res://systems/time/": Color(0.090909064, 0.8721591, 1, 1),
+"res://systems/work/": Color(1, 0, 0.046875, 1),
+"res://systems/world_generation/": Color(0.9000609, 0.4883117, 1, 1),
+"res://systems/world_objects/": Color(0.82810473, 1, 0.4883117, 1),
 "res://ui/": Color(0.55064934, 0.74724025, 1, 1)
 }

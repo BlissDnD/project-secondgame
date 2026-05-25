@@ -13,7 +13,7 @@
 [ext_resource type="Script" uid="uid://b2ipxvu3m6o8s" path="res://systems/world_generation/world_spawn_definition.gd" id="10_oo54l"]
 [ext_resource type="PackedScene" uid="uid://bvos6ltf1vvsp" path="res://scenes/objects/pebble.tscn" id="11_kpybi"]
 [ext_resource type="Script" uid="uid://q0u1xspouqyd" path="res://systems/npc/npc_definition.gd" id="14_ctatt"]
-[ext_resource type="Resource" uid="uid://dtfaq7udnq3wb" path="res://systems/npc/kabala/kabaladefi2.tres" id="15_xgqkh"]
+[ext_resource type="Resource" path="res://systems/npc/kabala/kabaladefi2.tres" id="15_xgqkh"]
 [ext_resource type="Script" uid="uid://db531sowljlst" path="res://systems/npc/npc_spawner.gd" id="16_lakw3"]
 [ext_resource type="PackedScene" uid="uid://bax6bvt62mhs3" path="res://ui/dialogue_box.tscn" id="18_lakw3"]
 [ext_resource type="PackedScene" uid="uid://brnv2uy6xj3yi" path="res://ui/bark_bubble.tscn" id="19_pm21f"]
@@ -23,6 +23,7 @@
 [ext_resource type="PackedScene" uid="uid://c8h8edlxc3fjv" path="res://scenes/worker/worker.tscn" id="23_munwf"]
 [ext_resource type="Script" uid="uid://padt2g1f7e1y" path="res://systems/world_generation/world_debug_spawn_service.gd" id="24_ctatt"]
 [ext_resource type="Script" uid="uid://b7nov50mcnb4l" path="res://systems/interaction/placement/placement_validator.gd" id="25_munwf"]
+[ext_resource type="Script" uid="uid://frvr8jjq12j0" path="res://systems/time/time_debug_display.gd" id="25_xgqkh"]
 [ext_resource type="Script" uid="uid://csb1wyobgijs0" path="res://systems/interaction/placement/placement_preview.gd" id="26_ts3gi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
@@ -338,3 +339,14 @@ metadata/_custom_type_script = "uid://b7nov50mcnb4l"
 [node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484 groups=["placement_preview", "placement_validator", "terrain_layer"]]
 script = ExtResource("26_ts3gi")
 metadata/_custom_type_script = "uid://csb1wyobgijs0"
+
+[node name="DebugCanvasLayer" type="CanvasLayer" parent="." unique_id=1570227695]
+
+[node name="TimeDebugDisplay" type="Label" parent="DebugCanvasLayer" unique_id=1457212618]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 60.0
+offset_bottom = 43.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+script = ExtResource("25_xgqkh")
