@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dgt842w8348nk"]
+
+[ext_resource type="Texture2D" uid="uid://pjts0thu7pm8" path="res://assets/images/Fantasy Forest 1/grass2.png" id="1_shto2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4o0iy"]
+size = Vector2(13, 42)
+
+[node name="SeedStage" type="Node2D" unique_id=1266861019]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=910972993]
+light_mask = 4
+position = Vector2(-0.5, -22)
+shape = SubResource("RectangleShape2D_4o0iy")
+
+[node name="Grass2" type="Sprite2D" parent="." unique_id=1322874657]
+position = Vector2(-1.25, -32)
+scale = Vector2(1.46, 1.46)
+texture = ExtResource("1_shto2")

@@ -27,7 +27,9 @@
 [ext_resource type="Script" uid="uid://frvr8jjq12j0" path="res://systems/time/time_debug_display.gd" id="25_xgqkh"]
 [ext_resource type="Script" uid="uid://dj4180krgum2k" path="res://systems/time/time_debug_controller.gd" id="26_munwf"]
 [ext_resource type="Script" uid="uid://csb1wyobgijs0" path="res://systems/interaction/placement/placement_preview.gd" id="26_ts3gi"]
+[ext_resource type="Script" uid="uid://ys7b02ohhr6v" path="res://systems/world_generation/simulation/world_simulation_debug_display.gd" id="27_37qwj"]
 [ext_resource type="Script" uid="uid://1dctjnejoswg" path="res://systems/time/day_night_controller.gd" id="27_ts3gi"]
+[ext_resource type="Script" uid="uid://dp6b3sa51hat5" path="res://systems/world_generation/simulation/world_simulation_manager.gd" id="30_navra"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -359,11 +361,26 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 script = ExtResource("25_xgqkh")
 
+[node name="WorldSimualtionDebugDisplay" type="Label" parent="DebugCanvasLayer" unique_id=1405599854]
+offset_left = 20.0
+offset_top = 400.0
+offset_right = 60.0
+offset_bottom = 423.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+script = ExtResource("27_37qwj")
+world_simulation_manager_path = NodePath("../../WorldSimulationManager")
+
 [node name="TimeDebugController" type="Node" parent="." unique_id=550064500]
 script = ExtResource("26_munwf")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=864447832]
 
-[node name="Node" type="Node" parent="." unique_id=2100532112 node_paths=PackedStringArray("canvas_modulate")]
+[node name="DayNight" type="Node" parent="." unique_id=2100532112 node_paths=PackedStringArray("canvas_modulate")]
 script = ExtResource("27_ts3gi")
 canvas_modulate = NodePath("../CanvasModulate")
+night_color = Color(0.60602033, 0.74618566, 0.98709136, 1)
+
+[node name="WorldSimulationManager" type="Node" parent="." unique_id=1136485242]
+script = ExtResource("30_navra")
+player_path = NodePath("../Player")

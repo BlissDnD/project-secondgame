@@ -7,7 +7,7 @@
 [ext_resource type="Resource" uid="uid://co5et7bnif0b7" path="res://resources/data/physics_profiles/pebble_carry_profile.tres" id="5_778ep"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_v8mqs"]
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fxtap"]
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_778ep"]
 friction = 0.8
 bounce = 0.5
 
@@ -22,8 +22,8 @@ height = 3.8326375
 scale = Vector2(0.36, 0.36)
 
 [node name="PhysicalItemBody" type="RigidBody2D" parent="." unique_id=596505902]
-mass = 0.5
-physics_material_override = SubResource("PhysicsMaterial_fxtap")
+mass = 0.7
+physics_material_override = SubResource("PhysicsMaterial_778ep")
 continuous_cd = 2
 contact_monitor = true
 max_contacts_reported = 4

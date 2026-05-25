@@ -76,3 +76,5 @@ func get_progress() -> float:
 		0.0,
 		1.0
 	)
+func force_refresh_stage() -> void:
+	_refresh_stage(true)

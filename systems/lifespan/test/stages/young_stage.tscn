@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://bta3n364qmsi4"]
+
+[ext_resource type="Texture2D" uid="uid://c0gyrasiqqog4" path="res://assets/images/Fantasy Forest 1/tree2.png" id="1_82fgi"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hnvdk"]
+size = Vector2(25, 244)
+
+[node name="YoungStage" type="Node2D" unique_id=838341353]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=492694528]
+light_mask = 4
+position = Vector2(-0.5, -123)
+shape = SubResource("RectangleShape2D_hnvdk")
+
+[node name="Tree2" type="Sprite2D" parent="." unique_id=42278667]
+position = Vector2(-12, -138)
+scale = Vector2(0.4747049, 0.4747049)
+texture = ExtResource("1_82fgi")
