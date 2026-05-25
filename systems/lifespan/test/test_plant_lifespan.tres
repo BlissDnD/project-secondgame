@@ -10,6 +10,6 @@
 script = ExtResource("1_1lc6b")
 id = &"test_plant"
 display_name = "Test Plant"
-total_lifespan_minutes = 10
+total_lifespan_minutes = 30
 stages = Array[ExtResource("2_lpfhk")]([ExtResource("3_d2d2s"), ExtResource("4_5ug6l"), ExtResource("5_54d7y")])
 metadata/_custom_type_script = "uid://85sd3nctedn1"

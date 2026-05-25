@@ -1,14 +1,19 @@
 [gd_scene format=3 uid="uid://chcow0yhn7efq"]
 
 [ext_resource type="Script" uid="uid://b30iftbd8ge6y" path="res://systems/lifespan/lifespan_component.gd" id="1_6ch17"]
+[ext_resource type="Script" uid="uid://dn7vxfpm33cpc" path="res://systems/lifespan/test/test_life_plant_debug.gd" id="1_wfaik"]
 [ext_resource type="Resource" uid="uid://dna6mj8wp6235" path="res://systems/lifespan/test/test_plant_lifespan.tres" id="2_jjf4b"]
 [ext_resource type="Script" uid="uid://dnxly5usuugx6" path="res://systems/lifespan/lifespan_stage_scene_adapter.gd" id="3_se7we"]
 [ext_resource type="Script" uid="uid://b1icj57qpw33k" path="res://systems/world_generation/simulation/simulation_entity_component.gd" id="4_jjf4b"]
+[ext_resource type="Script" uid="uid://ocw3xgfvtmv2" path="res://systems/world_generation/simulation/visibility_culling_component.gd" id="6_32l8a"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6ch17"]
 size = Vector2(126, 513)
 
 [node name="TestLifePlant" type="Node2D" unique_id=613596689]
+script = ExtResource("1_wfaik")
+
+[node name="StageRoot" type="Node2D" parent="." unique_id=262284308]
 
 [node name="LifeSpanComponent" type="Node" parent="." unique_id=1878244404]
 script = ExtResource("1_6ch17")
@@ -22,10 +27,16 @@ shape = SubResource("RectangleShape2D_6ch17")
 [node name="LifeSpanStageSceneAdapter" type="Node" parent="." unique_id=1862080163 node_paths=PackedStringArray("lifespan_component", "stage_root")]
 script = ExtResource("3_se7we")
 lifespan_component = NodePath("../LifeSpanComponent")
-stage_root = NodePath("..")
+stage_root = NodePath("../StageRoot")
 metadata/_custom_type_script = "uid://dnxly5usuugx6"
 
 [node name="SimulationEntityComponent" type="Node" parent="." unique_id=1936590236 node_paths=PackedStringArray("entity_root")]
 script = ExtResource("4_jjf4b")
 entity_root = NodePath("..")
 metadata/_custom_type_script = "uid://b1icj57qpw33k"
+
+[node name="VisibilityCullingComponent" type="Node" parent="." unique_id=717810688 node_paths=PackedStringArray("visual_root") groups=["player"]]
+script = ExtResource("6_32l8a")
+visual_root = NodePath("../StageRoot")
+visible_distance = 2000.0
+metadata/_custom_type_script = "uid://ocw3xgfvtmv2"

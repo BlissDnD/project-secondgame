@@ -287,7 +287,7 @@ script = ExtResource("10_oo54l")
 scene = ExtResource("11_kpybi")
 metadata/_custom_type_script = "uid://b2ipxvu3m6o8s"
 
-[sub_resource type="Resource" id="Resource_37qwj"]
+[sub_resource type="Resource" id="Resource_navra"]
 script = ExtResource("10_oo54l")
 scene = ExtResource("12_0nbtd")
 metadata/_custom_type_script = "uid://b2ipxvu3m6o8s"
@@ -304,7 +304,7 @@ object_layer = NodePath("../ObjectLayer")
 crashed_ship_scene = ExtResource("3_i7141")
 terrain_modifiers = Array[ExtResource("5_w7kh3")]([ExtResource("6_e3hyu"), ExtResource("7_e3hyu"), ExtResource("8_q5onr")])
 config = SubResource("Resource_lakw3")
-world_spawns = Array[ExtResource("10_oo54l")]([SubResource("Resource_ctatt"), SubResource("Resource_37qwj")])
+world_spawns = Array[ExtResource("10_oo54l")]([SubResource("Resource_ctatt"), SubResource("Resource_navra")])
 metadata/_custom_type_script = "uid://cyxl51x7ugdu0"
 
 [node name="Player" parent="." unique_id=677817848 instance=ExtResource("1_rwgxs")]

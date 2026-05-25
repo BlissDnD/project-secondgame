@@ -43,6 +43,7 @@ enabled=PackedStringArray("res://addons/GitGodot/plugin.cfg", "res://addons/bett
 [global_group]
 
 terrain_layer=""
+player=""
 
 [input]
 
