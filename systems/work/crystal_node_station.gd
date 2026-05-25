@@ -93,7 +93,7 @@ func _start_work_with_worker(worker: Node) -> void:
 	is_working = true
 
 	if assigned_worker.has_method("set_worker_state"):
-		assigned_worker.set_worker_state(WorkerStateMachine.WORKING_CRYSTAL_NODE)
+		assigned_worker.set_worker_state(WorkerStateMachine.WORKING)
 
 
 func _stop_work() -> void:

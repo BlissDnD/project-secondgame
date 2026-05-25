@@ -2,10 +2,9 @@ extends CharacterBody2D
 class_name Worker
 
 @export var state_machine: WorkerStateMachine
-@export var needs: WorkerNeedsComponent
-
-# Node-ra hagyjuk, hogy Godot Inspectorban biztosan behúzható legyen.
-# Runtime ellenőrizzük, hogy van-e rajta a szükséges API.
+@export var stats: WorkerStatsComponent
+@export var need_system: WorkerNeedSystem
+@export var goal_selector: UtilityGoalSelector
 @export var movement: Node
 
 @export var crystal_cargo_visual: Node2D
@@ -13,12 +12,9 @@ class_name Worker
 
 @export var main_crystal_group: String = "main_crystal"
 @export var deposit_distance: float = 28.0
-
 @export var gravity: float = 900.0
 
-# Régi root idle wander mezők. Most csak fallbackként maradnak.
-# Normál esetben a WorkerMovementComponent mozgat.
-@export_category("Legacy Idle Wander Fallback")
+@export_category("Idle Wander Fallback")
 @export var idle_wander_enabled: bool = false
 @export var idle_wander_speed: float = 35.0
 @export var idle_wander_move_time_min: float = 1.0
@@ -29,14 +25,17 @@ class_name Worker
 @export var idle_wander_turn_on_wall: bool = true
 @export var idle_wander_turn_on_gap: bool = true
 
-@export_category("Legacy Idle Wander Rays")
+@export_category("Idle Wander Rays")
 @export var idle_floor_ray: RayCast2D
 @export var idle_wall_ray: RayCast2D
 @export var idle_gap_ray: RayCast2D
 
 var current_socket: Node
+var has_assignment: bool = false
+var assigned_target: Node2D = null
+
 var has_crystal_cargo: bool = false
-var main_crystal_target: Node2D
+var main_crystal_target: Node2D = null
 
 var idle_wander_direction: int = 1
 var idle_wander_timer: float = 0.0
@@ -45,12 +44,39 @@ var idle_wander_paused: bool = false
 
 func _ready() -> void:
 	add_to_group("worker")
+	_resolve_nodes()
+	_connect_signals()
 
+	if crystal_cargo_visual != null:
+		crystal_cargo_visual.visible = false
+
+	randomize()
+	_randomize_idle_wander()
+
+	set_worker_state(WorkerStateMachine.IDLE, "spawned")
+
+
+func _physics_process(delta: float) -> void:
+	if state_machine == null:
+		return
+
+	_update_ai_loop()
+	_update_state_behavior(delta)
+	_update_debug_label()
+
+
+func _resolve_nodes() -> void:
 	if state_machine == null:
 		state_machine = get_node_or_null("WorkerStateMachine") as WorkerStateMachine
 
-	if needs == null:
-		needs = get_node_or_null("WorkerNeedsComponent") as WorkerNeedsComponent
+	if stats == null:
+		stats = get_node_or_null("WorkerStatsComponent") as WorkerStatsComponent
+
+	if need_system == null:
+		need_system = get_node_or_null("WorkerNeedSystem") as WorkerNeedSystem
+
+	if goal_selector == null:
+		goal_selector = get_node_or_null("UtilityGoalSelector") as UtilityGoalSelector
 
 	if movement == null:
 		movement = get_node_or_null("WorkerMovementComponent")
@@ -72,39 +98,66 @@ func _ready() -> void:
 	if debug_label == null:
 		debug_label = get_node_or_null("DebugLabel") as Label
 
-	if crystal_cargo_visual != null:
-		crystal_cargo_visual.visible = false
 
+func _connect_signals() -> void:
 	if movement != null:
-		if movement.has_signal("reached_target"):
-			if not movement.reached_target.is_connected(_on_movement_reached_target):
-				movement.reached_target.connect(_on_movement_reached_target)
+		if movement.has_signal("reached_target") and not movement.reached_target.is_connected(_on_movement_reached_target):
+			movement.reached_target.connect(_on_movement_reached_target)
 
-		if movement.has_signal("blocked"):
-			if not movement.blocked.is_connected(_on_movement_blocked):
-				movement.blocked.connect(_on_movement_blocked)
+		if movement.has_signal("blocked") and not movement.blocked.is_connected(_on_movement_blocked):
+			movement.blocked.connect(_on_movement_blocked)
 
-	if state_machine != null:
-		if not state_machine.state_changed.is_connected(_on_state_changed):
-			state_machine.state_changed.connect(_on_state_changed)
+	if state_machine != null and not state_machine.state_changed.is_connected(_on_state_changed):
+		state_machine.state_changed.connect(_on_state_changed)
 
-	randomize()
-	_randomize_idle_wander()
+	if stats != null:
+		if not stats.stamina_depleted.is_connected(_on_stamina_depleted):
+			stats.stamina_depleted.connect(_on_stamina_depleted)
 
-	set_worker_state(WorkerStateMachine.IDLE)
-
-
-func _physics_process(delta: float) -> void:
-	_update_needs(delta)
-	_update_state_behavior(delta)
-	_update_debug_label()
+		if not stats.stamina_recovered.is_connected(_on_stamina_recovered):
+			stats.stamina_recovered.connect(_on_stamina_recovered)
 
 
-func set_worker_state(new_state: StringName) -> void:
+func _update_ai_loop() -> void:
+	if stats == null or need_system == null or goal_selector == null:
+		return
+
+	var current_need := need_system.evaluate(stats, has_assignment)
+	var current_goal := goal_selector.select_goal(current_need)
+
+	_update_lifecycle_from_goal(current_goal)
+
+
+func _update_lifecycle_from_goal(goal: StringName) -> void:
+	if goal == UtilityGoalSelector.FAILED_GOAL:
+		state_machine.fail("failed_need")
+		return
+
+	if goal == UtilityGoalSelector.REST_GOAL:
+		if not state_machine.is_recovering():
+			state_machine.recover("stamina_low")
+		return
+
+	if state_machine.is_recovering():
+		if stats != null and stats.has_recovered_stamina():
+			state_machine.return_from_recovery(has_assignment)
+		return
+
+	if goal == UtilityGoalSelector.WORK_GOAL:
+		if state_machine.is_idle():
+			state_machine.set_state(WorkerStateMachine.ASSIGNED, "work_goal_selected")
+		return
+
+	if goal == UtilityGoalSelector.IDLE_GOAL:
+		if not state_machine.is_idle() and not has_crystal_cargo:
+			state_machine.set_state(WorkerStateMachine.IDLE, "idle_goal_selected")
+
+
+func set_worker_state(new_state: StringName, reason: String = "") -> void:
 	if state_machine == null:
 		return
 
-	state_machine.set_state(new_state)
+	state_machine.set_state(new_state, reason)
 
 
 func get_worker_state() -> StringName:
@@ -114,13 +167,34 @@ func get_worker_state() -> StringName:
 	return state_machine.current_state
 
 
+func assign_work(target: Node2D = null) -> void:
+	if state_machine != null and not state_machine.can_accept_assignment():
+		return
+
+	has_assignment = true
+	assigned_target = target
+	set_worker_state(WorkerStateMachine.ASSIGNED, "work_assigned")
+
+
+func clear_assignment() -> void:
+	has_assignment = false
+	assigned_target = null
+
+	if state_machine != null and not state_machine.is_recovering():
+		set_worker_state(WorkerStateMachine.IDLE, "assignment_cleared")
+
+
 func apply_work_drain(delta: float) -> void:
-	if needs != null:
-		needs.apply_work_decay(delta)
+	if stats != null:
+		stats.drain_stamina_for_work(delta)
 
 
 func receive_crystal_cargo() -> void:
 	has_crystal_cargo = true
+	has_assignment = true
+
+	if stats != null:
+		stats.add_carry_weight(1.0)
 
 	if crystal_cargo_visual != null:
 		crystal_cargo_visual.visible = true
@@ -128,13 +202,13 @@ func receive_crystal_cargo() -> void:
 	main_crystal_target = _find_main_crystal()
 
 	if main_crystal_target == null:
-		set_worker_state(WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL)
+		set_worker_state(WorkerStateMachine.FAILED, "cannot_reach_main_crystal")
 		return
 
 	if _movement_has_method(&"set_target"):
 		movement.call("set_target", main_crystal_target.global_position)
 
-	set_worker_state(WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN)
+	set_worker_state(WorkerStateMachine.CARRYING, "carrying_crystal_to_main")
 
 
 func on_inserted_into_socket(socket: Node) -> void:
@@ -144,20 +218,21 @@ func on_inserted_into_socket(socket: Node) -> void:
 	if _movement_has_method(&"clear_target"):
 		movement.call("clear_target")
 
+	assign_work(socket as Node2D)
+
 
 func on_removed_from_socket(socket: Node) -> void:
 	if current_socket == socket:
 		current_socket = null
 
-	if get_worker_state() != WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
-		set_worker_state(WorkerStateMachine.IDLE)
+	clear_assignment()
 
 
 func on_picked_up() -> void:
 	if _movement_has_method(&"clear_target"):
 		movement.call("clear_target")
 
-	set_worker_state(WorkerStateMachine.CARRIED)
+	set_worker_state(WorkerStateMachine.FAILED, "picked_up_by_player")
 	velocity = Vector2.ZERO
 
 
@@ -166,81 +241,136 @@ func on_dropped() -> void:
 		movement.call("clear_target")
 
 	velocity = Vector2.ZERO
-	set_worker_state(WorkerStateMachine.IDLE)
+	set_worker_state(WorkerStateMachine.IDLE, "dropped_by_player")
 
-
-func _update_needs(delta: float) -> void:
-	if needs == null or state_machine == null:
-		return
-
-	match state_machine.current_state:
-		WorkerStateMachine.IDLE:
-			needs.apply_idle_decay(delta)
-
-		WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
-			needs.apply_idle_decay(delta)
-
-		WorkerStateMachine.SLEEPING:
-			needs.apply_sleep_restore(delta)
-
-		_:
-			pass
 
 func _update_state_behavior(delta: float) -> void:
-	if state_machine == null:
-		return
-
 	match state_machine.current_state:
-		WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
-			if _movement_has_method(&"physics_update"):
-				movement.call("physics_update", delta)
-			else:
-				_apply_idle_physics(delta)
-
-			_try_deposit_crystal()
-
 		WorkerStateMachine.IDLE:
-			if _movement_has_method(&"physics_update"):
-				movement.call("physics_update", delta)
-			else:
-				_apply_idle_wander(delta)
+			_execute_idle(delta)
 
-		WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL:
-			if _movement_has_method(&"clear_target"):
-				movement.call("clear_target")
+		WorkerStateMachine.ASSIGNED:
+			_execute_assigned(delta)
 
-			velocity.x = 0.0
-			_apply_gravity(delta)
-			move_and_slide()
+		WorkerStateMachine.MOVING_TO_WORK:
+			_execute_moving_to_work(delta)
 
-		WorkerStateMachine.CARRIED:
-			if _movement_has_method(&"clear_target"):
-				movement.call("clear_target")
+		WorkerStateMachine.WORKING:
+			_execute_working(delta)
 
-			velocity = Vector2.ZERO
+		WorkerStateMachine.CARRYING:
+			_execute_carrying(delta)
 
-		WorkerStateMachine.WORKING_CRYSTAL_NODE:
-			if _movement_has_method(&"clear_target"):
-				movement.call("clear_target")
+		WorkerStateMachine.DEPOSITING:
+			_execute_depositing(delta)
 
-			velocity = Vector2.ZERO
+		WorkerStateMachine.RECOVERING:
+			_execute_recovering(delta)
 
-		WorkerStateMachine.DEPOSITING_CRYSTAL:
-			if _movement_has_method(&"clear_target"):
-				movement.call("clear_target")
-
-			velocity = Vector2.ZERO
-
-		WorkerStateMachine.SLEEPING:
-			if _movement_has_method(&"clear_target"):
-				movement.call("clear_target")
-
-			_apply_idle_physics(delta)
+		WorkerStateMachine.FAILED:
+			_execute_failed(delta)
 
 		_:
-			velocity.x = 0.0
-			_apply_gravity(delta)
-			move_and_slide()
+			_apply_idle_physics(delta)
+
+
+func _execute_idle(delta: float) -> void:
+	if _movement_has_method(&"physics_update"):
+		movement.call("physics_update", delta)
+	else:
+		_apply_idle_wander(delta)
+
+	if stats != null and absf(velocity.x) > 0.1:
+		stats.drain_stamina_for_movement(delta)
+
+
+func _execute_assigned(_delta: float) -> void:
+	velocity.x = 0.0
+
+	if assigned_target != null:
+		set_worker_state(WorkerStateMachine.MOVING_TO_WORK, "has_assigned_target")
+	else:
+		set_worker_state(WorkerStateMachine.WORKING, "assigned_without_target")
+
+
+func _execute_moving_to_work(delta: float) -> void:
+	if assigned_target == null:
+		set_worker_state(WorkerStateMachine.WORKING, "missing_target_continue_work")
+		return
+
+	if _movement_has_method(&"set_target"):
+		movement.call("set_target", assigned_target.global_position)
+
+	if _movement_has_method(&"physics_update"):
+		movement.call("physics_update", delta)
+	else:
+		var direction := signf(assigned_target.global_position.x - global_position.x)
+		velocity.x = direction * idle_wander_speed
+		_apply_gravity(delta)
+		move_and_slide()
+
+	if stats != null:
+		stats.drain_stamina_for_movement(delta)
+
+	if global_position.distance_to(assigned_target.global_position) <= deposit_distance:
+		velocity.x = 0.0
+		set_worker_state(WorkerStateMachine.WORKING, "arrived_to_work")
+
+
+func _execute_working(delta: float) -> void:
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity = Vector2.ZERO
+
+	if stats != null:
+		stats.drain_stamina_for_work(delta)
+
+	# Később ide jön majd:
+	# GoToCrystal -> MineCrystal -> PickUpCrystal -> GoToDeposit -> DepositCrystal
+
+
+func _execute_carrying(delta: float) -> void:
+	if main_crystal_target != null and _movement_has_method(&"set_target"):
+		movement.call("set_target", main_crystal_target.global_position)
+
+	if _movement_has_method(&"physics_update"):
+		movement.call("physics_update", delta)
+	else:
+		_apply_idle_physics(delta)
+
+	if stats != null:
+		stats.drain_stamina_for_movement(delta)
+
+	_try_deposit_crystal()
+
+
+func _execute_depositing(_delta: float) -> void:
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity = Vector2.ZERO
+
+
+func _execute_recovering(delta: float) -> void:
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity.x = 0.0
+	_apply_gravity(delta)
+	move_and_slide()
+
+	if stats != null:
+		stats.recover_stamina(delta)
+
+
+func _execute_failed(delta: float) -> void:
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity.x = 0.0
+	_apply_gravity(delta)
+	move_and_slide()
 
 
 func _movement_has_method(method_name: StringName) -> bool:
@@ -341,18 +471,22 @@ func _try_deposit_crystal() -> void:
 	if distance > deposit_distance:
 		return
 
-	set_worker_state(WorkerStateMachine.DEPOSITING_CRYSTAL)
+	set_worker_state(WorkerStateMachine.DEPOSITING, "depositing_crystal")
 
 	if main_crystal_target.has_method("deposit_crystal"):
 		main_crystal_target.deposit_crystal(1)
 
 	has_crystal_cargo = false
+	has_assignment = false
+
+	if stats != null:
+		stats.clear_carry_weight()
 
 	if crystal_cargo_visual != null:
 		crystal_cargo_visual.visible = false
 
 	main_crystal_target = null
-	set_worker_state(WorkerStateMachine.IDLE)
+	set_worker_state(WorkerStateMachine.IDLE, "crystal_deposited")
 
 
 func _find_main_crystal() -> Node2D:
@@ -373,12 +507,22 @@ func _on_movement_reached_target() -> void:
 
 
 func _on_movement_blocked() -> void:
-	if get_worker_state() == WorkerStateMachine.CARRYING_CRYSTAL_TO_MAIN:
-		set_worker_state(WorkerStateMachine.BLOCKED_CANNOT_REACH_MAIN_CRYSTAL)
+	if get_worker_state() == WorkerStateMachine.CARRYING:
+		set_worker_state(WorkerStateMachine.FAILED, "blocked_cannot_reach_main_crystal")
 
 
-func _on_state_changed(old_state: StringName, new_state: StringName) -> void:
-	print("Worker state changed: ", old_state, " -> ", new_state)
+func _on_stamina_depleted() -> void:
+	if state_machine != null:
+		state_machine.recover("stamina_depleted")
+
+
+func _on_stamina_recovered() -> void:
+	if state_machine != null and state_machine.is_recovering():
+		state_machine.return_from_recovery(has_assignment)
+
+
+func _on_state_changed(old_state: StringName, new_state: StringName, reason: String = "") -> void:
+	print("Worker state changed: ", old_state, " -> ", new_state, " reason=", reason)
 
 	if new_state == WorkerStateMachine.IDLE:
 		_randomize_idle_wander()
@@ -390,14 +534,39 @@ func _update_debug_label() -> void:
 
 	var state_text := "State: " + str(get_worker_state())
 
-	if needs != null:
-		state_text += "\n" + needs.get_debug_text()
+	if need_system != null:
+		state_text += "\nNeed: " + str(need_system.current_need)
+
+	if goal_selector != null:
+		state_text += "\nGoal: " + str(goal_selector.current_goal)
+
+	if stats != null:
+		state_text += "\nHP: " + str(roundi(stats.health))
+		state_text += "\nStamina: " + str(roundi(stats.stamina))
+		state_text += "\nEnergy: " + str(roundi(stats.energy))
+		state_text += "\nCarry: " + str(stats.carry_weight) + "/" + str(stats.max_carry_weight)
 
 	if has_crystal_cargo:
 		state_text += "\nCargo: Crystal"
 
-	if movement != null:
-		if movement.has_method("get"):
-			state_text += "\nMovement: " + str(movement.name)
+	if has_assignment:
+		state_text += "\nAssignment: yes"
 
 	debug_label.text = state_text
+	
+func get_debug_state() -> Dictionary:
+	return {
+		"type": "worker",
+		"state": str(get_worker_state()),
+		"need": str(need_system.current_need) if need_system != null else "none",
+		"goal": str(goal_selector.current_goal) if goal_selector != null else "none",
+		"health": stats.health if stats != null else 0,
+		"energy": stats.energy if stats != null else 0,
+		"stamina": stats.stamina if stats != null else 0,
+		"carry_weight": stats.carry_weight if stats != null else 0,
+		"max_carry_weight": stats.max_carry_weight if stats != null else 0,
+		"has_assignment": has_assignment,
+		"has_crystal_cargo": has_crystal_cargo,
+		"interrupt": state_machine.reason_for_interrupt if state_machine != null else "",
+		"fail": state_machine.last_failure_reason if state_machine != null else ""
+	}

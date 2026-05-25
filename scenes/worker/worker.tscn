@@ -8,17 +8,18 @@
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
 [ext_resource type="Resource" uid="uid://cpdejhbwxdlqo" path="res://resources/data/physics_profiles/worker_carry_profile.tres" id="7_5oyiq"]
 [ext_resource type="Script" uid="uid://oe6rx48tfp1c" path="res://systems/work/goap/worker_blackboard.gd" id="7_ock52"]
-[ext_resource type="Script" uid="uid://bwkulnmcg4nk7" path="res://systems/work/goap/worker_stats.gd" id="8_8hyuv"]
 [ext_resource type="Script" uid="uid://dtl6k7k0kll8k" path="res://systems/work/goap/worker_sensor_2d.gd" id="11_j82ov"]
 [ext_resource type="Script" uid="uid://dom034yrmhg55" path="res://systems/work/goap/goap_brain.gd" id="12_5oyiq"]
 [ext_resource type="Script" uid="uid://bpl7loy70rpsy" path="res://systems/work/goap/goap_action.gd" id="13_4vlxc"]
 [ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
 [ext_resource type="Script" uid="uid://csthjkstoc633" path="res://systems/work/workers/worker_external_motion_component.gd" id="18_4vlxc"]
-[ext_resource type="Script" uid="uid://ddf3tn23ax6ie" path="res://systems/work/workers/worker_needs_component.gd" id="19_lf01n"]
+[ext_resource type="Script" uid="uid://ckasy4oc8n4pg" path="res://systems/work/workers/worker_stats_component.gd" id="19_ih8nm"]
 [ext_resource type="Resource" uid="uid://c0275fwt1mdne" path="res://resources/data/physics_profiles/worker_motion_profile.tres" id="19_lwa6c"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
+[ext_resource type="Script" uid="uid://bvye302uglh6q" path="res://systems/work/worker_need_system.gd" id="20_8255w"]
 [ext_resource type="Resource" uid="uid://cppffm3iwkmdb" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
+[ext_resource type="Script" uid="uid://bwgyqrosfntql" path="res://systems/work/utility_goal_selector.gd" id="21_ynsbi"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -49,26 +50,20 @@ size = Vector2(50, 54)
 radius = 9.0
 height = 58.0
 
-[sub_resource type="Resource" id="Resource_4vlxc"]
-script = ExtResource("8_8hyuv")
-metadata/_custom_type_script = "uid://bwkulnmcg4nk7"
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 54)
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "needs", "movement", "crystal_cargo_visual", "debug_label", "idle_floor_ray", "idle_wall_ray", "idle_gap_ray")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "crystal_cargo_visual", "debug_label")]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
 state_machine = NodePath("WorkerStateMachine")
-needs = NodePath("WorkerNeedsComponent")
+stats = NodePath("WorkerStatsComponent")
+need_system = NodePath("WorkerNeedSystem")
+goal_selector = NodePath("UtilityGoalSelector")
 movement = NodePath("WorkerMovementComponent")
 crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
-idle_wander_speed = 80.0
-idle_floor_ray = NodePath("FloorRay")
-idle_wall_ray = NodePath("WallRay")
-idle_gap_ray = NodePath("GapRay")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
 position = Vector2(4.7683716e-07, -35)
@@ -154,7 +149,6 @@ shape = SubResource("CapsuleShape2D_5oyiq")
 
 [node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
 script = ExtResource("7_ock52")
-stats = SubResource("Resource_4vlxc")
 metadata/_custom_type_script = "uid://oe6rx48tfp1c"
 
 [node name="WorkerSensor2D" type="Area2D" parent="." unique_id=1197924075]
@@ -172,11 +166,6 @@ available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd")])
 goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_ir7vy")])
 metadata/_custom_type_script = "uid://dom034yrmhg55"
 
-[node name="WorkerNeedsComponent" type="Node" parent="." unique_id=1902545397]
-script = ExtResource("19_lf01n")
-blackboard_path = NodePath("../WorkerBlackboard")
-metadata/_custom_type_script = "uid://ddf3tn23ax6ie"
-
 [node name="WorkerGOAPAdapter" type="Node" parent="." unique_id=1642598976]
 script = ExtResource("16_j82ov")
 metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
@@ -188,3 +177,15 @@ motion_profile = ExtResource("19_lwa6c")
 minimum_air_time = 0.0
 nodes_to_disable_while_external_motion = [NodePath("../WorkerMovementComponent"), NodePath("../GOAPBrain"), NodePath("../WorkerStateMachine")]
 metadata/_custom_type_script = "uid://csthjkstoc633"
+
+[node name="WorkerStatsComponent" type="Node" parent="." unique_id=1540129802]
+script = ExtResource("19_ih8nm")
+metadata/_custom_type_script = "uid://ckasy4oc8n4pg"
+
+[node name="WorkerNeedSystem" type="Node" parent="." unique_id=1798279296]
+script = ExtResource("20_8255w")
+metadata/_custom_type_script = "uid://bvye302uglh6q"
+
+[node name="UtilityGoalSelector" type="Node" parent="." unique_id=525661005]
+script = ExtResource("21_ynsbi")
+metadata/_custom_type_script = "uid://bwgyqrosfntql"

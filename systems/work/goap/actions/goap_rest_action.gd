@@ -1,25 +1,51 @@
 extends GOAPAction
 class_name GOAPRestAction
 
-@export var energy_per_second: float = 25.0
-@export var finish_energy: float = 80.0
+
+func _init() -> void:
+	action_id = &"rest"
+	display_name = "Rest"
+	base_cost = 1.0
+	interruptible = false
+	requires_target = false
+	preconditions = {}
+	effects = {
+		&"stamina_low": false,
+		&"can_work": true
+	}
+
+
+func is_valid_for(blackboard: WorkerBlackboard) -> bool:
+	return blackboard != null and blackboard.stats != null
+
 
 func enter(blackboard: WorkerBlackboard) -> void:
 	super.enter(blackboard)
-	blackboard.set_fact(&"is_resting", true)
+
+	if blackboard.adapter != null:
+		blackboard.adapter.stop_movement()
+		blackboard.adapter.set_recovering()
+
 
 func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
-	blackboard.stats.restore_energy(energy_per_second * delta)
+	if blackboard == null:
+		return fail("missing_blackboard")
 
-	if blackboard.stats.energy >= finish_energy:
-		blackboard.set_fact(&"needs_rest", false)
-		blackboard.set_fact(&"is_resting", false)
+	if blackboard.stats == null:
+		return fail("missing_stats")
+
+	blackboard.stats.recover_stamina(delta)
+
+	if blackboard.stats.has_recovered_stamina():
 		status = ActionStatus.SUCCEEDED
 		return status
 
 	status = ActionStatus.RUNNING
 	return status
 
+
 func exit(blackboard: WorkerBlackboard) -> void:
-	blackboard.set_fact(&"is_resting", false)
+	if blackboard != null and blackboard.worker != null and blackboard.state_machine != null:
+		blackboard.state_machine.return_from_recovery(blackboard.worker.has_assignment)
+
 	super.exit(blackboard)

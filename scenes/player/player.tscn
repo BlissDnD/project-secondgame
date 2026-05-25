@@ -224,7 +224,7 @@ animations = [{
 "speed": 30.0
 }]
 
-[node name="Player" type="CharacterBody2D" unique_id=677817848 node_paths=PackedStringArray("carry_controller")]
+[node name="Player" type="CharacterBody2D" unique_id=677817848 node_paths=PackedStringArray("carry_controller") groups=["player"]]
 position = Vector2(0, -50)
 scale = Vector2(0.72, 0.72)
 collision_layer = 2
