@@ -3,6 +3,7 @@ extends Node
 signal fast_tick(tick_index: int)
 signal normal_tick(tick_index: int)
 signal slow_tick(tick_index: int)
+
 signal minute_simulation_tick(total_minutes: int)
 signal hour_simulation_tick(total_hours: int)
 signal day_simulation_tick(day: int)
@@ -18,6 +19,8 @@ var _slow_accumulator: float = 0.0
 var _fast_tick_index: int = 0
 var _normal_tick_index: int = 0
 var _slow_tick_index: int = 0
+
+var _listeners: Array[SimulationTickListener] = []
 
 
 func _ready() -> void:
@@ -43,6 +46,46 @@ func _process(delta: float) -> void:
 	_process_normal_tick(scaled_delta)
 	_process_slow_tick(scaled_delta)
 
+	_process_registered_listeners(scaled_delta)
+
+
+func register_listener(
+	callback: Callable,
+	interval_seconds: float
+) -> SimulationTickListener:
+	var listener := SimulationTickListener.new(
+		callback,
+		interval_seconds
+	)
+
+	_listeners.append(listener)
+
+	return listener
+
+
+func unregister_listener(listener: SimulationTickListener) -> void:
+	if listener == null:
+		return
+
+	_listeners.erase(listener)
+
+
+func _process_registered_listeners(delta: float) -> void:
+	for listener in _listeners:
+		if listener == null:
+			continue
+
+		if not listener.enabled:
+			continue
+
+		listener.accumulator += delta
+
+		while listener.accumulator >= listener.interval_seconds:
+			listener.accumulator -= listener.interval_seconds
+
+			if listener.callback.is_valid():
+				listener.callback.call()
+
 
 func _process_fast_tick(delta: float) -> void:
 	_fast_accumulator += delta
@@ -50,6 +93,7 @@ func _process_fast_tick(delta: float) -> void:
 	while _fast_accumulator >= fast_tick_interval_seconds:
 		_fast_accumulator -= fast_tick_interval_seconds
 		_fast_tick_index += 1
+
 		fast_tick.emit(_fast_tick_index)
 
 
@@ -59,6 +103,7 @@ func _process_normal_tick(delta: float) -> void:
 	while _normal_accumulator >= normal_tick_interval_seconds:
 		_normal_accumulator -= normal_tick_interval_seconds
 		_normal_tick_index += 1
+
 		normal_tick.emit(_normal_tick_index)
 
 
@@ -68,6 +113,7 @@ func _process_slow_tick(delta: float) -> void:
 	while _slow_accumulator >= slow_tick_interval_seconds:
 		_slow_accumulator -= slow_tick_interval_seconds
 		_slow_tick_index += 1
+
 		slow_tick.emit(_slow_tick_index)
 
 
@@ -84,4 +130,4 @@ func _on_world_time_day_changed(day: int) -> void:
 
 
 func _has_world_time_service() -> bool:
-	return Engine.has_singleton("WorldTimeService") or get_node_or_null("/root/WorldTimeService") != null
+	return get_node_or_null("/root/WorldTimeService") != null

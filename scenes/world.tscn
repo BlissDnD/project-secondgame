@@ -24,7 +24,9 @@
 [ext_resource type="Script" uid="uid://padt2g1f7e1y" path="res://systems/world_generation/world_debug_spawn_service.gd" id="24_ctatt"]
 [ext_resource type="Script" uid="uid://b7nov50mcnb4l" path="res://systems/interaction/placement/placement_validator.gd" id="25_munwf"]
 [ext_resource type="Script" uid="uid://frvr8jjq12j0" path="res://systems/time/time_debug_display.gd" id="25_xgqkh"]
+[ext_resource type="Script" uid="uid://dj4180krgum2k" path="res://systems/time/time_debug_controller.gd" id="26_munwf"]
 [ext_resource type="Script" uid="uid://csb1wyobgijs0" path="res://systems/interaction/placement/placement_preview.gd" id="26_ts3gi"]
+[ext_resource type="Script" uid="uid://1dctjnejoswg" path="res://systems/time/day_night_controller.gd" id="27_ts3gi"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -350,3 +352,12 @@ offset_bottom = 43.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 script = ExtResource("25_xgqkh")
+
+[node name="TimeDebugController" type="Node" parent="." unique_id=550064500]
+script = ExtResource("26_munwf")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=864447832]
+
+[node name="Node" type="Node" parent="." unique_id=2100532112 node_paths=PackedStringArray("canvas_modulate")]
+script = ExtResource("27_ts3gi")
+canvas_modulate = NodePath("../CanvasModulate")
