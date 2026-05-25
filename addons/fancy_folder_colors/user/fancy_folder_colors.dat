@@ -10,6 +10,7 @@ PTH={
 "res://systems/": Color(1, 0.574026, 0.90349025, 1),
 "res://systems/dialogue/": Color(0.44415587, 0.9739448, 1, 1),
 "res://systems/interaction/": Color(1, 0.44415587, 0.44415587, 1),
+"res://systems/lifespan/": Color(0.2805195, 1, 0.40980113, 1),
 "res://systems/npc/": Color(1, 0.9237013, 0.51168835, 1),
 "res://systems/npc/kabala/dialogue/kabala_dialogue_intro.tres": Color(1, 0, 0, 1),
 "res://systems/physics/": Color(0.8474026, 0.51168835, 1, 1),

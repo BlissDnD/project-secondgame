@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="LifeSpanStageDefinition" format=3 uid="uid://d0b10ku3vmjot"]
+
+[ext_resource type="Script" uid="uid://bh8j226ani5cw" path="res://systems/lifespan/lifespan_stage_definition.gd" id="1_tjrue"]
+[ext_resource type="Texture2D" uid="uid://dyxelwvb1f8h5" path="res://assets/images/Fantasy Forest 1/plant2.png" id="2_ceuda"]
+
+[resource]
+script = ExtResource("1_tjrue")
+id = &"seed"
+display_name = "Seed"
+sprite_texture = ExtResource("2_ceuda")
+metadata/_custom_type_script = "uid://bh8j226ani5cw"

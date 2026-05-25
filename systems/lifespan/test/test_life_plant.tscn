@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://chcow0yhn7efq"]
+
+[ext_resource type="Script" uid="uid://b30iftbd8ge6y" path="res://systems/lifespan/lifespan_component.gd" id="1_6ch17"]
+[ext_resource type="Resource" uid="uid://dna6mj8wp6235" path="res://systems/lifespan/test/test_plant_lifespan.tres" id="2_jjf4b"]
+[ext_resource type="Script" uid="uid://ctgov3adjchj1" path="res://systems/lifespan/lifespan_visual_adapter.gd" id="2_se7we"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6ch17"]
+size = Vector2(126, 513)
+
+[node name="TestLifePlant" type="Node2D" unique_id=613596689]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=904475125]
+position = Vector2(347.00003, -4)
+scale = Vector2(0.98502994, 0.9850299)
+region_enabled = true
+region_rect = Rect2(0, 0, 1002, 1080)
+
+[node name="LifeSpanComponent" type="Node" parent="." unique_id=1878244404]
+script = ExtResource("1_6ch17")
+definition = ExtResource("2_jjf4b")
+metadata/_custom_type_script = "uid://b30iftbd8ge6y"
+
+[node name="LifeSpanVisualAdapter" type="Node" parent="." unique_id=1779087550 node_paths=PackedStringArray("lifespan_component", "sprite")]
+script = ExtResource("2_se7we")
+lifespan_component = NodePath("../LifeSpanComponent")
+sprite = NodePath("../Sprite2D")
+metadata/_custom_type_script = "uid://ctgov3adjchj1"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1174551564]
+position = Vector2(-1, -264)
+shape = SubResource("RectangleShape2D_6ch17")
