@@ -7,6 +7,8 @@ class_name WorkerBlackboard
 @export var state_machine_path: NodePath = NodePath("../WorkerStateMachine")
 @export var adapter_path: NodePath = NodePath("../WorkerGOAPAdapter")
 
+var world_state: GOAPWorldState = GOAPWorldState.new()
+var is_wandering: bool = false
 var worker: Worker
 var stats: WorkerStatsComponent
 var movement: WorkerMovementComponent
@@ -27,6 +29,7 @@ var last_failure_reason: String = ""
 
 func _ready() -> void:
 	refresh_references()
+	update_world_state()
 
 
 func refresh_references() -> void:
@@ -52,6 +55,31 @@ func refresh_references() -> void:
 		push_error("WorkerBlackboard missing adapter reference.")
 
 
+func update_world_state() -> void:
+	if world_state == null:
+		world_state = GOAPWorldState.new()
+		
+	world_state.facts.clear()
+
+	world_state.set_fact(&"has_assignment", has_assignment())
+	world_state.set_fact(&"has_target", has_valid_target())
+	world_state.set_fact(&"has_cargo", has_cargo())
+	world_state.set_fact(&"stamina_low", has_low_stamina())
+	world_state.set_fact(&"can_work", can_work())
+	world_state.set_fact(&"at_target", is_at_target())
+	world_state.set_fact(&"is_wandering", is_wandering)
+	
+	if worker != null:
+		world_state.set_fact(&"is_idle", worker.get_worker_state() == WorkerStateMachine.IDLE)
+		world_state.set_fact(&"is_recovering", worker.get_worker_state() == WorkerStateMachine.RECOVERING)
+		world_state.set_fact(&"is_working", worker.get_worker_state() == WorkerStateMachine.WORKING)
+		
+
+func get_world_state() -> GOAPWorldState:
+	update_world_state()
+	return world_state
+
+
 func set_target(target: Node2D) -> void:
 	current_target = target
 
@@ -61,17 +89,23 @@ func set_target(target: Node2D) -> void:
 	else:
 		has_target_position = false
 
+	update_world_state()
+
 
 func set_target_position(position: Vector2) -> void:
 	current_target = null
 	current_target_position = position
 	has_target_position = true
 
+	update_world_state()
+
 
 func clear_target() -> void:
 	current_target = null
 	current_target_position = Vector2.ZERO
 	has_target_position = false
+
+	update_world_state()
 
 
 func get_target_position() -> Vector2:
@@ -122,12 +156,15 @@ func set_action_result(action_id: StringName, status: StringName, reason: String
 
 
 func get_world_state_data() -> Dictionary[StringName, Variant]:
+	update_world_state()
+
 	return {
 		&"has_assignment": has_assignment(),
 		&"has_target": has_valid_target(),
 		&"has_cargo": has_cargo(),
 		&"stamina_low": has_low_stamina(),
-		&"can_work": can_work()
+		&"can_work": can_work(),
+		&"at_target": is_at_target()
 	}
 
 

@@ -4,9 +4,4 @@
 
 [resource]
 script = ExtResource("1_g8rg0")
-action_id = &"idle"
-display_name = "Idle"
-effects = Dictionary[StringName, Variant]({
-&"is_idle": true
-})
 metadata/_custom_type_script = "uid://d2rpusd6jqpxv"

@@ -1,7 +1,6 @@
 extends GOAPAction
 class_name GOAPSideWanderAction
 
-@export var movement_path: NodePath = NodePath("../WorkerMovementComponent")
 @export var min_run_time: float = 2.0
 @export var max_run_time: float = 5.0
 
@@ -15,35 +14,64 @@ func _init() -> void:
 	base_cost = 1.0
 	interruptible = true
 	requires_target = false
-	preconditions = {}
-	effects = {
-		&"is_idle": true
+
+	preconditions = {
+		&"has_assignment": false,
+		&"stamina_low": false
 	}
+
+	effects = {
+		&"is_wandering": true
+	}
+
+
+func is_valid_for(blackboard: WorkerBlackboard) -> bool:
+	return blackboard != null \
+		and blackboard.worker != null \
+		and blackboard.movement != null \
+		and not blackboard.has_assignment() \
+		and not blackboard.has_low_stamina()
 
 
 func enter(blackboard: WorkerBlackboard) -> void:
 	super.enter(blackboard)
 
-	movement = blackboard.get_node_or_null(movement_path) as WorkerMovementComponent
-	if movement == null:
-		push_error("GOAPSideWanderAction missing movement_path.")
-		status = ActionStatus.FAILED
-		return
-
+	movement = blackboard.movement
 	timer = randf_range(min_run_time, max_run_time)
-	blackboard.set_fact(&"is_wandering", true)
-	movement.start_wander()
+
+	blackboard.is_wandering = true
+	blackboard.update_world_state()
+
+	if blackboard.adapter != null:
+		blackboard.adapter.set_idle()
+
+	if movement != null and movement.has_method("start_wander"):
+		movement.start_wander()
+	else:
+		status = ActionStatus.FAILED
+		last_failure_reason = "movement_missing_start_wander"
 
 
 func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
+	if blackboard == null:
+		return fail("missing_blackboard")
+
 	if movement == null:
-		return fail()
+		return fail("missing_movement")
+
+	if blackboard.has_low_stamina():
+		return interrupt(blackboard, "stamina_low")
+
+	if blackboard.has_assignment():
+		return interrupt(blackboard, "assignment_received")
+
+	if movement.has_method("physics_update"):
+		movement.physics_update(delta)
+
+	if blackboard.stats != null:
+		blackboard.stats.drain_stamina_for_movement(delta)
 
 	timer -= delta
-
-	if blackboard.get_fact(&"needs_rest", false):
-		status = ActionStatus.SUCCEEDED
-		return status
 
 	if timer <= 0.0:
 		timer = randf_range(min_run_time, max_run_time)
@@ -52,9 +80,13 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 	return status
 
 
+
 func exit(blackboard: WorkerBlackboard) -> void:
-	if movement != null:
+	if movement != null and movement.has_method("stop_wander"):
 		movement.stop_wander()
 
-	blackboard.set_fact(&"is_wandering", false)
+	if blackboard != null:
+		blackboard.is_wandering = false
+		blackboard.update_world_state()
+
 	super.exit(blackboard)

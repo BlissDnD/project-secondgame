@@ -18,7 +18,7 @@
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
 [ext_resource type="Script" uid="uid://bvye302uglh6q" path="res://systems/work/worker_need_system.gd" id="20_8255w"]
-[ext_resource type="Resource" uid="uid://cppffm3iwkmdb" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
+[ext_resource type="Resource" uid="uid://cm5o4c4knavu8" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
 [ext_resource type="Script" uid="uid://bwgyqrosfntql" path="res://systems/work/utility_goal_selector.gd" id="21_ynsbi"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
@@ -53,7 +53,7 @@ height = 58.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 54)
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "crystal_cargo_visual", "debug_label")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label")]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
@@ -62,6 +62,9 @@ stats = NodePath("WorkerStatsComponent")
 need_system = NodePath("WorkerNeedSystem")
 goal_selector = NodePath("UtilityGoalSelector")
 movement = NodePath("WorkerMovementComponent")
+blackboard = NodePath("WorkerBlackboard")
+goap_brain = NodePath("GOAPBrain")
+goap_adapter = NodePath("WorkerGOAPAdapter")
 crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
 
@@ -75,6 +78,30 @@ sprite_frames = SubResource("SpriteFrames_nupkf")
 position = Vector2(-9, -73)
 scale = Vector2(0.038411465, 0.038411465)
 sprite_frames = SubResource("SpriteFrames_ydra3")
+
+[node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
+script = ExtResource("7_ock52")
+metadata/_custom_type_script = "uid://oe6rx48tfp1c"
+
+[node name="WorkerExternalMotionComponent" type="Node" parent="." unique_id=1027011063 node_paths=PackedStringArray("worker_body", "nodes_to_disable_while_external_motion")]
+script = ExtResource("18_4vlxc")
+worker_body = NodePath("..")
+motion_profile = ExtResource("19_lwa6c")
+minimum_air_time = 0.0
+nodes_to_disable_while_external_motion = [NodePath("../WorkerMovementComponent"), NodePath("../GOAPBrain"), NodePath("../WorkerStateMachine")]
+metadata/_custom_type_script = "uid://csthjkstoc633"
+
+[node name="WorkerStatsComponent" type="Node" parent="." unique_id=1540129802]
+script = ExtResource("19_ih8nm")
+metadata/_custom_type_script = "uid://ckasy4oc8n4pg"
+
+[node name="WorkerNeedSystem" type="Node" parent="." unique_id=1798279296]
+script = ExtResource("20_8255w")
+metadata/_custom_type_script = "uid://bvye302uglh6q"
+
+[node name="UtilityGoalSelector" type="Node" parent="." unique_id=525661005]
+script = ExtResource("21_ynsbi")
+metadata/_custom_type_script = "uid://bwgyqrosfntql"
 
 [node name="WorkerStateMachine" type="Node" parent="." unique_id=733597544]
 script = ExtResource("2_md8yx")
@@ -102,6 +129,18 @@ wander_pause_time_max = 7.0
 wander_turn_chance = 0.15
 wander_turn_on_gap = true
 metadata/_custom_type_script = "uid://c1cycgosdi6gm"
+
+[node name="WorkerGOAPAdapter" type="Node" parent="." unique_id=1642598976]
+script = ExtResource("16_j82ov")
+metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
+
+[node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
+script = ExtResource("12_5oyiq")
+blackboard_path = NodePath("../WorkerBlackboard")
+available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd")])
+goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_ir7vy")])
+replan_interval = 5.0
+metadata/_custom_type_script = "uid://dom034yrmhg55"
 
 [node name="FloorRay" type="RayCast2D" parent="." unique_id=1912104998]
 target_position = Vector2(0, 44)
@@ -147,10 +186,6 @@ shape = SubResource("RectangleShape2D_ydra3")
 position = Vector2(0, -29)
 shape = SubResource("CapsuleShape2D_5oyiq")
 
-[node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
-script = ExtResource("7_ock52")
-metadata/_custom_type_script = "uid://oe6rx48tfp1c"
-
 [node name="WorkerSensor2D" type="Area2D" parent="." unique_id=1197924075]
 script = ExtResource("11_j82ov")
 metadata/_custom_type_script = "uid://dtl6k7k0kll8k"
@@ -158,34 +193,3 @@ metadata/_custom_type_script = "uid://dtl6k7k0kll8k"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerSensor2D" unique_id=1679016499]
 position = Vector2(-1.5, -27)
 shape = SubResource("RectangleShape2D_lf01n")
-
-[node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
-script = ExtResource("12_5oyiq")
-blackboard_path = NodePath("../WorkerBlackboard")
-available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd")])
-goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_ir7vy")])
-metadata/_custom_type_script = "uid://dom034yrmhg55"
-
-[node name="WorkerGOAPAdapter" type="Node" parent="." unique_id=1642598976]
-script = ExtResource("16_j82ov")
-metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
-
-[node name="WorkerExternalMotionComponent" type="Node" parent="." unique_id=1027011063 node_paths=PackedStringArray("worker_body", "nodes_to_disable_while_external_motion")]
-script = ExtResource("18_4vlxc")
-worker_body = NodePath("..")
-motion_profile = ExtResource("19_lwa6c")
-minimum_air_time = 0.0
-nodes_to_disable_while_external_motion = [NodePath("../WorkerMovementComponent"), NodePath("../GOAPBrain"), NodePath("../WorkerStateMachine")]
-metadata/_custom_type_script = "uid://csthjkstoc633"
-
-[node name="WorkerStatsComponent" type="Node" parent="." unique_id=1540129802]
-script = ExtResource("19_ih8nm")
-metadata/_custom_type_script = "uid://ckasy4oc8n4pg"
-
-[node name="WorkerNeedSystem" type="Node" parent="." unique_id=1798279296]
-script = ExtResource("20_8255w")
-metadata/_custom_type_script = "uid://bvye302uglh6q"
-
-[node name="UtilityGoalSelector" type="Node" parent="." unique_id=525661005]
-script = ExtResource("21_ynsbi")
-metadata/_custom_type_script = "uid://bwgyqrosfntql"

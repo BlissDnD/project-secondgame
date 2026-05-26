@@ -1,17 +1,7 @@
-[gd_resource type="Resource" script_class="GOAPMoveToTargetAction" format=3 uid="uid://c50j1xa2ynlvp"]
+[gd_resource type="Resource" script_class="GOAPMoveToTargetAction" format=3 uid="uid://chjpvlwop5my"]
 
 [ext_resource type="Script" uid="uid://7kvqehrdsbps" path="res://systems/work/goap/actions/goap_move_to_target_action.gd" id="1_e8phw"]
 
 [resource]
 script = ExtResource("1_e8phw")
-motor_path = NodePath("../WorkerMotor2D")
-action_id = &"move_to_target"
-display_name = "Move to target"
-preconditions = Dictionary[StringName, Variant]({
-&"has_target": true
-})
-effects = Dictionary[StringName, Variant]({
-&"at_target": true
-})
-requires_target = true
 metadata/_custom_type_script = "uid://7kvqehrdsbps"

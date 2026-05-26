@@ -6,6 +6,9 @@ class_name Worker
 @export var need_system: WorkerNeedSystem
 @export var goal_selector: UtilityGoalSelector
 @export var movement: Node
+@export var blackboard: WorkerBlackboard
+@export var goap_brain: GOAPBrain
+@export var goap_adapter: WorkerGOAPAdapter
 
 @export var crystal_cargo_visual: Node2D
 @export var debug_label: Label
@@ -30,7 +33,7 @@ class_name Worker
 @export var idle_wall_ray: RayCast2D
 @export var idle_gap_ray: RayCast2D
 
-var current_socket: Node
+var current_socket: Node = null
 var has_assignment: bool = false
 var assigned_target: Node2D = null
 
@@ -44,15 +47,15 @@ var idle_wander_paused: bool = false
 
 func _ready() -> void:
 	add_to_group("worker")
+	randomize()
+
 	_resolve_nodes()
 	_connect_signals()
 
 	if crystal_cargo_visual != null:
 		crystal_cargo_visual.visible = false
 
-	randomize()
 	_randomize_idle_wander()
-
 	set_worker_state(WorkerStateMachine.IDLE, "spawned")
 
 
@@ -60,8 +63,9 @@ func _physics_process(delta: float) -> void:
 	if state_machine == null:
 		return
 
-	_update_ai_loop()
-	_update_state_behavior(delta)
+	_update_worker_context()
+	_update_lifecycle()
+	_update_non_goap_state_behavior(delta)
 	_update_debug_label()
 
 
@@ -81,6 +85,15 @@ func _resolve_nodes() -> void:
 	if movement == null:
 		movement = get_node_or_null("WorkerMovementComponent")
 
+	if blackboard == null:
+		blackboard = get_node_or_null("WorkerBlackboard") as WorkerBlackboard
+
+	if goap_brain == null:
+		goap_brain = get_node_or_null("GOAPBrain") as GOAPBrain
+
+	if goap_adapter == null:
+		goap_adapter = get_node_or_null("WorkerGOAPAdapter") as WorkerGOAPAdapter
+
 	if idle_floor_ray == null:
 		idle_floor_ray = get_node_or_null("FloorRay") as RayCast2D
 
@@ -91,9 +104,9 @@ func _resolve_nodes() -> void:
 		idle_gap_ray = get_node_or_null("GapRay") as RayCast2D
 
 	if crystal_cargo_visual == null:
-		crystal_cargo_visual = get_node_or_null("CristalCargoVisual") as Node2D
+		crystal_cargo_visual = get_node_or_null("CrystalCargoVisual") as Node2D
 		if crystal_cargo_visual == null:
-			crystal_cargo_visual = get_node_or_null("CrystalCargoVisual") as Node2D
+			crystal_cargo_visual = get_node_or_null("CristalCargoVisual") as Node2D
 
 	if debug_label == null:
 		debug_label = get_node_or_null("DebugLabel") as Label
@@ -117,40 +130,202 @@ func _connect_signals() -> void:
 		if not stats.stamina_recovered.is_connected(_on_stamina_recovered):
 			stats.stamina_recovered.connect(_on_stamina_recovered)
 
+	if goap_brain != null:
+		if not goap_brain.action_started.is_connected(_on_goap_action_started):
+			goap_brain.action_started.connect(_on_goap_action_started)
 
-func _update_ai_loop() -> void:
+		if not goap_brain.action_finished.is_connected(_on_goap_action_finished):
+			goap_brain.action_finished.connect(_on_goap_action_finished)
+
+		if not goap_brain.action_failed.is_connected(_on_goap_action_failed):
+			goap_brain.action_failed.connect(_on_goap_action_failed)
+
+
+func _update_worker_context() -> void:
+	if blackboard != null and blackboard.has_method("update_world_state"):
+		blackboard.call("update_world_state")
+
+
+func _update_lifecycle() -> void:
 	if stats == null or need_system == null or goal_selector == null:
 		return
 
 	var current_need := need_system.evaluate(stats, has_assignment)
 	var current_goal := goal_selector.select_goal(current_need)
 
-	_update_lifecycle_from_goal(current_goal)
-
-
-func _update_lifecycle_from_goal(goal: StringName) -> void:
-	if goal == UtilityGoalSelector.FAILED_GOAL:
-		state_machine.fail("failed_need")
+	if current_goal == UtilityGoalSelector.FAILED_GOAL:
+		state_machine.fail("failed_goal")
 		return
 
-	if goal == UtilityGoalSelector.REST_GOAL:
+	if current_goal == UtilityGoalSelector.REST_GOAL:
 		if not state_machine.is_recovering():
 			state_machine.recover("stamina_low")
 		return
 
 	if state_machine.is_recovering():
-		if stats != null and stats.has_recovered_stamina():
+		if stats.has_recovered_stamina():
 			state_machine.return_from_recovery(has_assignment)
 		return
 
-	if goal == UtilityGoalSelector.WORK_GOAL:
+	if current_goal == UtilityGoalSelector.WORK_GOAL:
 		if state_machine.is_idle():
-			state_machine.set_state(WorkerStateMachine.ASSIGNED, "work_goal_selected")
+			set_worker_state(WorkerStateMachine.ASSIGNED, "work_goal_selected")
 		return
 
-	if goal == UtilityGoalSelector.IDLE_GOAL:
-		if not state_machine.is_idle() and not has_crystal_cargo:
-			state_machine.set_state(WorkerStateMachine.IDLE, "idle_goal_selected")
+	if current_goal == UtilityGoalSelector.IDLE_GOAL:
+		if has_crystal_cargo:
+			return
+
+		if not state_machine.is_idle():
+			set_worker_state(WorkerStateMachine.IDLE, "idle_goal_selected")
+
+		return
+
+
+func _update_non_goap_state_behavior(delta: float) -> void:
+	match state_machine.current_state:
+		WorkerStateMachine.IDLE:
+			_execute_idle_fallback(delta)
+
+		WorkerStateMachine.ASSIGNED:
+			_execute_assigned()
+
+		WorkerStateMachine.MOVING_TO_WORK:
+			_execute_moving_to_work(delta)
+
+		WorkerStateMachine.WORKING:
+			_execute_working(delta)
+
+		WorkerStateMachine.CARRYING:
+			_execute_carrying(delta)
+
+		WorkerStateMachine.DEPOSITING:
+			_execute_depositing()
+
+		WorkerStateMachine.RECOVERING:
+			_execute_recovering_fallback(delta)
+
+		WorkerStateMachine.FAILED:
+			_execute_failed(delta)
+
+		_:
+			_apply_idle_physics(delta)
+
+
+func _execute_idle_fallback(delta: float) -> void:
+	if goap_brain != null and goap_brain.current_action != null:
+		return
+
+	if _movement_has_method(&"physics_update"):
+		movement.call("physics_update", delta)
+	else:
+		_apply_idle_wander(delta)
+
+	if stats != null and absf(velocity.x) > 0.1:
+		stats.drain_stamina_for_movement(delta)
+
+
+func _execute_assigned() -> void:
+	velocity.x = 0.0
+
+	if assigned_target != null:
+		if blackboard != null:
+			blackboard.set_target(assigned_target)
+
+		set_worker_state(WorkerStateMachine.MOVING_TO_WORK, "has_assigned_target")
+	else:
+		set_worker_state(WorkerStateMachine.WORKING, "assigned_without_target")
+
+
+func _execute_moving_to_work(delta: float) -> void:
+	if goap_brain != null and goap_brain.current_action != null:
+		return
+
+	if assigned_target == null:
+		set_worker_state(WorkerStateMachine.WORKING, "missing_target_continue_work")
+		return
+
+	if _movement_has_method(&"set_target"):
+		movement.call("set_target", assigned_target.global_position)
+
+	if _movement_has_method(&"physics_update"):
+		movement.call("physics_update", delta)
+	else:
+		var direction := signf(assigned_target.global_position.x - global_position.x)
+		velocity.x = direction * idle_wander_speed
+		_apply_gravity(delta)
+		move_and_slide()
+
+	if stats != null:
+		stats.drain_stamina_for_movement(delta)
+
+	if global_position.distance_to(assigned_target.global_position) <= deposit_distance:
+		velocity.x = 0.0
+		set_worker_state(WorkerStateMachine.WORKING, "arrived_to_work")
+
+
+func _execute_working(delta: float) -> void:
+	if goap_brain != null and goap_brain.current_action != null:
+		return
+
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity = Vector2.ZERO
+
+	if stats != null:
+		stats.drain_stamina_for_work(delta)
+
+
+func _execute_carrying(delta: float) -> void:
+	if goap_brain != null and goap_brain.current_action != null:
+		_try_deposit_crystal()
+		return
+
+	if main_crystal_target != null and _movement_has_method(&"set_target"):
+		movement.call("set_target", main_crystal_target.global_position)
+
+	if _movement_has_method(&"physics_update"):
+		movement.call("physics_update", delta)
+	else:
+		_apply_gravity(delta)
+		move_and_slide()
+
+	if stats != null:
+		stats.drain_stamina_for_movement(delta)
+
+	_try_deposit_crystal()
+
+
+func _execute_depositing() -> void:
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity = Vector2.ZERO
+
+
+func _execute_recovering_fallback(delta: float) -> void:
+	if goap_brain != null and goap_brain.current_action != null:
+		return
+
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity.x = 0.0
+	_apply_gravity(delta)
+	move_and_slide()
+
+	if stats != null:
+		stats.recover_stamina(delta)
+
+
+func _execute_failed(delta: float) -> void:
+	if _movement_has_method(&"clear_target"):
+		movement.call("clear_target")
+
+	velocity.x = 0.0
+	_apply_gravity(delta)
+	move_and_slide()
 
 
 func set_worker_state(new_state: StringName, reason: String = "") -> void:
@@ -162,7 +337,7 @@ func set_worker_state(new_state: StringName, reason: String = "") -> void:
 
 func get_worker_state() -> StringName:
 	if state_machine == null:
-		return &""
+		return &"None"
 
 	return state_machine.current_state
 
@@ -173,12 +348,22 @@ func assign_work(target: Node2D = null) -> void:
 
 	has_assignment = true
 	assigned_target = target
+
+	if blackboard != null:
+		if target != null:
+			blackboard.set_target(target)
+		else:
+			blackboard.clear_target()
+
 	set_worker_state(WorkerStateMachine.ASSIGNED, "work_assigned")
 
 
 func clear_assignment() -> void:
 	has_assignment = false
 	assigned_target = null
+
+	if blackboard != null:
+		blackboard.clear_target()
 
 	if state_machine != null and not state_machine.is_recovering():
 		set_worker_state(WorkerStateMachine.IDLE, "assignment_cleared")
@@ -204,6 +389,9 @@ func receive_crystal_cargo() -> void:
 	if main_crystal_target == null:
 		set_worker_state(WorkerStateMachine.FAILED, "cannot_reach_main_crystal")
 		return
+
+	if blackboard != null:
+		blackboard.set_target(main_crystal_target)
 
 	if _movement_has_method(&"set_target"):
 		movement.call("set_target", main_crystal_target.global_position)
@@ -242,135 +430,6 @@ func on_dropped() -> void:
 
 	velocity = Vector2.ZERO
 	set_worker_state(WorkerStateMachine.IDLE, "dropped_by_player")
-
-
-func _update_state_behavior(delta: float) -> void:
-	match state_machine.current_state:
-		WorkerStateMachine.IDLE:
-			_execute_idle(delta)
-
-		WorkerStateMachine.ASSIGNED:
-			_execute_assigned(delta)
-
-		WorkerStateMachine.MOVING_TO_WORK:
-			_execute_moving_to_work(delta)
-
-		WorkerStateMachine.WORKING:
-			_execute_working(delta)
-
-		WorkerStateMachine.CARRYING:
-			_execute_carrying(delta)
-
-		WorkerStateMachine.DEPOSITING:
-			_execute_depositing(delta)
-
-		WorkerStateMachine.RECOVERING:
-			_execute_recovering(delta)
-
-		WorkerStateMachine.FAILED:
-			_execute_failed(delta)
-
-		_:
-			_apply_idle_physics(delta)
-
-
-func _execute_idle(delta: float) -> void:
-	if _movement_has_method(&"physics_update"):
-		movement.call("physics_update", delta)
-	else:
-		_apply_idle_wander(delta)
-
-	if stats != null and absf(velocity.x) > 0.1:
-		stats.drain_stamina_for_movement(delta)
-
-
-func _execute_assigned(_delta: float) -> void:
-	velocity.x = 0.0
-
-	if assigned_target != null:
-		set_worker_state(WorkerStateMachine.MOVING_TO_WORK, "has_assigned_target")
-	else:
-		set_worker_state(WorkerStateMachine.WORKING, "assigned_without_target")
-
-
-func _execute_moving_to_work(delta: float) -> void:
-	if assigned_target == null:
-		set_worker_state(WorkerStateMachine.WORKING, "missing_target_continue_work")
-		return
-
-	if _movement_has_method(&"set_target"):
-		movement.call("set_target", assigned_target.global_position)
-
-	if _movement_has_method(&"physics_update"):
-		movement.call("physics_update", delta)
-	else:
-		var direction := signf(assigned_target.global_position.x - global_position.x)
-		velocity.x = direction * idle_wander_speed
-		_apply_gravity(delta)
-		move_and_slide()
-
-	if stats != null:
-		stats.drain_stamina_for_movement(delta)
-
-	if global_position.distance_to(assigned_target.global_position) <= deposit_distance:
-		velocity.x = 0.0
-		set_worker_state(WorkerStateMachine.WORKING, "arrived_to_work")
-
-
-func _execute_working(delta: float) -> void:
-	if _movement_has_method(&"clear_target"):
-		movement.call("clear_target")
-
-	velocity = Vector2.ZERO
-
-	if stats != null:
-		stats.drain_stamina_for_work(delta)
-
-	# Később ide jön majd:
-	# GoToCrystal -> MineCrystal -> PickUpCrystal -> GoToDeposit -> DepositCrystal
-
-
-func _execute_carrying(delta: float) -> void:
-	if main_crystal_target != null and _movement_has_method(&"set_target"):
-		movement.call("set_target", main_crystal_target.global_position)
-
-	if _movement_has_method(&"physics_update"):
-		movement.call("physics_update", delta)
-	else:
-		_apply_idle_physics(delta)
-
-	if stats != null:
-		stats.drain_stamina_for_movement(delta)
-
-	_try_deposit_crystal()
-
-
-func _execute_depositing(_delta: float) -> void:
-	if _movement_has_method(&"clear_target"):
-		movement.call("clear_target")
-
-	velocity = Vector2.ZERO
-
-
-func _execute_recovering(delta: float) -> void:
-	if _movement_has_method(&"clear_target"):
-		movement.call("clear_target")
-
-	velocity.x = 0.0
-	_apply_gravity(delta)
-	move_and_slide()
-
-	if stats != null:
-		stats.recover_stamina(delta)
-
-
-func _execute_failed(delta: float) -> void:
-	if _movement_has_method(&"clear_target"):
-		movement.call("clear_target")
-
-	velocity.x = 0.0
-	_apply_gravity(delta)
-	move_and_slide()
 
 
 func _movement_has_method(method_name: StringName) -> bool:
@@ -466,9 +525,7 @@ func _try_deposit_crystal() -> void:
 	if main_crystal_target == null:
 		return
 
-	var distance := global_position.distance_to(main_crystal_target.global_position)
-
-	if distance > deposit_distance:
+	if global_position.distance_to(main_crystal_target.global_position) > deposit_distance:
 		return
 
 	set_worker_state(WorkerStateMachine.DEPOSITING, "depositing_crystal")
@@ -486,14 +543,15 @@ func _try_deposit_crystal() -> void:
 		crystal_cargo_visual.visible = false
 
 	main_crystal_target = null
+
+	if blackboard != null:
+		blackboard.clear_target()
+
 	set_worker_state(WorkerStateMachine.IDLE, "crystal_deposited")
 
 
 func _find_main_crystal() -> Node2D:
 	var nodes := get_tree().get_nodes_in_group(main_crystal_group)
-
-	if nodes.is_empty():
-		return null
 
 	for node in nodes:
 		if node is Node2D:
@@ -528,6 +586,24 @@ func _on_state_changed(old_state: StringName, new_state: StringName, reason: Str
 		_randomize_idle_wander()
 
 
+func _on_goap_action_started(action: GOAPAction) -> void:
+	print("GOAP action started: ", action.action_id)
+
+
+func _on_goap_action_finished(action: GOAPAction) -> void:
+	print("GOAP action finished: ", action.action_id)
+
+	if blackboard != null:
+		blackboard.set_action_result(action.action_id, &"finished", "")
+
+
+func _on_goap_action_failed(action: GOAPAction) -> void:
+	print("GOAP action failed: ", action.action_id, " reason=", action.last_failure_reason)
+
+	if blackboard != null:
+		blackboard.set_action_result(action.action_id, &"failed", action.last_failure_reason)
+
+
 func _update_debug_label() -> void:
 	if debug_label == null:
 		return
@@ -539,6 +615,10 @@ func _update_debug_label() -> void:
 
 	if goal_selector != null:
 		state_text += "\nGoal: " + str(goal_selector.current_goal)
+
+	if goap_brain != null:
+		state_text += "\nAction: "
+		state_text += str(goap_brain.current_action.action_id) if goap_brain.current_action != null else "None"
 
 	if stats != null:
 		state_text += "\nHP: " + str(roundi(stats.health))
@@ -553,13 +633,15 @@ func _update_debug_label() -> void:
 		state_text += "\nAssignment: yes"
 
 	debug_label.text = state_text
-	
+
+
 func get_debug_state() -> Dictionary:
 	return {
 		"type": "worker",
 		"state": str(get_worker_state()),
 		"need": str(need_system.current_need) if need_system != null else "none",
 		"goal": str(goal_selector.current_goal) if goal_selector != null else "none",
+		"action": str(goap_brain.current_action.action_id) if goap_brain != null and goap_brain.current_action != null else "none",
 		"health": stats.health if stats != null else 0,
 		"energy": stats.energy if stats != null else 0,
 		"stamina": stats.stamina if stats != null else 0,
@@ -568,5 +650,7 @@ func get_debug_state() -> Dictionary:
 		"has_assignment": has_assignment,
 		"has_crystal_cargo": has_crystal_cargo,
 		"interrupt": state_machine.reason_for_interrupt if state_machine != null else "",
-		"fail": state_machine.last_failure_reason if state_machine != null else ""
+		"fail": state_machine.last_failure_reason if state_machine != null else "",
+		"blackboard": blackboard.get_debug_state() if blackboard != null else {},
+		"goap": goap_brain.get_debug_state() if goap_brain != null else {}
 	}
