@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GOAPDepositCrystalAction" format=3 uid="uid://b2i0t1xy0o84l"]
+
+[ext_resource type="Script" uid="uid://cboauot0nwho5" path="res://systems/work/goap/goals/goap_deposit_crystal_action.gd" id="1_7yj7f"]
+
+[resource]
+script = ExtResource("1_7yj7f")
+action_id = &"deposit_crystal"
+display_name = "Deposit Crystal"
+preconditions = Dictionary[StringName, Variant]({
+&"at_deposit": true,
+&"has_cargo": true
+})
+effects = Dictionary[StringName, Variant]({
+&"delivered_crystal": true,
+&"has_cargo": false
+})
+metadata/_custom_type_script = "uid://cboauot0nwho5"

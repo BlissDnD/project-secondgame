@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GOAPGoToCrystalAction" format=3 uid="uid://ctel7blfcx3k4"]
+
+[ext_resource type="Script" uid="uid://lvj0ojydis0y" path="res://systems/work/goap/goals/goap_go_to_crystal_action.gd" id="1_n1e4a"]
+
+[resource]
+script = ExtResource("1_n1e4a")
+action_id = &"go_to_crystal"
+display_name = "Go To Crystal"
+preconditions = Dictionary[StringName, Variant]({
+&"has_assignment": true,
+&"has_work_target": true,
+&"stamina_low": false
+})
+effects = Dictionary[StringName, Variant]({
+&"at_work_target": true
+})
+metadata/_custom_type_script = "uid://lvj0ojydis0y"

@@ -13,15 +13,21 @@
 [ext_resource type="Script" uid="uid://bpl7loy70rpsy" path="res://systems/work/goap/goap_action.gd" id="13_4vlxc"]
 [ext_resource type="Resource" uid="uid://bi1dq2qpqt03b" path="res://systems/work/goap/actions/rest_action.tres" id="16_8255w"]
 [ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
+[ext_resource type="Resource" uid="uid://ctel7blfcx3k4" path="res://systems/work/goap/goals/go_to_crystal_action.tres" id="17_61yg6"]
 [ext_resource type="Script" uid="uid://csthjkstoc633" path="res://systems/work/workers/worker_external_motion_component.gd" id="18_4vlxc"]
+[ext_resource type="Resource" uid="uid://c4jwpsp74decl" path="res://systems/work/goap/goals/mine_crystal_action.tres" id="18_syodb"]
 [ext_resource type="Script" uid="uid://ckasy4oc8n4pg" path="res://systems/work/workers/worker_stats_component.gd" id="19_ih8nm"]
+[ext_resource type="Resource" uid="uid://cpkb27jrf8gsn" path="res://systems/work/goap/goals/pickup_crystal_action.tres" id="19_k2aal"]
 [ext_resource type="Resource" uid="uid://c0275fwt1mdne" path="res://resources/data/physics_profiles/worker_motion_profile.tres" id="19_lwa6c"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
+[ext_resource type="Resource" uid="uid://cjp6k63qf1ybm" path="res://systems/work/goap/goals/carry_to_main_crystal_action.tres" id="20_17cts"]
 [ext_resource type="Script" uid="uid://bvye302uglh6q" path="res://systems/work/worker_need_system.gd" id="20_8255w"]
 [ext_resource type="Resource" uid="uid://cm5o4c4knavu8" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
 [ext_resource type="Resource" uid="uid://ds13lisub11su" path="res://systems/work/goap/goals/rest_goal.tres" id="20_u3vbd"]
+[ext_resource type="Resource" uid="uid://b2i0t1xy0o84l" path="res://systems/work/goap/goals/deposit_crystal_action.tres" id="21_utf6g"]
 [ext_resource type="Script" uid="uid://bwgyqrosfntql" path="res://systems/work/utility_goal_selector.gd" id="21_ynsbi"]
+[ext_resource type="Resource" uid="uid://bl6i7rp52y8di" path="res://systems/work/goap/goals/work_goal.tres" id="24_r3q7o"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -138,8 +144,8 @@ metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
 [node name="GOAPBrain" type="Node" parent="." unique_id=2008070577]
 script = ExtResource("12_5oyiq")
 blackboard_path = NodePath("../WorkerBlackboard")
-available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd"), ExtResource("16_8255w")])
-goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_ir7vy"), ExtResource("20_u3vbd")])
+available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd"), ExtResource("16_8255w"), ExtResource("17_61yg6"), ExtResource("18_syodb"), ExtResource("19_k2aal"), ExtResource("20_17cts"), ExtResource("21_utf6g")])
+goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_u3vbd"), ExtResource("24_r3q7o"), ExtResource("20_ir7vy")])
 replan_interval = 5.0
 metadata/_custom_type_script = "uid://dom034yrmhg55"
 

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dxua1o4ttgtea" path="res://assets/images/SlimeOrange/SlimeOrange_00018.png" id="2_ggd22"]
 [ext_resource type="Script" uid="uid://bm8wr0qu0bxo2" path="res://systems/work/workers/worker_socket.gd" id="3_vmugq"]
 [ext_resource type="Resource" uid="uid://cuxhv824am5ox" path="res://systems/interaction/placement/placeables/crystal_node_station_definition.tres" id="5_n4p0y"]
+[ext_resource type="Resource" uid="uid://cpdejhbwxdlqo" path="res://resources/data/physics_profiles/worker_carry_profile.tres" id="5_s7fu6"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_vmugq"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_n4p0y"]
@@ -26,11 +27,9 @@ size = Vector2(50.5, 43)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_n4p0y"]
 size = Vector2(44, 24)
 
-[node name="CrystalNodeStation" type="Node2D" unique_id=1501838052 node_paths=PackedStringArray("worker_socket")]
+[node name="CrystalNodeStation" type="Node2D" unique_id=1501838052]
 position = Vector2(-1, -48)
 script = ExtResource("1_5o5yr")
-worker_socket = NodePath("WorkerSocket")
-definition = ExtResource("5_n4p0y")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=125109257]
 position = Vector2(-1.0000038, 34)
@@ -53,13 +52,12 @@ offset_right = 4.0
 offset_bottom = 27.0
 metadata/_edit_use_anchors_ = true
 
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "ground_anchor", "highlight_target")]
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "highlight_target")]
 script = ExtResource("5_vmugq")
 root_node = NodePath("..")
-requires_ground = true
+carry_profile = ExtResource("5_s7fu6")
 supports_grid_placement = true
 placeable_definition = ExtResource("5_n4p0y")
-ground_anchor = NodePath("../GroundAnchor")
 highlight_target = NodePath("../AnimatedSprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.4392157)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
