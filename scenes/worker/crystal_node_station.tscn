@@ -7,6 +7,12 @@
 [ext_resource type="Resource" uid="uid://cpdejhbwxdlqo" path="res://resources/data/physics_profiles/worker_carry_profile.tres" id="5_s7fu6"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_vmugq"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_n4p0y"]
+size = Vector2(44, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s7fu6"]
+size = Vector2(35, 23)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_n4p0y"]
 animations = [{
 "frames": [{
@@ -18,27 +24,38 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_s7fu6"]
-size = Vector2(35, 23)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_0g1qb"]
 size = Vector2(50.5, 43)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_n4p0y"]
-size = Vector2(44, 24)
-
-[node name="CrystalNodeStation" type="Node2D" unique_id=1501838052]
+[node name="CrystalNodeStation" type="Node2D" unique_id=1233325320]
 position = Vector2(-1, -48)
 script = ExtResource("1_5o5yr")
+metadata/_custom_type_script = "uid://cipvc3it5fahh"
+
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "ground_anchor", "highlight_target")]
+script = ExtResource("5_vmugq")
+root_node = NodePath("")
+carry_profile = ExtResource("5_s7fu6")
+supports_grid_placement = true
+placeable_definition = ExtResource("5_n4p0y")
+placeable_scene = null
+ground_anchor = NodePath("../GroundAnchor")
+highlight_target = NodePath("../AnimatedSprite2D")
+highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.4392157)
+metadata/_custom_type_script = "uid://c0acc3v16fne0"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1074899958]
+position = Vector2(1, 33)
+shape = SubResource("RectangleShape2D_n4p0y")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1483393256]
+position = Vector2(1.5, 36.5)
+shape = SubResource("RectangleShape2D_s7fu6")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=125109257]
 position = Vector2(-1.0000038, 34)
 scale = Vector2(0.123170726, 0.12317073)
 sprite_frames = SubResource("SpriteFrames_n4p0y")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1483393256]
-position = Vector2(1.5, 36.5)
-shape = SubResource("RectangleShape2D_s7fu6")
 
 [node name="WorkerSocket" type="Area2D" parent="." unique_id=42561517]
 script = ExtResource("3_vmugq")
@@ -51,19 +68,5 @@ shape = SubResource("RectangleShape2D_0g1qb")
 offset_right = 4.0
 offset_bottom = 27.0
 metadata/_edit_use_anchors_ = true
-
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1896007660 node_paths=PackedStringArray("root_node", "highlight_target")]
-script = ExtResource("5_vmugq")
-root_node = NodePath("..")
-carry_profile = ExtResource("5_s7fu6")
-supports_grid_placement = true
-placeable_definition = ExtResource("5_n4p0y")
-highlight_target = NodePath("../AnimatedSprite2D")
-highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.4392157)
-metadata/_custom_type_script = "uid://c0acc3v16fne0"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=1074899958]
-position = Vector2(1, 33)
-shape = SubResource("RectangleShape2D_n4p0y")
 
 [node name="GroundAnchor" type="Node2D" parent="." unique_id=1623249915]

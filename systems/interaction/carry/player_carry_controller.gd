@@ -13,7 +13,6 @@ class_name PlayerCarryController
 @export_range(0.01, 10000.0, 0.01) var lift_strength: float = 25.0
 @export_range(0.01, 10000.0, 0.01) var carry_strength: float = 30.0
 @export_range(0.01, 10000.0, 0.01) var throw_strength: float = 20.0
-
 @export_range(0.0, 10000.0, 1.0) var base_throw_impulse: float = 650.0
 
 @export_group("Throw Charge")
@@ -32,24 +31,48 @@ var _is_charging_throw: bool = false
 var _throw_charge: float = 0.0
 
 
+func _ready() -> void:
+	call_deferred("_resolve_placement_controller")
+
+
 func _physics_process(delta: float) -> void:
 	if _is_charging_throw:
 		_update_throw_charge(delta)
 
-	if placement_controller != null and placement_controller.is_placing:
-		var target_position := _get_player_place_target_position()
-		placement_controller.update_preview_from_world_position(target_position)
+	_update_placement_preview()
+
+
+func _resolve_placement_controller() -> void:
+	_get_placement_controller()
+
+
+func _get_placement_controller() -> PlacementController:
+	if placement_controller != null:
+		return placement_controller
+
+	placement_controller = get_tree().get_first_node_in_group("placement_controller") as PlacementController
+
+	if placement_controller != null:
+		return placement_controller
+
+	var current := get_tree().current_scene
+	if current != null:
+		placement_controller = current.find_child("PlacementController", true, false) as PlacementController
+
+	return placement_controller
 
 
 func try_interact() -> void:
-	if placement_controller != null and placement_controller.is_placing:
-		placement_controller.try_place_current()
-		return
-
 	if carried_component != null:
 		cancel_throw_charge()
 
 		if _try_insert_carried_worker_into_socket():
+			_clear_carry_collision_proxy()
+			carried_component = null
+			_cancel_placement_preview()
+			return
+
+		if _try_place_carried():
 			_clear_carry_collision_proxy()
 			carried_component = null
 			return
@@ -58,6 +81,7 @@ func try_interact() -> void:
 		return
 
 	var carryable := _find_nearest_carryable()
+
 	if carryable != null:
 		if not carryable.can_be_lifted_by(lift_strength):
 			LoggerConsole.log("Too heavy to lift: " + str(carryable.get_weight()))
@@ -67,6 +91,10 @@ func try_interact() -> void:
 			carried_component = carryable
 			_create_carry_collision_proxy(carried_component)
 			return
+
+
+func get_carried_carryable() -> CarryableComponent:
+	return carried_component
 
 
 func start_throw_charge() -> void:
@@ -93,6 +121,8 @@ func release_charged_throw(direction: Vector2, mouse_position: Vector2) -> void:
 	if not carried_component.can_be_thrown():
 		cancel_throw_charge()
 		return
+
+	_cancel_placement_preview()
 
 	var power_ratio := get_current_throw_power_ratio_for_mouse(mouse_position)
 	var charged_impulse := base_throw_impulse * power_ratio
@@ -191,15 +221,74 @@ func _update_throw_charge(delta: float) -> void:
 	_throw_charge = clampf(_throw_charge + delta / charge_time, 0.0, 1.0)
 
 
+func _update_placement_preview() -> void:
+	var controller := _get_placement_controller()
+
+	if controller == null:
+		return
+
+	if carried_component == null:
+		_cancel_placement_preview()
+		return
+
+	if not carried_component.supports_placement():
+		_cancel_placement_preview()
+		return
+
+	var target_position := _get_player_place_target_position()
+
+	carried_component.update_placement_preview(
+		controller,
+		target_position
+	)
+
+
+func _try_place_carried() -> bool:
+	if carried_component == null:
+		return false
+
+	var controller := _get_placement_controller()
+
+	if controller == null:
+		return false
+
+	if not carried_component.supports_placement():
+		return false
+
+	var target_position := _get_player_place_target_position()
+
+	var placed := carried_component.try_place_with_controller(
+		controller,
+		target_position
+	)
+
+	if placed:
+		_cancel_placement_preview()
+
+	return placed
+
+
+func _cancel_placement_preview() -> void:
+	var controller := _get_placement_controller()
+
+	if controller == null:
+		return
+
+	if controller.is_placing:
+		controller.cancel_placement()
+
+
 func _throw_carried_with_impulse(direction: Vector2, throw_impulse: float) -> void:
 	if carried_component == null:
 		return
 
 	_clear_carry_collision_proxy()
+	_cancel_placement_preview()
 
 	var throw_position := get_throw_origin()
 	var player_physics_body := player_body as PhysicsBody2D
 	var throw_velocity := _get_throw_velocity_for_direction(direction, throw_impulse)
+
 	LoggerConsole.log(
 		"THROW "
 		+ str(carried_component.name)
@@ -210,6 +299,7 @@ func _throw_carried_with_impulse(direction: Vector2, throw_impulse: float) -> vo
 		+ " velocity="
 		+ str(throw_velocity)
 	)
+
 	carried_component.throw_with_velocity(
 		throw_position,
 		throw_velocity,
@@ -245,8 +335,9 @@ func _drop_carried() -> void:
 		return
 
 	_clear_carry_collision_proxy()
+	_cancel_placement_preview()
 
-	var drop_position := player_body.global_position + drop_offset
+	var drop_position := _get_player_place_target_position()
 	var inherited_velocity := _get_player_velocity()
 
 	carried_component.drop(drop_position, inherited_velocity)
@@ -303,6 +394,7 @@ func _try_insert_carried_worker_into_socket() -> bool:
 		return false
 
 	_clear_carry_collision_proxy()
+	_cancel_placement_preview()
 
 	carried_component.is_carried = false
 	carried_component.carrier = null
@@ -394,11 +486,15 @@ func _get_player_place_target_position() -> Vector2:
 	if player_body != null and player_body.has_method("get_facing_direction"):
 		facing = float(player_body.get_facing_direction())
 
+	if player_body == null:
+		return Vector2.ZERO
+
 	return player_body.global_position + Vector2(48.0 * facing, 0.0)
 
 
 func _get_player_velocity() -> Vector2:
 	var character := player_body as CharacterBody2D
+
 	if character != null:
 		return character.velocity
 

@@ -4,15 +4,17 @@ class_name CarryableComponent
 signal picked_up(carrier: Node2D)
 signal dropped(carrier: Node2D)
 signal thrown(carrier: Node2D, velocity: Vector2)
+signal placed(carrier: Node2D, placed_node: Node)
 
 @export var root_node: Node2D
 @export var hold_offset: Vector2 = Vector2(0, -48)
 
 @export var carry_profile: CarryProfile
 
+@export_group("Optional Placement Override")
 @export var supports_grid_placement: bool = false
 @export var placeable_definition: PlaceableDefinition
-@export var footprint_tiles: Vector2i = Vector2i.ONE
+@export var placeable_scene: PackedScene
 
 @export var disable_body_collision_while_carried: bool = true
 @export var enable_body_collision_when_dropped: bool = true
@@ -70,6 +72,76 @@ func can_drop_freely() -> bool:
 		return true
 
 	return carry_profile.can_drop_freely
+
+
+func supports_placement() -> bool:
+	return supports_grid_placement \
+		and placeable_definition != null \
+		and placeable_scene != null
+
+
+func update_placement_preview(
+	placement_controller: PlacementController,
+	world_position: Vector2
+) -> bool:
+	if placement_controller == null:
+		return false
+
+	if not supports_placement():
+		placement_controller.cancel_placement()
+		return false
+
+	if not is_carried:
+		placement_controller.cancel_placement()
+		return false
+
+	if not placement_controller.is_placing:
+		placement_controller.begin_placement(placeable_definition, placeable_scene)
+
+	placement_controller.update_preview_from_world_position(world_position)
+
+	return placement_controller.current_valid
+
+
+func clear_placement_preview(placement_controller: PlacementController) -> void:
+	if placement_controller == null:
+		return
+
+	if placement_controller.is_placing:
+		placement_controller.cancel_placement()
+
+
+func try_place_with_controller(
+	placement_controller: PlacementController,
+	world_position: Vector2
+) -> bool:
+	if placement_controller == null:
+		return false
+
+	if not supports_placement():
+		return false
+
+	if not is_carried:
+		return false
+
+	update_placement_preview(placement_controller, world_position)
+
+	if not placement_controller.current_valid:
+		return false
+
+	var old_carrier := carrier
+	var placed_node := placement_controller.try_place_current()
+
+	if placed_node == null:
+		return false
+
+	_finish_carried_without_world_drop()
+
+	if root_node != null:
+		root_node.queue_free()
+
+	placed.emit(old_carrier, placed_node)
+	return true
 
 
 func can_insert_into_worker_socket() -> bool:
@@ -167,6 +239,8 @@ func pickup(new_carrier: Node2D, hold_parent: Node2D = null) -> bool:
 	if not can_carry():
 		return false
 
+	_release_placement_occupancy_if_needed()
+
 	original_parent = root_node.get_parent()
 	_original_global_scale = root_node.global_scale
 
@@ -208,8 +282,6 @@ func throw_with_velocity(
 
 	var old_carrier := carrier
 
-	# Throw release is not a normal drop.
-	# Do not call on_dropped(), because NPCs may return to idle immediately.
 	_drop_internal(throw_position, Vector2.ZERO, false, false)
 
 	var physical_body := root_node as PhysicalItemBody
@@ -308,6 +380,38 @@ func _drop_internal(
 		dropped.emit(old_carrier)
 
 
+func _finish_carried_without_world_drop() -> void:
+	if root_node == null:
+		return
+
+	var old_carrier := carrier
+
+	carrier = null
+	is_carried = false
+
+	_set_physics_carried_state(false)
+	_notify_external_motion_end_carried()
+
+	if root_node.has_method("on_dropped"):
+		root_node.on_dropped()
+
+	dropped.emit(old_carrier)
+
+
+func _release_placement_occupancy_if_needed() -> void:
+	if root_node == null:
+		return
+
+	if root_node is PlaceableObject:
+		var placeable := root_node as PlaceableObject
+
+		if "occupied_cells" in placeable:
+			PlacementOccupancyRegistry.release_cells(
+				placeable.occupied_cells,
+				placeable
+			)
+
+
 func _set_physics_carried_state(value: bool) -> void:
 	var physical_body := root_node as PhysicalItemBody
 	if physical_body != null:
@@ -317,6 +421,9 @@ func _set_physics_carried_state(value: bool) -> void:
 			physical_body.set_body_collision_enabled(not value)
 
 		if not value and enable_body_collision_when_dropped:
+			physical_body.set_body_collision_enabled(true)
+
+		if not value and enable_body_collision_when_placed:
 			physical_body.set_body_collision_enabled(true)
 
 		return

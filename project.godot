@@ -44,6 +44,10 @@ enabled=PackedStringArray("res://addons/GitGodot/plugin.cfg", "res://addons/bett
 
 terrain_layer=""
 player=""
+placement_preview=""
+placement_validator=""
+placement_controller=""
+world=""
 
 [input]
 

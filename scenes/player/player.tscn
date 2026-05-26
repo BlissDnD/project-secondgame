@@ -272,10 +272,11 @@ autoplay = "idle"
 frame = 12
 frame_progress = 0.7395813
 
-[node name="PlayerCarryController" type="Node" parent="." unique_id=73168991 node_paths=PackedStringArray("player_body", "interaction_area", "hold_point")]
+[node name="PlayerCarryController" type="Node" parent="." unique_id=73168991 node_paths=PackedStringArray("player_body", "interaction_area", "placement_controller", "hold_point") groups=["placement_preview", "placement_validator", "player"]]
 script = ExtResource("54_0ncpa")
 player_body = NodePath("..")
 interaction_area = NodePath("../FlipContainer/InteractionArea")
+placement_controller = NodePath("")
 hold_point = NodePath("../HoldPoint")
 minimum_throw_power = 0.1
 base_full_charge_time = 1.0

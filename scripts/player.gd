@@ -4,6 +4,7 @@ extends CharacterBody2D
 @onready var jump_sound: AudioStreamPlayer2D = $JumpSound
 @onready var flip_container: Node2D = $FlipContainer
 
+@export var placement_controller: PlacementController
 @export var carry_controller: PlayerCarryController
 @export var noclip_speed: float = 600.0
 @export_range(0.01, 10000.0, 0.01) var base_player_weight: float = 70.0
@@ -25,6 +26,7 @@ func _ready() -> void:
 
 	if carry_controller != null:
 		carry_controller.player_base_weight = base_player_weight
+		carry_controller.placement_controller = placement_controller
 
 
 func _input(event: InputEvent) -> void:

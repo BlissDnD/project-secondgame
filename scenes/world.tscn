@@ -30,6 +30,7 @@
 [ext_resource type="Script" uid="uid://ys7b02ohhr6v" path="res://systems/world_generation/simulation/world_simulation_debug_display.gd" id="27_37qwj"]
 [ext_resource type="Script" uid="uid://1dctjnejoswg" path="res://systems/time/day_night_controller.gd" id="27_ts3gi"]
 [ext_resource type="Script" uid="uid://dp6b3sa51hat5" path="res://systems/world_generation/simulation/world_simulation_manager.gd" id="30_navra"]
+[ext_resource type="Script" uid="uid://dmd1s3bttbf8" path="res://systems/interaction/placement/placement_controller.gd" id="31_luhhm"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71j4m"]
 texture = ExtResource("1_k0juu")
@@ -292,7 +293,7 @@ script = ExtResource("10_oo54l")
 scene = ExtResource("12_0nbtd")
 metadata/_custom_type_script = "uid://b2ipxvu3m6o8s"
 
-[node name="World" type="Node2D" unique_id=1212785255]
+[node name="World" type="Node2D" unique_id=1212785255 groups=["placement_controller", "world"]]
 
 [node name="TerrainTileMapLayer" type="TileMapLayer" parent="." unique_id=449527124 groups=["terrain_layer"]]
 tile_set = SubResource("TileSet_i7141")
@@ -341,12 +342,12 @@ spawn_offset_tiles = 5
 object_spacing_tiles = 20
 metadata/_custom_type_script = "uid://padt2g1f7e1y"
 
-[node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap") groups=["placement_preview", "placement_validator", "terrain_layer"]]
+[node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap") groups=["placement_preview", "placement_validator", "player", "terrain_layer"]]
 script = ExtResource("25_munwf")
 terrain_tilemap = NodePath("../TerrainTileMapLayer")
 metadata/_custom_type_script = "uid://b7nov50mcnb4l"
 
-[node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484 groups=["placement_preview", "placement_validator", "terrain_layer"]]
+[node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484 groups=["placement_preview", "placement_validator", "player", "terrain_layer"]]
 script = ExtResource("26_ts3gi")
 metadata/_custom_type_script = "uid://csb1wyobgijs0"
 
@@ -384,3 +385,10 @@ night_color = Color(0.60602033, 0.74618566, 0.98709136, 1)
 [node name="WorldSimulationManager" type="Node" parent="." unique_id=1136485242]
 script = ExtResource("30_navra")
 player_path = NodePath("../Player")
+
+[node name="PlacementController" type="Node" parent="." unique_id=2093984953 node_paths=PackedStringArray("validator", "preview", "world_root") groups=["placement_controller"]]
+script = ExtResource("31_luhhm")
+validator = NodePath("../PlacementValidator")
+preview = NodePath("../PlacementPreview")
+world_root = NodePath("..")
+metadata/_custom_type_script = "uid://dmd1s3bttbf8"
