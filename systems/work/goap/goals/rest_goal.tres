@@ -4,4 +4,10 @@
 
 [resource]
 script = ExtResource("1_eux0e")
+goal_id = &"rest_goal"
+display_name = "Rest Goal"
+desired_state = Dictionary[StringName, Variant]({
+&"can_work": true,
+&"stamina_low": false
+})
 metadata/_custom_type_script = "uid://da48mn5h8hatq"

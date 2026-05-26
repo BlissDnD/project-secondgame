@@ -3,12 +3,16 @@ class_name GOAPRestAction
 
 
 func _init() -> void:
-	action_id = &"rest"
-	display_name = "Rest"
-	base_cost = 1.0
+	action_id = &"rest_action"
+	display_name = "Rest Action"
+	base_cost = 0.1
 	interruptible = false
 	requires_target = false
-	preconditions = {}
+
+	preconditions = {
+		&"stamina_low": true
+	}
+
 	effects = {
 		&"stamina_low": false,
 		&"can_work": true
@@ -45,7 +49,7 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 
 
 func exit(blackboard: WorkerBlackboard) -> void:
-	if blackboard != null and blackboard.worker != null and blackboard.state_machine != null:
+	if blackboard != null and blackboard.state_machine != null and blackboard.worker != null:
 		blackboard.state_machine.return_from_recovery(blackboard.worker.has_assignment)
 
 	super.exit(blackboard)

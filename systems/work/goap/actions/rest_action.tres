@@ -4,4 +4,13 @@
 
 [resource]
 script = ExtResource("1_3sww1")
+action_id = &"rest_action"
+display_name = "Rest Action"
+preconditions = Dictionary[StringName, Variant]({
+&"stamina_low": true
+})
+effects = Dictionary[StringName, Variant]({
+&"can_work": true,
+&"stamina_low": false
+})
 metadata/_custom_type_script = "uid://bigqb8idlhxib"

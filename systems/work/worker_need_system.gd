@@ -26,7 +26,7 @@ func _get_next_need(stats: WorkerStatsComponent, has_assignment: bool) -> String
 	if not stats.is_alive():
 		return FAILED_NEED
 
-	if stats.has_low_stamina():
+	if stats.is_stamina_low:
 		return RECOVER_STAMINA_NEED
 
 	if has_assignment:
