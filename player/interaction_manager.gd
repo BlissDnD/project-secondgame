@@ -220,7 +220,8 @@ func _get_target_root(target: Node) -> Node2D:
 		return target.owner as Node2D
 
 	if target is CarryableComponent:
-		return (target as CarryableComponent).get_carried_root()
+		var carryable := target as CarryableComponent
+		return carryable.get_carried_root()
 
 	return target.owner as Node2D
 
