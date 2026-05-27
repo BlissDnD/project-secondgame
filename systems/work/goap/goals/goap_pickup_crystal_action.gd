@@ -1,6 +1,8 @@
 extends GOAPAction
 class_name GOAPPickupCrystalAction
 
+@export var crystal_item_scene: PackedScene
+
 
 func _init() -> void:
 	action_id = &"pickup_crystal"
@@ -40,8 +42,21 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if not blackboard.has_mined_crystal:
 		return fail("nothing_mined")
 
+	if crystal_item_scene == null:
+		return fail("missing_crystal_item_scene")
+
+	var item := crystal_item_scene.instantiate() as CrystalItem
+
+	if item == null:
+		return fail("failed_to_create_item")
+
+	blackboard.carried_item = item
+
 	blackboard.worker.receive_crystal_cargo()
+
 	blackboard.clear_mined_crystal()
+
+	blackboard.set_fact(&"has_cargo", true)
 
 	status = ActionStatus.SUCCEEDED
 	return status

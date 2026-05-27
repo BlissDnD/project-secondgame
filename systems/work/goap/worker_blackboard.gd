@@ -14,7 +14,7 @@ var stats: WorkerStatsComponent
 var movement: WorkerMovementComponent
 var state_machine: WorkerStateMachine
 var adapter: WorkerGOAPAdapter
-
+var carried_item: Node = null
 var current_target: Node2D = null
 var current_target_position: Vector2 = Vector2.ZERO
 var has_target_position: bool = false

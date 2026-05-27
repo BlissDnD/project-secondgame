@@ -10,6 +10,8 @@ signal stats_changed
 @export var max_stamina: float = 100.0
 @export var max_carry_weight: float = 10.0
 
+@export_group("Stamina")
+@export var enable_stamina: bool = false
 @export var stamina_low_threshold: float = 20.0
 @export var stamina_recovered_threshold: float = 80.0
 
@@ -29,10 +31,20 @@ func _ready() -> void:
 	health = max_health
 	energy = max_energy
 	stamina = max_stamina
+	is_stamina_low = false
 	_emit_changed()
 
 
+func _process(_delta: float) -> void:
+	if not enable_stamina:
+		_force_full_stamina()
+
+
 func drain_stamina(amount: float) -> void:
+	if not enable_stamina:
+		_force_full_stamina()
+		return
+
 	if amount <= 0.0:
 		return
 
@@ -42,15 +54,27 @@ func drain_stamina(amount: float) -> void:
 
 
 func drain_stamina_for_movement(delta: float) -> void:
+	if not enable_stamina:
+		_force_full_stamina()
+		return
+
 	var carry_multiplier := 1.0 + get_carry_ratio()
 	drain_stamina(stamina_move_drain_per_second * carry_multiplier * delta)
 
 
 func drain_stamina_for_work(delta: float) -> void:
+	if not enable_stamina:
+		_force_full_stamina()
+		return
+
 	drain_stamina(stamina_work_drain_per_second * delta)
 
 
 func recover_stamina(delta: float) -> void:
+	if not enable_stamina:
+		_force_full_stamina()
+		return
+
 	stamina = clampf(stamina + stamina_rest_regen_per_second * delta, 0.0, max_stamina)
 	_check_stamina_state()
 	_emit_changed()
@@ -77,14 +101,23 @@ func get_carry_ratio() -> float:
 
 
 func has_low_stamina() -> bool:
+	if not enable_stamina:
+		return false
+
 	return stamina <= stamina_low_threshold
 
 
 func has_recovered_stamina() -> bool:
+	if not enable_stamina:
+		return true
+
 	return stamina >= stamina_recovered_threshold
 
 
 func can_work() -> bool:
+	if not enable_stamina:
+		return health > 0.0
+
 	return health > 0.0 and stamina > stamina_low_threshold
 
 
@@ -108,7 +141,27 @@ func heal(amount: float) -> void:
 	_emit_changed()
 
 
+func _force_full_stamina() -> void:
+	var changed := false
+
+	if stamina != max_stamina:
+		stamina = max_stamina
+		changed = true
+
+	if is_stamina_low:
+		is_stamina_low = false
+		stamina_recovered.emit()
+		changed = true
+
+	if changed:
+		_emit_changed()
+
+
 func _check_stamina_state() -> void:
+	if not enable_stamina:
+		_force_full_stamina()
+		return
+
 	if not is_stamina_low and stamina <= stamina_low_threshold:
 		is_stamina_low = true
 		stamina_depleted.emit()

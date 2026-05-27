@@ -6,6 +6,7 @@
 script = ExtResource("1_n1e4a")
 action_id = &"go_to_crystal"
 display_name = "Go To Crystal"
+base_cost = 0.1
 preconditions = Dictionary[StringName, Variant]({
 &"has_assignment": true,
 &"has_work_target": true,

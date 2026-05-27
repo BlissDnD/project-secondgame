@@ -77,14 +77,11 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 	status = ActionStatus.RUNNING
 	return status
 
-
 func exit(blackboard: WorkerBlackboard) -> void:
 	if blackboard != null and blackboard.adapter != null:
-		if status == ActionStatus.SUCCEEDED:
-			blackboard.adapter.stop_movement()
+		blackboard.adapter.stop_movement()
 
 	super.exit(blackboard)
-
 
 func _update_stuck_detection(blackboard: WorkerBlackboard, delta: float) -> void:
 	var current_position := blackboard.worker.global_position

@@ -532,8 +532,8 @@ func _try_insert_carried_worker_into_socket() -> bool:
 	_clear_carry_collision_proxy()
 	_cancel_placement_preview()
 
-	carried_component.is_carried = false
-	carried_component.carrier = null
+	carried_component.force_drop(worker.global_position, Vector2.ZERO)
+	carried_component = null
 
 	return socket.insert_worker(worker)
 

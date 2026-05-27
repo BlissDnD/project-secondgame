@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://qu2432d8mkav"]
+
+[ext_resource type="Script" uid="uid://csn5a3igc0n77" path="res://scenes/objects/crystal_item.gd" id="1_r5028"]
+[ext_resource type="Texture2D" uid="uid://bvftfgiroejw4" path="res://assets/images/Items/apple.png" id="2_qu0ud"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_guaaj"]
+size = Vector2(41, 47)
+
+[node name="CrystalItem" type="Node2D" unique_id=415081740]
+script = ExtResource("1_r5028")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=676309751]
+position = Vector2(-1, -23)
+shape = SubResource("RectangleShape2D_guaaj")
+
+[node name="Apple" type="Sprite2D" parent="." unique_id=1694801127]
+position = Vector2(-1.0000019, -23)
+scale = Vector2(0.6328125, 0.6328125)
+texture = ExtResource("2_qu0ud")

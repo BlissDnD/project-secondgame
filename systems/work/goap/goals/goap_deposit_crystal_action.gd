@@ -45,17 +45,38 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if not blackboard.has_cargo():
 		return fail("missing_cargo")
 
+	var carried_item: Node = blackboard.carried_item as Node
+
+	if carried_item == null:
+		return fail("missing_carried_item")
+
 	var deposit_target := blackboard.current_target
 
 	if deposit_target == null:
 		return fail("missing_deposit_target")
 
 	if deposit_target.has_method("deposit_crystal"):
-		deposit_target.deposit_crystal(1)
+		var amount := 1
+
+		if carried_item.has_method("get_amount"):
+			amount = carried_item.get_amount()
+
+		deposit_target.deposit_crystal(amount)
+
+	# ====================================
+	# CLEAR ITEM STATE
+	# ====================================
+
+	if is_instance_valid(carried_item):
+		carried_item.queue_free()
+
+	blackboard.carried_item = null
+
+	blackboard.set_fact(&"has_cargo", false)
+	blackboard.set_fact(&"delivered_crystal", true)
+	blackboard.set_fact(&"has_item", false)
 
 	blackboard.worker.has_crystal_cargo = false
-	blackboard.worker.has_assignment = false
-	blackboard.worker.main_crystal_target = null
 
 	if blackboard.worker.crystal_cargo_visual != null:
 		blackboard.worker.crystal_cargo_visual.visible = false
@@ -63,14 +84,15 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if blackboard.stats != null:
 		blackboard.stats.clear_carry_weight()
 
-	blackboard.clear_assignment_data()
-
 	status = ActionStatus.SUCCEEDED
 	return status
 
 
 func exit(blackboard: WorkerBlackboard) -> void:
 	if blackboard != null and blackboard.state_machine != null:
-		blackboard.state_machine.set_state(WorkerStateMachine.IDLE, "deposit_complete")
+		blackboard.state_machine.set_state(
+			WorkerStateMachine.IDLE,
+			"deposit_complete"
+		)
 
 	super.exit(blackboard)

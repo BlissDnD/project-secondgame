@@ -317,6 +317,19 @@ func apply_motion_damping(
 		velocity,
 		delta
 	)
+
+func force_drop(
+	drop_position: Vector2,
+	inherited_velocity: Vector2 = Vector2.ZERO
+) -> void:
+	_drop_internal(
+		drop_position,
+		inherited_velocity,
+		true,
+		true
+	)
+
+
 func get_carry_speed_multiplier(
 	carry_strength: float
 ) -> float:
