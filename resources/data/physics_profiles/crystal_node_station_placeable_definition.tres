@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_y2joa")
 display_name = "Crystal Node Station"
-required_node_group = "crystal_node"
 required_node_radius_tiles = 1
+use_context_placement = true
+context_required_group = &"crystal_node"
 metadata/_custom_type_script = "uid://clim8k4pcubep"

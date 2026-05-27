@@ -24,12 +24,6 @@ class_name PlayerCarryController
 @export_range(16.0, 4000.0, 1.0) var mouse_distance_for_max_power: float = 900.0
 @export_range(0.0, 512.0, 1.0) var mouse_distance_dead_zone: float = 32.0
 
-@export_group("Context Placement")
-@export var context_required_group: StringName = &"crystal_node"
-@export var context_required_radius: float = 128.0
-@export var context_side_offset_cells: Vector2i = Vector2i(1, 0)
-@export var context_cell_size: Vector2 = Vector2(32, 32)
-
 var carried_component: CarryableComponent = null
 
 var _carry_collision_shapes: Array[CollisionShape2D] = []
@@ -253,7 +247,7 @@ func _update_context_placement_preview() -> void:
 		_cancel_placement_preview()
 		return
 
-	var target_position_variant: Variant = _get_context_place_target_position_or_null()
+	var target_position_variant: Variant = _get_context_place_target_position_or_null(definition)
 
 	if target_position_variant == null:
 		_cancel_placement_preview()
@@ -296,7 +290,7 @@ func _try_context_place_carried() -> bool:
 	if definition == null or scene == null:
 		return false
 
-	var target_position_variant: Variant = _get_context_place_target_position_or_null()
+	var target_position_variant: Variant = _get_context_place_target_position_or_null(definition)
 
 	if target_position_variant == null:
 		return false
@@ -330,6 +324,77 @@ func _try_context_place_carried() -> bool:
 	_cancel_placement_preview()
 
 	return true
+
+
+func _get_context_place_target_position_or_null(definition: PlaceableDefinition) -> Variant:
+	if definition == null:
+		return null
+
+	if not definition.use_context_placement:
+		return null
+
+	if definition.context_required_group == &"":
+		return null
+
+	var context_node := _find_nearest_context_node(
+		definition.context_required_group,
+		definition.context_required_radius
+	)
+
+	if context_node == null:
+		return null
+
+	var context_cell := _world_to_context_cell(
+		context_node.global_position,
+		definition.context_cell_size
+	)
+
+	var target_cell := context_cell + definition.context_side_offset_cells
+
+	return _context_cell_to_world(
+		target_cell,
+		definition.context_cell_size
+	)
+
+
+func _find_nearest_context_node(group_name: StringName, max_distance: float) -> Node2D:
+	if player_body == null:
+		return null
+
+	var nodes := get_tree().get_nodes_in_group(group_name)
+	var best: Node2D = null
+	var best_distance := INF
+
+	for node in nodes:
+		var node_2d := node as Node2D
+
+		if node_2d == null:
+			continue
+
+		var distance := player_body.global_position.distance_to(node_2d.global_position)
+
+		if distance > max_distance:
+			continue
+
+		if distance < best_distance:
+			best_distance = distance
+			best = node_2d
+
+	return best
+
+
+func _world_to_context_cell(world_position: Vector2, local_cell_size: Vector2) -> Vector2i:
+	return Vector2i(
+		floori(world_position.x / local_cell_size.x),
+		floori(world_position.y / local_cell_size.y)
+	)
+
+
+func _context_cell_to_world(cell: Vector2i, local_cell_size: Vector2) -> Vector2:
+	return Vector2(
+		cell.x * local_cell_size.x,
+		cell.y * local_cell_size.y
+	)
 
 
 func _cancel_placement_preview() -> void:
@@ -551,61 +616,6 @@ func _find_nearest_worker_socket() -> WorkerSocket:
 				best = socket
 
 	return best
-
-
-func _get_context_place_target_position_or_null() -> Variant:
-	var context_node := _find_nearest_context_node(
-		context_required_group,
-		context_required_radius
-	)
-
-	if context_node == null:
-		return null
-
-	var context_cell := _world_to_context_cell(context_node.global_position)
-	var target_cell := context_cell + context_side_offset_cells
-
-	return _context_cell_to_world(target_cell)
-
-
-func _find_nearest_context_node(group_name: StringName, max_distance: float) -> Node2D:
-	if player_body == null:
-		return null
-
-	var nodes := get_tree().get_nodes_in_group(group_name)
-	var best: Node2D = null
-	var best_distance := INF
-
-	for node in nodes:
-		var node_2d := node as Node2D
-
-		if node_2d == null:
-			continue
-
-		var distance := player_body.global_position.distance_to(node_2d.global_position)
-
-		if distance > max_distance:
-			continue
-
-		if distance < best_distance:
-			best_distance = distance
-			best = node_2d
-
-	return best
-
-
-func _world_to_context_cell(world_position: Vector2) -> Vector2i:
-	return Vector2i(
-		floori(world_position.x / context_cell_size.x),
-		floori(world_position.y / context_cell_size.y)
-	)
-
-
-func _context_cell_to_world(cell: Vector2i) -> Vector2:
-	return Vector2(
-		cell.x * context_cell_size.x,
-		cell.y * context_cell_size.y
-	)
 
 
 func _get_player_place_target_position() -> Vector2:
