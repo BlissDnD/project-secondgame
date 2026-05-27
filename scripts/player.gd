@@ -6,6 +6,8 @@ extends CharacterBody2D
 
 @export var placement_controller: PlacementController
 @export var carry_controller: PlayerCarryController
+@export var simple_placeable_placer: SimplePlaceablePlacer
+
 @export var noclip_speed: float = 600.0
 @export_range(0.01, 10000.0, 0.01) var base_player_weight: float = 70.0
 
@@ -24,15 +26,45 @@ func _ready() -> void:
 	_default_collision_layer = collision_layer
 	_default_collision_mask = collision_mask
 
+	if carry_controller == null:
+		carry_controller = get_node_or_null("PlayerCarryController") as PlayerCarryController
+
+	if simple_placeable_placer == null:
+		simple_placeable_placer = get_node_or_null("SimplePlaceablePlacer") as SimplePlaceablePlacer
+
 	if carry_controller != null:
 		carry_controller.player_base_weight = base_player_weight
-		carry_controller.placement_controller = placement_controller
+
+		if placement_controller != null:
+			carry_controller.placement_controller = placement_controller
+
+	if simple_placeable_placer != null:
+		simple_placeable_placer.player_body = self
+
+		if placement_controller != null:
+			simple_placeable_placer.placement_controller = placement_controller
 
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_godmode"):
 		_set_godmode_enabled(not godmode_enabled)
 		return
+
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_P:
+			if simple_placeable_placer != null:
+				simple_placeable_placer.begin()
+			return
+
+		if event.keycode == KEY_F:
+			if simple_placeable_placer != null and simple_placeable_placer.is_active:
+				simple_placeable_placer.confirm()
+				return
+
+		if event.keycode == KEY_ESCAPE:
+			if simple_placeable_placer != null and simple_placeable_placer.is_active:
+				simple_placeable_placer.cancel()
+				return
 
 	if event.is_action_pressed("throw_carried"):
 		if carry_controller != null:

@@ -6,6 +6,6 @@
 script = ExtResource("1_lnpsu")
 display_name = "Crystal Node Station"
 footprint = Vector2i(2, 1)
-required_node_group = "crystal_node"
+placement_mode = 5
 required_node_radius_tiles = 2
 metadata/_custom_type_script = "uid://clim8k4pcubep"

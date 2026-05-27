@@ -1,33 +1,52 @@
 extends Node2D
 class_name PlacementPreview
 
-@export var cell_size: Vector2 = Vector2(32, 32)
+@export var valid_color: Color = Color(0.1, 1.0, 0.25, 0.35)
+@export var invalid_color: Color = Color(1.0, 0.1, 0.1, 0.35)
 
-var preview_cells: Array[Vector2i] = []
+var preview_rects: Array[Rect2] = []
 var is_valid: bool = false
 
 
-func set_preview(cells: Array[Vector2i], valid: bool) -> void:
-	preview_cells = cells
+func _ready() -> void:
+	top_level = true
+	global_position = Vector2.ZERO
+	z_index = 999
+	z_as_relative = false
+	visible = true
+
+
+func set_preview_rects(rects: Array[Rect2], valid: bool) -> void:
+	preview_rects = rects
 	is_valid = valid
+
+	top_level = true
+	global_position = Vector2.ZERO
+	z_index = 999
+	z_as_relative = false
+	visible = true
+
+	print("[PREVIEW] rect_count=", preview_rects.size(), " valid=", is_valid)
+
 	queue_redraw()
 
 
 func clear_preview() -> void:
-	preview_cells.clear()
+	preview_rects.clear()
 	queue_redraw()
 
 
 func _draw() -> void:
-	var color := Color(0.1, 1.0, 0.25, 0.35)
+	var draw_color := valid_color
 
 	if not is_valid:
-		color = Color(1.0, 0.1, 0.1, 0.35)
+		draw_color = invalid_color
 
-	for cell in preview_cells:
-		var rect := Rect2(
-			Vector2(cell.x * cell_size.x, cell.y * cell_size.y),
-			cell_size
+	for rect in preview_rects:
+		draw_rect(rect, draw_color, true)
+		draw_rect(
+			rect,
+			Color(draw_color.r, draw_color.g, draw_color.b, 0.95),
+			false,
+			2.0
 		)
-		draw_rect(rect, color, true)
-		draw_rect(rect, Color(color.r, color.g, color.b, 0.9), false, 2.0)

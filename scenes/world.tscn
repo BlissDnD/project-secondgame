@@ -348,7 +348,9 @@ terrain_tilemap = NodePath("../TerrainTileMapLayer")
 metadata/_custom_type_script = "uid://b7nov50mcnb4l"
 
 [node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484 groups=["placement_preview", "placement_validator", "player", "terrain_layer"]]
+z_index = 999
 script = ExtResource("26_ts3gi")
+cell_size = Vector2(0, 0)
 metadata/_custom_type_script = "uid://csb1wyobgijs0"
 
 [node name="DebugCanvasLayer" type="CanvasLayer" parent="." unique_id=1570227695]
@@ -390,5 +392,5 @@ player_path = NodePath("../Player")
 script = ExtResource("31_luhhm")
 validator = NodePath("../PlacementValidator")
 preview = NodePath("../PlacementPreview")
-world_root = NodePath("..")
+world_root = NodePath("../ObjectLayer")
 metadata/_custom_type_script = "uid://dmd1s3bttbf8"

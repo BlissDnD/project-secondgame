@@ -1,6 +1,5 @@
-extends Node2D
+extends PlaceableObject
 class_name CrystalNodeStation
-
 signal worker_inserted(worker: Worker)
 signal worker_removed(worker: Worker)
 
