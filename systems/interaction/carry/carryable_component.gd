@@ -20,6 +20,9 @@ signal placed(carrier: Node2D, placed_node: Node)
 
 @export var ground_anchor: Node2D
 
+@export_group("External Motion")
+@export var external_motion_component: Node
+
 @export_group("Highlight")
 @export var highlight_target: CanvasItem
 @export var highlight_color: Color = Color(1.35, 1.35, 1.35, 1.0)
@@ -40,6 +43,11 @@ var _original_global_scale: Vector2 = Vector2.ONE
 func _ready() -> void:
 	if root_node == null:
 		root_node = owner as Node2D
+
+	if external_motion_component == null and root_node != null:
+		external_motion_component = root_node.get_node_or_null(
+			"WorkerExternalMotionComponent"
+		)
 
 	if highlight_target == null:
 		highlight_target = _find_first_canvas_item(root_node)
@@ -138,103 +146,6 @@ func get_collision_shapes_for_proxy() -> Array[CollisionShape2D]:
 	return result
 
 
-func update_placement_preview(
-	placement_controller: PlacementController,
-	world_position: Vector2
-) -> bool:
-	if placement_controller == null:
-		return false
-
-	if not supports_placement():
-		placement_controller.cancel_placement()
-		return false
-
-	if not is_carried:
-		placement_controller.cancel_placement()
-		return false
-
-	var definition := get_placeable_definition()
-	var scene := get_placeable_scene()
-
-	if definition == null or scene == null:
-		placement_controller.cancel_placement()
-		return false
-
-	if placement_controller.has_method("update_context_preview"):
-		return placement_controller.update_context_preview(
-			definition,
-			scene,
-			world_position
-		)
-
-	if not placement_controller.is_placing:
-		placement_controller.begin_placement(
-			definition,
-			scene
-		)
-
-	placement_controller.update_preview_from_world_position(
-		world_position
-	)
-
-	return placement_controller.current_valid
-
-
-func clear_placement_preview(
-	placement_controller: PlacementController
-) -> void:
-	if placement_controller == null:
-		return
-
-	if placement_controller.is_placing:
-		placement_controller.cancel_placement()
-
-
-func try_place_with_controller(
-	placement_controller: PlacementController,
-	world_position: Vector2
-) -> Node:
-	if placement_controller == null:
-		return null
-
-	if not supports_placement():
-		return null
-
-	if not is_carried:
-		return null
-
-	var valid := update_placement_preview(
-		placement_controller,
-		world_position
-	)
-
-	if not valid:
-		return null
-
-	var old_carrier := carrier
-	var placed_node := placement_controller.try_place_current()
-
-	if placed_node == null:
-		return null
-
-	finish_after_successful_place()
-
-	placed.emit(old_carrier, placed_node)
-
-	return placed_node
-
-
-func finish_after_successful_place() -> void:
-	if root_node == null:
-		return
-
-	var old_root := root_node
-
-	_finish_carried_without_world_drop()
-
-	old_root.queue_free()
-
-
 func pickup(
 	new_carrier: Node2D,
 	hold_parent: Node2D = null
@@ -244,6 +155,8 @@ func pickup(
 
 	if root_node == null:
 		return false
+
+	_notify_external_motion_begin_carried()
 
 	_release_placement_occupancy_if_needed()
 
@@ -293,18 +206,6 @@ func drop(
 	)
 
 
-func force_drop(
-	drop_position: Vector2,
-	inherited_velocity: Vector2 = Vector2.ZERO
-) -> void:
-	_drop_internal(
-		drop_position,
-		inherited_velocity,
-		true,
-		true
-	)
-
-
 func throw_with_velocity(
 	throw_position: Vector2,
 	throw_velocity: Vector2,
@@ -321,6 +222,8 @@ func throw_with_velocity(
 		false,
 		false
 	)
+
+	_notify_external_motion_start_throw(throw_velocity)
 
 	var physical_body := root_node as PhysicalItemBody
 
@@ -341,6 +244,17 @@ func throw_with_velocity(
 		return
 
 	thrown.emit(old_carrier, throw_velocity)
+
+
+func finish_after_successful_place() -> void:
+	if root_node == null:
+		return
+
+	var old_root := root_node
+
+	_finish_carried_without_world_drop()
+
+	old_root.queue_free()
 
 
 func get_motion_profile() -> PhysicalMotionProfile:
@@ -390,7 +304,6 @@ func get_max_throw_speed() -> float:
 
 	return fallback_max_throw_speed
 
-
 func apply_motion_damping(
 	velocity: Vector2,
 	delta: float
@@ -404,8 +317,6 @@ func apply_motion_damping(
 		velocity,
 		delta
 	)
-
-
 func get_carry_speed_multiplier(
 	carry_strength: float
 ) -> float:
@@ -503,6 +414,8 @@ func _drop_internal(
 	carrier = null
 	is_carried = false
 
+	_notify_external_motion_end_carried()
+
 	_set_physics_carried_state(false)
 
 	var physical_body := root_node as PhysicalItemBody
@@ -527,6 +440,8 @@ func _finish_carried_without_world_drop() -> void:
 
 	carrier = null
 	is_carried = false
+
+	_notify_external_motion_end_carried()
 
 	_set_physics_carried_state(false)
 
@@ -609,3 +524,31 @@ func _find_first_canvas_item(node: Node) -> CanvasItem:
 			return found
 
 	return null
+
+
+func _notify_external_motion_begin_carried() -> void:
+	if external_motion_component == null:
+		return
+
+	if external_motion_component.has_method("begin_carried"):
+		external_motion_component.begin_carried()
+
+
+func _notify_external_motion_end_carried() -> void:
+	if external_motion_component == null:
+		return
+
+	if external_motion_component.has_method("end_carried"):
+		external_motion_component.end_carried()
+
+
+func _notify_external_motion_start_throw(
+	throw_velocity: Vector2
+) -> void:
+	if external_motion_component == null:
+		return
+
+	if external_motion_component.has_method("start_external_motion"):
+		external_motion_component.start_external_motion(
+			throw_velocity
+		)

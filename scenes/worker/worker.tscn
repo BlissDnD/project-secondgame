@@ -14,11 +14,9 @@
 [ext_resource type="Resource" uid="uid://bi1dq2qpqt03b" path="res://systems/work/goap/actions/rest_action.tres" id="16_8255w"]
 [ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
 [ext_resource type="Resource" uid="uid://ctel7blfcx3k4" path="res://systems/work/goap/goals/go_to_crystal_action.tres" id="17_61yg6"]
-[ext_resource type="Script" uid="uid://csthjkstoc633" path="res://systems/work/workers/worker_external_motion_component.gd" id="18_4vlxc"]
 [ext_resource type="Resource" uid="uid://c4jwpsp74decl" path="res://systems/work/goap/goals/mine_crystal_action.tres" id="18_syodb"]
 [ext_resource type="Script" uid="uid://ckasy4oc8n4pg" path="res://systems/work/workers/worker_stats_component.gd" id="19_ih8nm"]
 [ext_resource type="Resource" uid="uid://cpkb27jrf8gsn" path="res://systems/work/goap/goals/pickup_crystal_action.tres" id="19_k2aal"]
-[ext_resource type="Resource" uid="uid://c0275fwt1mdne" path="res://resources/data/physics_profiles/worker_motion_profile.tres" id="19_lwa6c"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
 [ext_resource type="Resource" uid="uid://cjp6k63qf1ybm" path="res://systems/work/goap/goals/carry_to_main_crystal_action.tres" id="20_17cts"]
@@ -28,6 +26,8 @@
 [ext_resource type="Resource" uid="uid://b2i0t1xy0o84l" path="res://systems/work/goap/goals/deposit_crystal_action.tres" id="21_utf6g"]
 [ext_resource type="Script" uid="uid://bwgyqrosfntql" path="res://systems/work/utility_goal_selector.gd" id="21_ynsbi"]
 [ext_resource type="Resource" uid="uid://bl6i7rp52y8di" path="res://systems/work/goap/goals/work_goal.tres" id="24_r3q7o"]
+[ext_resource type="Script" uid="uid://d14n6wwwcafrr" path="res://systems/work/workers/worker_physics_node_component.gd" id="27_61yg6"]
+[ext_resource type="PackedScene" uid="uid://bxieh5isie7ol" path="res://scenes/worker/worker_physics_proxy.tscn" id="28_syodb"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -90,14 +90,6 @@ sprite_frames = SubResource("SpriteFrames_ydra3")
 [node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
 script = ExtResource("7_ock52")
 metadata/_custom_type_script = "uid://oe6rx48tfp1c"
-
-[node name="WorkerExternalMotionComponent" type="Node" parent="." unique_id=1027011063 node_paths=PackedStringArray("worker_body", "nodes_to_disable_while_external_motion")]
-script = ExtResource("18_4vlxc")
-worker_body = NodePath("..")
-motion_profile = ExtResource("19_lwa6c")
-minimum_air_time = 0.0
-nodes_to_disable_while_external_motion = [NodePath("../WorkerMovementComponent"), NodePath("../GOAPBrain"), NodePath("../WorkerStateMachine")]
-metadata/_custom_type_script = "uid://csthjkstoc633"
 
 [node name="WorkerStatsComponent" type="Node" parent="." unique_id=1540129802]
 script = ExtResource("19_ih8nm")
@@ -175,14 +167,16 @@ offset_bottom = 18.0
 
 [node name="GroundAnchor" type="Node2D" parent="." unique_id=166947312]
 
-[node name="CarryableComponent" type="Area2D" parent="." unique_id=1125259685 node_paths=PackedStringArray("root_node", "highlight_target")]
+[node name="CarryableComponent" type="Area2D" parent="." unique_id=1125259685 node_paths=PackedStringArray("root_node", "external_motion_component", "highlight_target")]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("7_4pgqf")
 root_node = NodePath("..")
 carry_profile = ExtResource("7_5oyiq")
+external_motion_component = NodePath("../WorkerPhysicsModeComponent")
 highlight_target = NodePath("../WorkerSprite")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.627451)
+fallback_weight = 0.7
 metadata/_custom_type_script = "uid://c0acc3v16fne0"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=767862528]
@@ -200,3 +194,9 @@ metadata/_custom_type_script = "uid://dtl6k7k0kll8k"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerSensor2D" unique_id=1679016499]
 position = Vector2(-1.5, -27)
 shape = SubResource("RectangleShape2D_lf01n")
+
+[node name="WorkerPhysicsModeComponent" type="Node" parent="." unique_id=196907416]
+script = ExtResource("27_61yg6")
+physics_proxy_scene = ExtResource("28_syodb")
+nodes_to_disable_while_not_ai = Array[NodePath]([NodePath("../WorkerMovementComponent"), NodePath("../WorkerStateMachine"), NodePath("../WorkerGOAPAdapter"), NodePath("../WorkerBlackboard"), NodePath("../GOAPBrain")])
+metadata/_custom_type_script = "uid://d14n6wwwcafrr"

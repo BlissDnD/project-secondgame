@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://bxieh5isie7ol"]
+
+[ext_resource type="Script" uid="uid://ci4w21qnd5n72" path="res://systems/work/workers/worker_physics_proxy.gd" id="1_2c5bg"]
+[ext_resource type="Resource" uid="uid://c0275fwt1mdne" path="res://resources/data/physics_profiles/worker_motion_profile.tres" id="2_vq677"]
+[ext_resource type="Texture2D" uid="uid://mvxwy8btjimw" path="res://assets/images/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00004.png" id="3_5xq1u"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_33nv4"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_5xq1u")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sp8s0"]
+radius = 9.0
+height = 58.0
+
+[node name="WorkerPhysicsProxy" type="RigidBody2D" unique_id=468298798]
+mass = 0.5
+continuous_cd = 2
+contact_monitor = true
+max_contacts_reported = 3
+script = ExtResource("1_2c5bg")
+motion_profile = ExtResource("2_vq677")
+metadata/_custom_type_script = "uid://ci4w21qnd5n72"
+
+[node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=609203344]
+position = Vector2(4.7683716e-07, -35)
+rotation = -0.012237191
+scale = Vector2(0.24574064, 0.24574062)
+sprite_frames = SubResource("SpriteFrames_33nv4")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=862858664]
+position = Vector2(0, -29)
+shape = SubResource("CapsuleShape2D_sp8s0")
