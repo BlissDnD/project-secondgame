@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PlaceableDefinition" format=3 uid="uid://c4pjf7d5wrllj"]
+
+[ext_resource type="Script" uid="uid://clim8k4pcubep" path="res://systems/interaction/placement/placeable_definition.gd" id="1_y2joa"]
+
+[resource]
+script = ExtResource("1_y2joa")
+display_name = "Crystal Node Station"
+required_node_group = "crystal_node"
+required_node_radius_tiles = 1
+metadata/_custom_type_script = "uid://clim8k4pcubep"

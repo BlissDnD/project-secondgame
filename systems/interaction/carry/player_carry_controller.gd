@@ -24,11 +24,18 @@ class_name PlayerCarryController
 @export_range(16.0, 4000.0, 1.0) var mouse_distance_for_max_power: float = 900.0
 @export_range(0.0, 512.0, 1.0) var mouse_distance_dead_zone: float = 32.0
 
-var carried_component: CarryableComponent
+@export_group("Context Placement")
+@export var context_required_group: StringName = &"crystal_node"
+@export var context_required_radius: float = 128.0
+@export var context_side_offset_cells: Vector2i = Vector2i(1, 0)
+@export var context_cell_size: Vector2 = Vector2(32, 32)
+
+var carried_component: CarryableComponent = null
 
 var _carry_collision_shapes: Array[CollisionShape2D] = []
 var _is_charging_throw: bool = false
 var _throw_charge: float = 0.0
+var _has_valid_context_placement: bool = false
 
 
 func _ready() -> void:
@@ -39,7 +46,7 @@ func _physics_process(delta: float) -> void:
 	if _is_charging_throw:
 		_update_throw_charge(delta)
 
-	_update_placement_preview()
+	_update_context_placement_preview()
 
 
 func _resolve_placement_controller() -> void:
@@ -55,9 +62,10 @@ func _get_placement_controller() -> PlacementController:
 	if placement_controller != null:
 		return placement_controller
 
-	var current := get_tree().current_scene
-	if current != null:
-		placement_controller = current.find_child("PlacementController", true, false) as PlacementController
+	var current_scene := get_tree().current_scene
+
+	if current_scene != null:
+		placement_controller = current_scene.find_child("PlacementController", true, false) as PlacementController
 
 	return placement_controller
 
@@ -72,7 +80,7 @@ func try_interact() -> void:
 			_cancel_placement_preview()
 			return
 
-		if _try_place_carried():
+		if _try_context_place_carried():
 			_clear_carry_collision_proxy()
 			carried_component = null
 			return
@@ -136,6 +144,7 @@ func release_charged_throw(direction: Vector2, mouse_position: Vector2) -> void:
 func get_throw_origin() -> Vector2:
 	if carried_component != null:
 		var root := carried_component.get_carried_root()
+
 		if root != null:
 			return root.global_position
 
@@ -221,29 +230,61 @@ func _update_throw_charge(delta: float) -> void:
 	_throw_charge = clampf(_throw_charge + delta / charge_time, 0.0, 1.0)
 
 
-func _update_placement_preview() -> void:
+func _update_context_placement_preview() -> void:
+	_has_valid_context_placement = false
+
 	var controller := _get_placement_controller()
 
 	if controller == null:
+		print("[CTX] no placement controller")
 		return
 
 	if carried_component == null:
 		_cancel_placement_preview()
 		return
 
+	print("[CTX] carrying=", carried_component.name)
+
 	if not carried_component.supports_placement():
+		print("[CTX] supports_placement=false")
+		print("  supports_grid_placement=", carried_component.supports_grid_placement)
+		print("  definition=", carried_component.placeable_definition)
+		print("  scene=", carried_component.placeable_scene)
 		_cancel_placement_preview()
 		return
 
-	var target_position := _get_player_place_target_position()
+	var target_position_variant: Variant = _get_context_place_target_position_or_null()
 
-	carried_component.update_placement_preview(
-		controller,
-		target_position
-	)
+	if target_position_variant == null:
+		print("[CTX] no nearby context node group=", context_required_group, " radius=", context_required_radius)
+		_cancel_placement_preview()
+		return
 
+	var target_position: Vector2 = target_position_variant as Vector2
 
-func _try_place_carried() -> bool:
+	print("[CTX] target_position=", target_position)
+
+	if controller.has_method("update_context_preview"):
+		_has_valid_context_placement = controller.update_context_preview(
+			carried_component.placeable_definition,
+			carried_component.placeable_scene,
+			target_position
+		)
+	else:
+		if not controller.is_placing:
+			controller.begin_placement(
+				carried_component.placeable_definition,
+				carried_component.placeable_scene
+			)
+
+		controller.update_preview_from_world_position(target_position)
+		_has_valid_context_placement = controller.current_valid
+
+	print("[CTX] valid=", _has_valid_context_placement)
+
+	if not _has_valid_context_placement:
+		_cancel_placement_preview()
+func _try_context_place_carried() -> bool:
 	if carried_component == null:
 		return false
 
@@ -255,17 +296,64 @@ func _try_place_carried() -> bool:
 	if not carried_component.supports_placement():
 		return false
 
-	var target_position := _get_player_place_target_position()
+	var target_position_variant: Variant = _get_context_place_target_position_or_null()
 
-	var placed := carried_component.try_place_with_controller(
-		controller,
-		target_position
-	)
+	if target_position_variant == null:
+		return false
 
-	if placed:
-		_cancel_placement_preview()
+	var target_position: Vector2 = target_position_variant as Vector2
 
-	return placed
+	var valid := false
+
+	if controller.has_method("update_context_preview"):
+		valid = controller.update_context_preview(
+			carried_component.placeable_definition,
+			carried_component.placeable_scene,
+			target_position
+		)
+	else:
+		if not controller.is_placing:
+			controller.begin_placement(
+				carried_component.placeable_definition,
+				carried_component.placeable_scene
+			)
+
+		controller.update_preview_from_world_position(target_position)
+		valid = controller.current_valid
+
+	if not valid:
+		return false
+
+	var placed := controller.try_place_current()
+
+	if placed == null:
+		return false
+
+	var old_carried := carried_component
+	_finish_carried_after_context_place(old_carried, placed)
+
+	return true
+
+
+func _finish_carried_after_context_place(carryable: CarryableComponent, placed_node: Node) -> void:
+	if carryable == null:
+		return
+
+	var old_root := carryable.get_carried_root()
+
+	if carryable.has_method("_finish_carried_without_world_drop"):
+		carryable.call("_finish_carried_without_world_drop")
+	else:
+		carryable.is_carried = false
+		carryable.carrier = null
+
+	if old_root != null:
+		old_root.queue_free()
+
+	_cancel_placement_preview()
+
+	if carryable.has_signal("placed"):
+		carryable.placed.emit(player_body, placed_node)
 
 
 func _cancel_placement_preview() -> void:
@@ -348,6 +436,7 @@ func _create_carry_collision_proxy(carryable: CarryableComponent) -> void:
 	_clear_carry_collision_proxy()
 
 	var player_collision_object := player_body as CollisionObject2D
+
 	if player_collision_object == null:
 		return
 
@@ -383,10 +472,12 @@ func _try_insert_carried_worker_into_socket() -> bool:
 		return false
 
 	var worker := carried_component.root_node
+
 	if worker == null:
 		return false
 
 	var socket := _find_nearest_worker_socket()
+
 	if socket == null:
 		return false
 
@@ -419,6 +510,7 @@ func _find_nearest_carryable() -> CarryableComponent:
 			continue
 
 		var root := carryable.get_carried_root()
+
 		if root == null:
 			continue
 
@@ -439,6 +531,7 @@ func _find_carryable_from_area(area: Area2D) -> CarryableComponent:
 		return area as CarryableComponent
 
 	var root := area.owner
+
 	if root == null:
 		root = area
 
@@ -478,6 +571,66 @@ func _find_nearest_worker_socket() -> WorkerSocket:
 				best = socket
 
 	return best
+
+
+func _get_context_place_target_position_or_null() -> Variant:
+	var context_node := _find_nearest_context_node(
+		context_required_group,
+		context_required_radius
+	)
+
+	if context_node == null:
+		return null
+
+	var context_cell := _world_to_context_cell(context_node.global_position)
+	var target_cell := context_cell + context_side_offset_cells
+
+	return _context_cell_to_world(target_cell)
+
+
+func _find_nearest_context_node(group_name: StringName, max_distance: float) -> Node2D:
+	if player_body == null:
+		print("[CTX] player_body=null")
+		return null
+
+	var nodes := get_tree().get_nodes_in_group(group_name)
+	print("[CTX] nodes in group ", group_name, " = ", nodes.size())
+
+	var best: Node2D = null
+	var best_distance := INF
+
+	for node in nodes:
+		var node_2d := node as Node2D
+
+		if node_2d == null:
+			continue
+
+		var distance := player_body.global_position.distance_to(node_2d.global_position)
+		print("[CTX] candidate=", node_2d.name, " distance=", distance)
+
+		if distance > max_distance:
+			continue
+
+		if distance < best_distance:
+			best_distance = distance
+			best = node_2d
+
+	print("[CTX] best=", best, " best_distance=", best_distance)
+
+	return best
+
+func _world_to_context_cell(world_position: Vector2) -> Vector2i:
+	return Vector2i(
+		floori(world_position.x / context_cell_size.x),
+		floori(world_position.y / context_cell_size.y)
+	)
+
+
+func _context_cell_to_world(cell: Vector2i) -> Vector2:
+	return Vector2(
+		cell.x * context_cell_size.x,
+		cell.y * context_cell_size.y
+	)
 
 
 func _get_player_place_target_position() -> Vector2:

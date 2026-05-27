@@ -54,9 +54,6 @@
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
 [ext_resource type="Script" uid="uid://ct0l8tix2e53" path="res://systems/interaction/carry/player_carry_controller.gd" id="54_0ncpa"]
 [ext_resource type="Script" uid="uid://x87sltqeft72" path="res://player/throw_trajectory_projectile.gd" id="54_upxxc"]
-[ext_resource type="Script" uid="uid://bqbnk3f3nxagj" path="res://systems/interaction/placement/simple_placeable_placer.gd" id="55_uygh0"]
-[ext_resource type="Resource" uid="uid://cuxhv824am5ox" path="res://systems/interaction/placement/placeables/crystal_node_station_definition.tres" id="56_t1aof"]
-[ext_resource type="PackedScene" uid="uid://d3gxd0nmiyvk8" path="res://scenes/worker/crystal_node_station.tscn" id="57_w8qe1"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0ncpa"]
 radius = 13.777775
@@ -293,10 +290,3 @@ line_width = 2.0
 
 [node name="HoldPoint" type="Node2D" parent="." unique_id=1514846231]
 position = Vector2(0, -48)
-
-[node name="SimplePlaceablePlacer" type="Node" parent="." unique_id=1594043768 node_paths=PackedStringArray("player_body")]
-script = ExtResource("55_uygh0")
-placeable_definition = ExtResource("56_t1aof")
-placeable_scene = ExtResource("57_w8qe1")
-player_body = NodePath("..")
-metadata/_custom_type_script = "uid://bqbnk3f3nxagj"

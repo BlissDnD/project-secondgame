@@ -17,17 +17,20 @@ func _ready() -> void:
 
 
 func set_preview_rects(rects: Array[Rect2], valid: bool) -> void:
-	preview_rects = rects
 	is_valid = valid
 
+	if not valid:
+		preview_rects.clear()
+		visible = false
+		queue_redraw()
+		return
+
+	preview_rects = rects
 	top_level = true
 	global_position = Vector2.ZERO
 	z_index = 999
 	z_as_relative = false
 	visible = true
-
-	print("[PREVIEW] rect_count=", preview_rects.size(), " valid=", is_valid)
-
 	queue_redraw()
 
 

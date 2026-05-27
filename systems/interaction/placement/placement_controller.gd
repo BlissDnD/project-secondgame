@@ -20,7 +20,41 @@ var _references_logged: bool = false
 func _ready() -> void:
 	add_to_group("placement_controller")
 	call_deferred("_resolve_references")
+func update_context_preview(
+	definition: PlaceableDefinition,
+	scene: PackedScene,
+	world_position: Vector2
+) -> bool:
+	if definition == null or scene == null:
+		cancel_placement()
+		return false
 
+	if validator == null or preview == null or world_root == null:
+		_resolve_references()
+
+	if validator == null or preview == null or world_root == null:
+		return false
+
+	held_definition = definition
+	held_scene = scene
+	is_placing = true
+
+	current_origin_cell = world_to_cell(world_position)
+
+	var cells := validator.get_footprint_cells(current_origin_cell, definition.footprint)
+	current_valid = validator.is_valid_placement(definition, current_origin_cell, world_root)
+
+	var rects: Array[Rect2] = []
+
+	for cell in cells:
+		rects.append(Rect2(
+			cell_to_world(cell),
+			cell_size
+		))
+
+	preview.set_preview_rects(rects, current_valid)
+
+	return current_valid
 
 func _resolve_references() -> void:
 	var current_scene := get_tree().current_scene

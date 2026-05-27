@@ -4,4 +4,5 @@
 
 [resource]
 script = ExtResource("1_f1hri")
+can_be_thrown = false
 metadata/_custom_type_script = "uid://0dvivduhknqa"
