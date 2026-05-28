@@ -23,9 +23,7 @@ func _init() -> void:
 
 func is_valid_for(blackboard: WorkerBlackboard) -> bool:
 	return blackboard != null \
-		and blackboard.worker != null \
-		and blackboard.has_mined_crystal \
-		and not blackboard.has_cargo()
+		and blackboard.worker != null
 
 
 func enter(blackboard: WorkerBlackboard) -> void:
@@ -39,18 +37,15 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if blackboard.worker == null:
 		return fail("missing_worker")
 
-	if not blackboard.has_mined_crystal:
-		return fail("nothing_mined")
-
 	if crystal_item_scene == null:
 		return fail("missing_crystal_item_scene")
 
-	var item := crystal_item_scene.instantiate() as CrystalItem
+	var item := crystal_item_scene.instantiate()
 
 	if item == null:
 		return fail("failed_to_create_item")
 
-	blackboard.carried_item = item
+	blackboard.set_carried_item(item)
 
 	blackboard.worker.receive_crystal_cargo()
 

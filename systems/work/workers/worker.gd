@@ -9,7 +9,7 @@ class_name Worker
 @export var blackboard: WorkerBlackboard
 @export var goap_brain: GOAPBrain
 @export var goap_adapter: WorkerGOAPAdapter
-
+var assigned_work_target: Node2D = null
 @export var crystal_cargo_visual: Node2D
 @export var debug_label: Label
 
@@ -342,32 +342,31 @@ func get_worker_state() -> StringName:
 	return state_machine.current_state
 
 
-func assign_work(target: Node2D = null) -> void:
-	if state_machine != null and not state_machine.can_accept_assignment():
-		return
-
-	has_assignment = true
-	assigned_target = target
+func assign_work(target: Node2D) -> void:
+	assigned_work_target = target
+	has_assignment = target != null
 
 	if blackboard != null:
-		if target != null:
-			blackboard.set_target(target)
-		else:
-			blackboard.clear_target()
+		blackboard.set_assignment(target)
 
-	set_worker_state(WorkerStateMachine.ASSIGNED, "work_assigned")
-
+	if state_machine != null:
+		state_machine.set_state(
+			WorkerStateMachine.ASSIGNED,
+			"work_assigned"
+		)
 
 func clear_assignment() -> void:
+	assigned_work_target = null
 	has_assignment = false
-	assigned_target = null
 
 	if blackboard != null:
-		blackboard.clear_target()
+		blackboard.clear_assignment()
 
-	if state_machine != null and not state_machine.is_recovering():
-		set_worker_state(WorkerStateMachine.IDLE, "assignment_cleared")
-
+	if state_machine != null:
+		state_machine.set_state(
+			WorkerStateMachine.IDLE,
+			"assignment_cleared"
+		)
 
 func apply_work_drain(delta: float) -> void:
 	if stats != null:

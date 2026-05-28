@@ -14,20 +14,18 @@ var stats: WorkerStatsComponent
 var movement: WorkerMovementComponent
 var state_machine: WorkerStateMachine
 var adapter: WorkerGOAPAdapter
-var carried_item: Node = null
+
 var current_target: Node2D = null
 var current_target_position: Vector2 = Vector2.ZERO
 var has_target_position: bool = false
 
-var assigned_station: CrystalNodeStation = null
-var assigned_crystal_node: CrystalNode = null
-
 var current_item: Node = null
 var current_job: Node = null
+var current_assignment: Node = null
 
-var is_wandering: bool = false
+var carried_item: Node = null
 var has_mined_crystal: bool = false
-var delivered_crystal: bool = false
+var is_wandering: bool = false
 
 var last_action_id: StringName = &"None"
 var last_action_status: StringName = &"None"
@@ -36,6 +34,10 @@ var last_failure_reason: String = ""
 
 func _ready() -> void:
 	refresh_references()
+	update_world_state()
+
+
+func _process(_delta: float) -> void:
 	update_world_state()
 
 
@@ -48,47 +50,82 @@ func refresh_references() -> void:
 
 	if worker == null:
 		push_error("WorkerBlackboard missing worker reference.")
+
 	if stats == null:
 		push_error("WorkerBlackboard missing stats reference.")
+
 	if movement == null:
 		push_error("WorkerBlackboard missing movement reference.")
+
 	if state_machine == null:
 		push_error("WorkerBlackboard missing state_machine reference.")
+
 	if adapter == null:
 		push_error("WorkerBlackboard missing adapter reference.")
 
 
 func update_world_state() -> void:
-	if world_state == null:
-		world_state = GOAPWorldState.new()
-
-	world_state.facts.clear()
-
 	world_state.set_fact(&"has_assignment", has_assignment())
-	world_state.set_fact(&"has_target", has_valid_target())
 	world_state.set_fact(&"has_work_target", has_work_target())
+	world_state.set_fact(&"has_target", has_valid_target())
+	world_state.set_fact(&"has_target_position", has_target_position)
+
 	world_state.set_fact(&"has_cargo", has_cargo())
+	world_state.set_fact(&"has_item", has_cargo())
 	world_state.set_fact(&"has_mined_crystal", has_mined_crystal)
-	world_state.set_fact(&"delivered_crystal", delivered_crystal)
 
 	world_state.set_fact(&"stamina_low", has_low_stamina())
 	world_state.set_fact(&"can_work", can_work())
 
 	world_state.set_fact(&"at_target", is_at_target())
+	world_state.set_fact(&"at_work", is_at_work_target())
 	world_state.set_fact(&"at_work_target", is_at_work_target())
-	world_state.set_fact(&"at_deposit", is_at_target())
+	world_state.set_fact(&"at_deposit", is_at_deposit_target())
 
 	world_state.set_fact(&"is_wandering", is_wandering)
 
 	if worker != null:
-		world_state.set_fact(&"is_idle", worker.get_worker_state() == WorkerStateMachine.IDLE)
-		world_state.set_fact(&"is_recovering", worker.get_worker_state() == WorkerStateMachine.RECOVERING)
-		world_state.set_fact(&"is_working", worker.get_worker_state() == WorkerStateMachine.WORKING)
+		world_state.set_fact(&"worker_has_assignment", worker.has_assignment)
+		world_state.set_fact(&"worker_has_crystal_cargo", worker.has_crystal_cargo)
+
+	if state_machine != null:
+		world_state.set_fact(&"is_idle", state_machine.current_state == WorkerStateMachine.IDLE)
+		world_state.set_fact(&"is_assigned", state_machine.current_state == WorkerStateMachine.ASSIGNED)
+		world_state.set_fact(&"is_moving_to_work", state_machine.current_state == WorkerStateMachine.MOVING_TO_WORK)
+		world_state.set_fact(&"is_working", state_machine.current_state == WorkerStateMachine.WORKING)
+		world_state.set_fact(&"is_carrying", state_machine.current_state == WorkerStateMachine.CARRYING)
+		world_state.set_fact(&"is_depositing", state_machine.current_state == WorkerStateMachine.DEPOSITING)
+		world_state.set_fact(&"is_recovering", state_machine.current_state == WorkerStateMachine.RECOVERING)
+		world_state.set_fact(&"is_failed", state_machine.current_state == WorkerStateMachine.FAILED)
 
 
 func get_world_state() -> GOAPWorldState:
 	update_world_state()
 	return world_state
+
+
+func get_world_state_data() -> Dictionary[StringName, Variant]:
+	update_world_state()
+	return world_state.facts.duplicate(true)
+
+
+func set_fact(key: StringName, value: Variant) -> void:
+	world_state.set_fact(key, value)
+
+	match key:
+		&"has_mined_crystal":
+			has_mined_crystal = bool(value)
+
+		&"is_wandering":
+			is_wandering = bool(value)
+
+		&"has_cargo", &"has_item":
+			if not bool(value):
+				clear_cargo()
+
+
+func get_fact(key: StringName, default_value: Variant = null) -> Variant:
+	return world_state.get_fact(key, default_value)
 
 
 func set_target(target: Node2D) -> void:
@@ -98,7 +135,6 @@ func set_target(target: Node2D) -> void:
 		current_target_position = target.global_position
 		has_target_position = true
 	else:
-		current_target_position = Vector2.ZERO
 		has_target_position = false
 
 	update_world_state()
@@ -118,61 +154,18 @@ func clear_target() -> void:
 	update_world_state()
 
 
-func set_assigned_station(station: CrystalNodeStation) -> void:
-	assigned_station = station
-	current_job = station
-	delivered_crystal = false
-	has_mined_crystal = false
-
-	if assigned_station != null:
-		assigned_crystal_node = assigned_station.get_crystal_node()
-	else:
-		assigned_crystal_node = null
-
-	if assigned_crystal_node != null:
-		set_target(assigned_crystal_node)
-	else:
-		update_world_state()
-
-
-func clear_assignment_data() -> void:
-	assigned_station = null
-	assigned_crystal_node = null
-	current_job = null
-	has_mined_crystal = false
-	clear_target()
-	update_world_state()
-
-
 func get_target_position() -> Vector2:
-	if current_target != null:
+	if current_target != null and is_instance_valid(current_target):
 		return current_target.global_position
 
 	return current_target_position
 
 
-func get_work_target() -> Node2D:
-	if assigned_crystal_node != null:
-		return assigned_crystal_node
-
-	return current_target
-
-
-func get_work_target_position() -> Vector2:
-	var work_target := get_work_target()
-
-	if work_target != null:
-		return work_target.global_position
-
-	return get_target_position()
-
-
 func has_valid_target() -> bool:
-	return current_target != null or has_target_position
+	if current_target != null and is_instance_valid(current_target):
+		return true
 
-
-func has_work_target() -> bool:
-	return assigned_crystal_node != null
+	return has_target_position
 
 
 func is_at_target(distance: float = 18.0) -> bool:
@@ -186,17 +179,80 @@ func is_at_target(distance: float = 18.0) -> bool:
 
 
 func is_at_work_target(distance: float = 24.0) -> bool:
-	if worker == null:
+	if not is_at_target(distance):
 		return false
 
-	if not has_work_target():
+	if current_target == null:
 		return false
 
-	return worker.global_position.distance_to(get_work_target_position()) <= distance
+	return current_target == get_work_target()
 
 
+func is_at_deposit_target(distance: float = 28.0) -> bool:
+	if not is_at_target(distance):
+		return false
+
+	if current_target == null:
+		return false
+
+	return current_target.is_in_group("main_crystal")
+
+
+func set_assignment(target: Node) -> void:
+	current_assignment = target
+	current_job = target
+	update_world_state()
+
+
+func clear_assignment() -> void:
+	current_assignment = null
+	current_job = null
+	update_world_state()
+
+
+func clear_work_target() -> void:
+	clear_assignment()
+
+
+func has_assignment() -> bool:
+	if current_assignment != null and is_instance_valid(current_assignment):
+		return true
+
+	if current_job != null and is_instance_valid(current_job):
+		return true
+
+	return worker != null and worker.has_assignment
+
+
+func has_work_target() -> bool:
+	return get_work_target() != null
+
+
+func get_work_target() -> Node2D:
+	if current_assignment != null and is_instance_valid(current_assignment):
+		return current_assignment as Node2D
+
+	if current_job != null and is_instance_valid(current_job):
+		return current_job as Node2D
+
+	if worker != null and "assigned_work_target" in worker:
+		var assigned = worker.get("assigned_work_target")
+
+		if assigned != null and is_instance_valid(assigned):
+			return assigned as Node2D
+
+	return null
+
+func get_work_target_position() -> Vector2:
+	var target := get_work_target()
+
+	if target != null:
+		return target.global_position
+
+	return current_target_position
+	
 func has_low_stamina() -> bool:
-	return stats != null and stats.is_stamina_low
+	return stats != null and stats.has_low_stamina()
 
 
 func has_recovered_stamina() -> bool:
@@ -207,72 +263,59 @@ func can_work() -> bool:
 	return stats != null and stats.can_work()
 
 
-func has_assignment() -> bool:
-	return worker != null and worker.has_assignment
-
-
-func has_cargo() -> bool:
-	return worker != null and worker.has_crystal_cargo
-
-
-func mark_crystal_mined() -> void:
-	has_mined_crystal = true
-	update_world_state()
+func set_mined_crystal(value: bool) -> void:
+	has_mined_crystal = value
+	world_state.set_fact(&"has_mined_crystal", has_mined_crystal)
 
 
 func clear_mined_crystal() -> void:
-	has_mined_crystal = false
-	update_world_state()
+	set_mined_crystal(false)
 
 
-func mark_delivered_crystal() -> void:
-	delivered_crystal = true
-	update_world_state()
+func set_carried_item(item: Node) -> void:
+	carried_item = item
+	current_item = item
+
+	world_state.set_fact(&"has_cargo", carried_item != null)
+	world_state.set_fact(&"has_item", carried_item != null)
 
 
-func clear_delivered_crystal() -> void:
-	delivered_crystal = false
-	update_world_state()
+func clear_cargo() -> void:
+	if carried_item != null and is_instance_valid(carried_item):
+		carried_item.queue_free()
+
+	carried_item = null
+	current_item = null
+
+	world_state.set_fact(&"has_cargo", false)
+	world_state.set_fact(&"has_item", false)
 
 
-func set_action_result(action_id: StringName, status: StringName, reason: String = "") -> void:
+func has_cargo() -> bool:
+	return carried_item != null and is_instance_valid(carried_item)
+
+
+func set_action_result(action_id: StringName, status_value: StringName, reason: String = "") -> void:
 	last_action_id = action_id
-	last_action_status = status
+	last_action_status = status_value
 	last_failure_reason = reason
 
 
-func get_world_state_data() -> Dictionary[StringName, Variant]:
+func get_debug_state() -> Dictionary:
 	update_world_state()
 
 	return {
-		&"has_assignment": has_assignment(),
-		&"has_target": has_valid_target(),
-		&"has_work_target": has_work_target(),
-		&"has_cargo": has_cargo(),
-		&"has_mined_crystal": has_mined_crystal,
-		&"delivered_crystal": delivered_crystal,
-		&"stamina_low": has_low_stamina(),
-		&"can_work": can_work(),
-		&"at_target": is_at_target(),
-		&"at_work_target": is_at_work_target(),
-		&"at_deposit": is_at_target(),
-		&"is_wandering": is_wandering
-	}
-
-
-func get_debug_state() -> Dictionary:
-	return {
 		"target": str(current_target),
 		"target_position": current_target_position,
-		"assigned_station": str(assigned_station),
-		"assigned_crystal_node": str(assigned_crystal_node),
 		"has_target_position": has_target_position,
 		"current_item": str(current_item),
 		"current_job": str(current_job),
-		"is_wandering": is_wandering,
+		"current_assignment": str(current_assignment),
+		"carried_item": str(carried_item),
 		"has_mined_crystal": has_mined_crystal,
-		"delivered_crystal": delivered_crystal,
+		"is_wandering": is_wandering,
 		"last_action_id": str(last_action_id),
 		"last_action_status": str(last_action_status),
-		"last_failure_reason": last_failure_reason
+		"last_failure_reason": last_failure_reason,
+		"world_state": world_state.facts.duplicate(true)
 	}

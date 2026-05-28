@@ -34,8 +34,19 @@ func is_valid_for(blackboard: WorkerBlackboard) -> bool:
 func enter(blackboard: WorkerBlackboard) -> void:
 	super.enter(blackboard)
 
-	if blackboard.adapter != null:
-		blackboard.adapter.move_to_work_position(blackboard.get_work_target_position())
+	if blackboard == null:
+		status = ActionStatus.FAILED
+		return
+
+	if blackboard.adapter == null:
+		status = ActionStatus.FAILED
+		return
+
+	blackboard.set_target(blackboard.get_work_target())
+
+	blackboard.adapter.move_to_work_position(
+		blackboard.get_work_target_position()
+	)
 
 
 func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
@@ -45,10 +56,17 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 	if blackboard.adapter == null:
 		return fail("missing_adapter")
 
+	if not blackboard.has_work_target():
+		return fail("missing_work_target")
+
 	if blackboard.has_low_stamina():
 		return interrupt(blackboard, "stamina_low")
 
-	blackboard.adapter.move_to_work_position(blackboard.get_work_target_position())
+	blackboard.set_target(blackboard.get_work_target())
+
+	blackboard.adapter.move_to_work_position(
+		blackboard.get_work_target_position()
+	)
 
 	if blackboard.movement != null and blackboard.movement.has_method("physics_update"):
 		blackboard.movement.physics_update(delta)
@@ -65,7 +83,7 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 
 
 func exit(blackboard: WorkerBlackboard) -> void:
-	if blackboard != null and blackboard.adapter != null and status == ActionStatus.SUCCEEDED:
+	if blackboard != null and blackboard.adapter != null:
 		blackboard.adapter.stop_movement()
 
 	super.exit(blackboard)

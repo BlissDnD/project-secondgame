@@ -7,7 +7,7 @@ script = ExtResource("1_i44hj")
 goal_id = &"deliver_item"
 display_name = "Deliver Item"
 desired_state = Dictionary[StringName, Variant]({
-&"item_delivered": true
+&"has_cargo": false
 })
-base_priority = 8.0
+base_priority = 80.0
 metadata/_custom_type_script = "uid://ccn6hqgs1l4fd"

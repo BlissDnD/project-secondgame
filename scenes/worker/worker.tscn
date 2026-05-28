@@ -26,6 +26,7 @@
 [ext_resource type="Resource" uid="uid://b2i0t1xy0o84l" path="res://systems/work/goap/goals/deposit_crystal_action.tres" id="21_utf6g"]
 [ext_resource type="Script" uid="uid://bwgyqrosfntql" path="res://systems/work/utility_goal_selector.gd" id="21_ynsbi"]
 [ext_resource type="Resource" uid="uid://bl6i7rp52y8di" path="res://systems/work/goap/goals/work_goal.tres" id="24_r3q7o"]
+[ext_resource type="Resource" uid="uid://b0waduod5oi50" path="res://systems/work/goap/goals/delivery_item_goal.tres" id="24_syodb"]
 [ext_resource type="Script" uid="uid://d14n6wwwcafrr" path="res://systems/work/workers/worker_physics_node_component.gd" id="27_61yg6"]
 [ext_resource type="PackedScene" uid="uid://bxieh5isie7ol" path="res://scenes/worker/worker_physics_proxy.tscn" id="28_syodb"]
 
@@ -137,7 +138,7 @@ metadata/_custom_type_script = "uid://bwnkuuafp8tdv"
 script = ExtResource("12_5oyiq")
 blackboard_path = NodePath("../WorkerBlackboard")
 available_actions = Array[ExtResource("13_4vlxc")]([ExtResource("19_u3vbd"), ExtResource("16_8255w"), ExtResource("17_61yg6"), ExtResource("18_syodb"), ExtResource("19_k2aal"), ExtResource("20_17cts"), ExtResource("21_utf6g")])
-goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_u3vbd"), ExtResource("24_r3q7o"), ExtResource("20_ir7vy")])
+goals = Array[ExtResource("19_ynsbi")]([ExtResource("20_u3vbd"), ExtResource("24_r3q7o"), ExtResource("20_ir7vy"), ExtResource("24_syodb")])
 replan_interval = 5.0
 metadata/_custom_type_script = "uid://dom034yrmhg55"
 

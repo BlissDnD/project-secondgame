@@ -1,7 +1,8 @@
 extends GOAPAction
 class_name GOAPCarryToMainCrystalAction
 
-@export var arrive_distance: float = 28.0
+@export var arrive_distance: float = 64.0
+@export var deposit_offset: Vector2 = Vector2(64, 0)
 
 
 func _init() -> void:
@@ -32,6 +33,16 @@ func is_valid_for(blackboard: WorkerBlackboard) -> bool:
 func enter(blackboard: WorkerBlackboard) -> void:
 	super.enter(blackboard)
 
+	if blackboard == null:
+		status = ActionStatus.FAILED
+		last_failure_reason = "missing_blackboard"
+		return
+
+	if blackboard.worker == null:
+		status = ActionStatus.FAILED
+		last_failure_reason = "missing_worker"
+		return
+
 	var main_crystal := blackboard.worker._find_main_crystal()
 
 	if main_crystal == null:
@@ -39,10 +50,13 @@ func enter(blackboard: WorkerBlackboard) -> void:
 		last_failure_reason = "missing_main_crystal"
 		return
 
+	var target_position := main_crystal.global_position + deposit_offset
+
 	blackboard.set_target(main_crystal)
+	blackboard.set_target_position(target_position)
 
 	if blackboard.adapter != null:
-		blackboard.adapter.move_to_deposit_position(main_crystal.global_position)
+		blackboard.adapter.move_to_deposit_position(target_position)
 
 
 func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
@@ -51,6 +65,9 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 
 	if blackboard.worker == null:
 		return fail("missing_worker")
+
+	if blackboard.adapter == null:
+		return fail("missing_adapter")
 
 	if not blackboard.has_cargo():
 		return fail("missing_cargo")
@@ -61,9 +78,12 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 	if not blackboard.has_valid_target():
 		return fail("missing_deposit_target")
 
-	blackboard.adapter.move_to_deposit_position(blackboard.get_target_position())
+	var target_position := blackboard.get_target_position()
 
-	if blackboard.movement != null and blackboard.movement.has_method("physics_update"):
+	blackboard.adapter.move_to_deposit_position(target_position)
+
+	if blackboard.movement != null \
+	and blackboard.movement.has_method("physics_update"):
 		blackboard.movement.physics_update(delta)
 
 	if blackboard.stats != null:
@@ -78,7 +98,8 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 
 
 func exit(blackboard: WorkerBlackboard) -> void:
-	if blackboard != null and blackboard.adapter != null and status == ActionStatus.SUCCEEDED:
+	if blackboard != null \
+	and blackboard.adapter != null:
 		blackboard.adapter.stop_movement()
 
 	super.exit(blackboard)
