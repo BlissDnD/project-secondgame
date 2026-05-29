@@ -12,7 +12,7 @@ class_name Worker
 var assigned_work_target: Node2D = null
 @export var crystal_cargo_visual: Node2D
 @export var debug_label: Label
-
+@export var cargo_hold_point: Node2D
 @export var main_crystal_group: String = "main_crystal"
 @export var deposit_distance: float = 28.0
 @export var gravity: float = 900.0
@@ -68,7 +68,8 @@ func _physics_process(delta: float) -> void:
 	_update_non_goap_state_behavior(delta)
 	_update_debug_label()
 
-
+func get_cargo_hold_point() -> Node2D:
+	return cargo_hold_point
 func _resolve_nodes() -> void:
 	if state_machine == null:
 		state_machine = get_node_or_null("WorkerStateMachine") as WorkerStateMachine

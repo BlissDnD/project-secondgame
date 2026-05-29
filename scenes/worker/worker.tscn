@@ -62,7 +62,7 @@ height = 58.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 54)
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label", "cargo_hold_point")]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
@@ -76,6 +76,7 @@ goap_brain = NodePath("GOAPBrain")
 goap_adapter = NodePath("WorkerGOAPAdapter")
 crystal_cargo_visual = NodePath("CrístalCargoVisual")
 debug_label = NodePath("DebugLabel")
+cargo_hold_point = NodePath("CargoHoldPoint")
 
 [node name="WorkerSprite" type="AnimatedSprite2D" parent="." unique_id=192111359]
 position = Vector2(4.7683716e-07, -35)
@@ -201,3 +202,6 @@ script = ExtResource("27_61yg6")
 physics_proxy_scene = ExtResource("28_syodb")
 nodes_to_disable_while_not_ai = Array[NodePath]([NodePath("../WorkerMovementComponent"), NodePath("../WorkerStateMachine"), NodePath("../WorkerGOAPAdapter"), NodePath("../WorkerBlackboard"), NodePath("../GOAPBrain")])
 metadata/_custom_type_script = "uid://d14n6wwwcafrr"
+
+[node name="CargoHoldPoint" type="Marker2D" parent="." unique_id=411674892]
+position = Vector2(0, -24)

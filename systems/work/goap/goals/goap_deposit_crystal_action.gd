@@ -15,22 +15,19 @@ func _init() -> void:
 	}
 
 	effects = {
-		&"has_cargo": false,
-		&"delivered_crystal": true
+		&"has_cargo": false
 	}
 
 
 func is_valid_for(blackboard: WorkerBlackboard) -> bool:
 	return blackboard != null \
-		and blackboard.worker != null \
-		and blackboard.has_cargo() \
-		and blackboard.has_valid_target()
+		and blackboard.worker != null
 
 
 func enter(blackboard: WorkerBlackboard) -> void:
 	super.enter(blackboard)
 
-	if blackboard.adapter != null:
+	if blackboard != null and blackboard.adapter != null:
 		blackboard.adapter.stop_movement()
 		blackboard.adapter.set_depositing()
 
@@ -45,36 +42,32 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if not blackboard.has_cargo():
 		return fail("missing_cargo")
 
-	var carried_item: Node = blackboard.carried_item as Node
+	var item := blackboard.carried_item as Node2D
 
-	if carried_item == null:
+	if item == null or not is_instance_valid(item):
 		return fail("missing_carried_item")
 
-	var deposit_target := blackboard.current_target
+	var main_crystal := blackboard.worker._find_main_crystal() as MainCrystal
 
-	if deposit_target == null:
-		return fail("missing_deposit_target")
+	if main_crystal == null:
+		return fail("missing_main_crystal")
 
-	if deposit_target.has_method("deposit_crystal"):
-		var amount := 1
+	var world := blackboard.worker.get_tree().current_scene
 
-		if carried_item.has_method("get_amount"):
-			amount = carried_item.get_amount()
+	if world == null:
+		return fail("missing_world")
 
-		deposit_target.deposit_crystal(amount)
+	item.reparent(world, false)
+	item.global_position = main_crystal.get_deposit_position()
+	item.rotation = 0.0
 
-	# ====================================
-	# CLEAR ITEM STATE
-	# ====================================
-
-	if is_instance_valid(carried_item):
-		carried_item.queue_free()
+	main_crystal.deposit_crystal_item(item)
 
 	blackboard.carried_item = null
-
+	blackboard.current_item = null
 	blackboard.set_fact(&"has_cargo", false)
-	blackboard.set_fact(&"delivered_crystal", true)
 	blackboard.set_fact(&"has_item", false)
+	blackboard.clear_mined_crystal()
 
 	blackboard.worker.has_crystal_cargo = false
 
@@ -89,10 +82,7 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 
 
 func exit(blackboard: WorkerBlackboard) -> void:
-	if blackboard != null and blackboard.state_machine != null:
-		blackboard.state_machine.set_state(
-			WorkerStateMachine.IDLE,
-			"deposit_complete"
-		)
+	if blackboard != null and blackboard.adapter != null:
+		blackboard.adapter.stop_movement()
 
 	super.exit(blackboard)

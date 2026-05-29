@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="GOAPMineCrystalAction" format=3 uid="uid://c4jwpsp74decl"]
 
 [ext_resource type="Script" uid="uid://u1cre0ao0trs" path="res://systems/work/goap/goals/goap_mine_crystal_action.gd" id="1_4w87p"]
+[ext_resource type="PackedScene" uid="uid://qu2432d8mkav" path="res://scenes/objects/crystal_item.tscn" id="1_d8j8n"]
 
 [resource]
 script = ExtResource("1_4w87p")
+crystal_item_scene = ExtResource("1_d8j8n")
 action_id = &"mine_crystal"
 display_name = "Mine Crystal"
 base_cost = 0.1
@@ -11,6 +13,8 @@ preconditions = Dictionary[StringName, Variant]({
 &"at_work_target": true,
 &"can_work": true,
 &"has_assignment": true,
+&"has_cargo": false,
+&"has_mined_crystal": false,
 &"stamina_low": false
 })
 effects = Dictionary[StringName, Variant]({

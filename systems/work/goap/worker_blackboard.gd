@@ -64,9 +64,14 @@ func refresh_references() -> void:
 		push_error("WorkerBlackboard missing adapter reference.")
 
 
+# =========================================================
+# WORLD STATE
+# =========================================================
+
 func update_world_state() -> void:
 	world_state.set_fact(&"has_assignment", has_assignment())
 	world_state.set_fact(&"has_work_target", has_work_target())
+
 	world_state.set_fact(&"has_target", has_valid_target())
 	world_state.set_fact(&"has_target_position", has_target_position)
 
@@ -121,17 +126,21 @@ func set_fact(key: StringName, value: Variant) -> void:
 
 		&"has_cargo", &"has_item":
 			if not bool(value):
-				clear_cargo()
+				carried_item = null
 
 
 func get_fact(key: StringName, default_value: Variant = null) -> Variant:
 	return world_state.get_fact(key, default_value)
 
 
+# =========================================================
+# TARGET
+# =========================================================
+
 func set_target(target: Node2D) -> void:
 	current_target = target
 
-	if target != null:
+	if target != null and is_instance_valid(target):
 		current_target_position = target.global_position
 		has_target_position = true
 	else:
@@ -141,7 +150,13 @@ func set_target(target: Node2D) -> void:
 
 
 func set_target_position(position: Vector2) -> void:
-	current_target = null
+	current_target_position = position
+	has_target_position = true
+	update_world_state()
+
+
+func set_target_and_position(target: Node2D, position: Vector2) -> void:
+	current_target = target
 	current_target_position = position
 	has_target_position = true
 	update_world_state()
@@ -155,10 +170,13 @@ func clear_target() -> void:
 
 
 func get_target_position() -> Vector2:
+	if has_target_position:
+		return current_target_position
+
 	if current_target != null and is_instance_valid(current_target):
 		return current_target.global_position
 
-	return current_target_position
+	return Vector2.ZERO
 
 
 func has_valid_target() -> bool:
@@ -179,24 +197,30 @@ func is_at_target(distance: float = 18.0) -> bool:
 
 
 func is_at_work_target(distance: float = 24.0) -> bool:
-	if not is_at_target(distance):
+	var work_target := get_work_target()
+
+	if work_target == null:
 		return false
 
-	if current_target == null:
+	return worker != null \
+		and worker.global_position.distance_to(work_target.global_position) <= distance
+
+
+func is_at_deposit_target(distance: float = 64.0) -> bool:
+	if worker == null:
 		return false
 
-	return current_target == get_work_target()
+	if current_target != null \
+	and is_instance_valid(current_target) \
+	and current_target.is_in_group("main_crystal"):
+		return worker.global_position.distance_to(get_target_position()) <= distance
+
+	return false
 
 
-func is_at_deposit_target(distance: float = 28.0) -> bool:
-	if not is_at_target(distance):
-		return false
-
-	if current_target == null:
-		return false
-
-	return current_target.is_in_group("main_crystal")
-
+# =========================================================
+# ASSIGNMENT / WORK TARGET
+# =========================================================
 
 func set_assignment(target: Node) -> void:
 	current_assignment = target
@@ -243,6 +267,7 @@ func get_work_target() -> Node2D:
 
 	return null
 
+
 func get_work_target_position() -> Vector2:
 	var target := get_work_target()
 
@@ -250,7 +275,12 @@ func get_work_target_position() -> Vector2:
 		return target.global_position
 
 	return current_target_position
-	
+
+
+# =========================================================
+# STATS
+# =========================================================
+
 func has_low_stamina() -> bool:
 	return stats != null and stats.has_low_stamina()
 
@@ -263,6 +293,10 @@ func can_work() -> bool:
 	return stats != null and stats.can_work()
 
 
+# =========================================================
+# MINING / CARGO
+# =========================================================
+
 func set_mined_crystal(value: bool) -> void:
 	has_mined_crystal = value
 	world_state.set_fact(&"has_mined_crystal", has_mined_crystal)
@@ -270,6 +304,10 @@ func set_mined_crystal(value: bool) -> void:
 
 func clear_mined_crystal() -> void:
 	set_mined_crystal(false)
+
+
+func set_current_item(item: Node) -> void:
+	current_item = item
 
 
 func set_carried_item(item: Node) -> void:
@@ -280,10 +318,11 @@ func set_carried_item(item: Node) -> void:
 	world_state.set_fact(&"has_item", carried_item != null)
 
 
-func clear_cargo() -> void:
-	if carried_item != null and is_instance_valid(carried_item):
-		carried_item.queue_free()
+func has_cargo() -> bool:
+	return carried_item != null and is_instance_valid(carried_item)
 
+
+func clear_cargo_reference() -> void:
 	carried_item = null
 	current_item = null
 
@@ -291,9 +330,44 @@ func clear_cargo() -> void:
 	world_state.set_fact(&"has_item", false)
 
 
-func has_cargo() -> bool:
-	return carried_item != null and is_instance_valid(carried_item)
+func clear_cargo_and_free_item() -> void:
+	if carried_item != null and is_instance_valid(carried_item):
+		carried_item.queue_free()
 
+	clear_cargo_reference()
+
+
+func finish_deposit() -> void:
+	clear_cargo_reference()
+	clear_mined_crystal()
+	clear_target()
+
+	world_state.set_fact(&"at_deposit", false)
+	world_state.set_fact(&"at_target", false)
+	world_state.set_fact(&"has_cargo", false)
+	world_state.set_fact(&"has_item", false)
+	world_state.set_fact(&"has_mined_crystal", false)
+
+	if stats != null:
+		stats.clear_carry_weight()
+
+	if worker != null:
+		worker.has_crystal_cargo = false
+
+		if worker.crystal_cargo_visual != null:
+			worker.crystal_cargo_visual.visible = false
+
+	update_world_state()
+
+
+# Backward-compatible name.
+func clear_cargo() -> void:
+	clear_cargo_reference()
+
+
+# =========================================================
+# ACTION RESULT DEBUG
+# =========================================================
 
 func set_action_result(action_id: StringName, status_value: StringName, reason: String = "") -> void:
 	last_action_id = action_id

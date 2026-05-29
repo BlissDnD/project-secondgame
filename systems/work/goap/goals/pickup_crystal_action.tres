@@ -1,11 +1,9 @@
 [gd_resource type="Resource" script_class="GOAPPickupCrystalAction" format=3 uid="uid://cpkb27jrf8gsn"]
 
 [ext_resource type="Script" uid="uid://cchvnjb1q7wfs" path="res://systems/work/goap/goals/goap_pickup_crystal_action.gd" id="1_a2f7u"]
-[ext_resource type="PackedScene" uid="uid://qu2432d8mkav" path="res://scenes/objects/crystal_item.tscn" id="1_u4u3d"]
 
 [resource]
 script = ExtResource("1_a2f7u")
-crystal_item_scene = ExtResource("1_u4u3d")
 action_id = &"pickup_crystal"
 display_name = "Pickup Crystal"
 preconditions = Dictionary[StringName, Variant]({

@@ -17,8 +17,9 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b5bu4"]
 size = Vector2(81, 94)
 
-[node name="MainCrystal" type="Node2D" unique_id=1643437430]
+[node name="MainCrystal" type="Node2D" unique_id=1643437430 node_paths=PackedStringArray("deposit_point")]
 script = ExtResource("1_hyv5x")
+deposit_point = NodePath("DepositPoint")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1225371543]
 position = Vector2(-63, -79)
@@ -28,3 +29,5 @@ sprite_frames = SubResource("SpriteFrames_hyv5x")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1515454983]
 position = Vector2(-16, -40)
 shape = SubResource("RectangleShape2D_b5bu4")
+
+[node name="DepositPoint" type="Marker2D" parent="." unique_id=1148181587]
