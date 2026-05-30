@@ -54,6 +54,9 @@ size = Vector2(51, 54)
 [sub_resource type="CircleShape2D" id="CircleShape2D_17cts"]
 radius = 385.7674
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_syodb"]
+radius = 63.07139
+
 [node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("carry_controller", "state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label", "cargo_hold_point")]
 collision_layer = 4
 floor_block_on_wall = false
@@ -173,7 +176,7 @@ metadata/_custom_type_script = "uid://c0acc3v16fne0"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=767862528]
 position = Vector2(-2, -27)
 shape = SubResource("RectangleShape2D_ydra3")
-debug_color = Color(0.7882353, 0.43137255, 0, 0.28627452)
+debug_color = Color(0.7882353, 0.43137255, 0, 0.12941177)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1787094264]
 position = Vector2(0, -29)
@@ -186,6 +189,7 @@ metadata/_custom_type_script = "uid://dtl6k7k0kll8k"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerSensor2D" unique_id=1679016499]
 position = Vector2(-1.5, -27)
 shape = SubResource("RectangleShape2D_lf01n")
+debug_color = Color(0, 0.6, 0.69803923, 0.08235294)
 
 [node name="WorkerPhysicsModeComponent" type="Node" parent="." unique_id=196907416]
 script = ExtResource("27_61yg6")
@@ -217,4 +221,12 @@ blackboard = NodePath("../WorkerBlackboard")
 hold_point = NodePath("../CargoHoldPoint")
 lift_strength = 50.0
 carry_strength = 50.0
+interaction_area_path = NodePath("../WorkerInteractionArea")
 metadata/_custom_type_script = "uid://cc1ts70heimko"
+
+[node name="WorkerInteractionArea" type="Area2D" parent="." unique_id=1267530721]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorkerInteractionArea" unique_id=1506795851]
+position = Vector2(-2, -31)
+shape = SubResource("CircleShape2D_syodb")
+debug_color = Color(0.7921569, 0.42352942, 0.1254902, 0.18431373)

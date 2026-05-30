@@ -8,9 +8,19 @@ class_name WorkerCarryController
 @export var lift_strength: float = 25.0
 @export var carry_strength: float = 30.0
 
+@export var interaction_area_path: NodePath
+
+var interaction_area: Area2D
+
+func _ready() -> void:
+	interaction_area = get_node_or_null(interaction_area_path)
+	
 
 func can_pickup_item(item: WorldItem) -> bool:
 	if item == null:
+		return false
+
+	if interaction_area == null:
 		return false
 
 	if not item.can_be_hauled_by(worker_body):
@@ -24,19 +34,43 @@ func can_pickup_item(item: WorldItem) -> bool:
 	if not carryable.can_be_lifted_by(lift_strength):
 		return false
 
+	var body := item.get_physical_body()
+
+	if body == null:
+		return false
+
+	if not interaction_area.overlaps_body(body):
+		return false
+
 	return true
 
 func is_item_in_pickup_range(item: WorldItem) -> bool:
-	if worker_body == null:
-		return false
-
 	if item == null:
+		print("[PICKUP_RANGE] item null")
 		return false
 
-	var dx := absf(worker_body.global_position.x - item.global_position.x)
-	var dy := absf(worker_body.global_position.y - item.global_position.y)
+	if interaction_area == null:
+		print("[PICKUP_RANGE] interaction_area null")
+		return false
 
-	return dx <= pickup_range and dy <= 96.0
+	var body := item.get_physical_body()
+
+	if body == null:
+		print("[PICKUP_RANGE] body null item=", item.name)
+		return false
+
+	var result := interaction_area.overlaps_body(body)
+
+	print(
+		"[PICKUP_RANGE] item=", item.name,
+		" body=", body.name,
+		" item_pos=", item.get_world_position(),
+		" worker_pos=", worker_body.global_position if worker_body != null else Vector2.ZERO,
+		" result=", result
+	)
+
+	return result
+	
 func pickup_item(item: WorldItem) -> bool:
 	if not is_item_in_pickup_range(item):
 		return false

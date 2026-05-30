@@ -2,8 +2,6 @@ extends GOAPAction
 class_name GOAPGoToVisibleItemAction
 
 @export var item_type: StringName = &"crystal"
-@export var arrive_distance: float = 48.0
-@export var arrive_y_tolerance: float = 96.0
 
 
 func _init() -> void:
@@ -89,15 +87,8 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 	if blackboard.movement != null and blackboard.movement.has_method("physics_update"):
 		blackboard.movement.physics_update(delta)
 
-	var x_distance := absf(
-		blackboard.worker.global_position.x - target_position.x
-	)
-
-	var y_distance := absf(
-		blackboard.worker.global_position.y - target_position.y
-	)
-
-	if x_distance <= arrive_distance and y_distance <= arrive_y_tolerance:
+	if blackboard.carry_controller != null \
+	and blackboard.carry_controller.is_item_in_pickup_range(item):
 		blackboard.set_fact(&"at_visible_item", true)
 		status = ActionStatus.SUCCEEDED
 		return status
