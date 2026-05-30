@@ -632,25 +632,80 @@ func _update_debug_label() -> void:
 	if has_assignment:
 		state_text += "\nAssignment: yes"
 
+	if blackboard != null:
+		state_text += "\nVisible Item: " + str(
+			blackboard.has_visible_haulable_item()
+		)
+
+		state_text += "\nVisible Crystal: " + str(
+			blackboard.has_visible_item_type(&"crystal")
+		)
+
+		var nearest_item := blackboard.get_nearest_visible_item(&"crystal")
+
+		state_text += "\nNearest Crystal: " + str(
+			nearest_item != null
+		)
+
+		if nearest_item != null:
+			var dist := global_position.distance_to(
+				nearest_item.global_position
+			)
+
+			state_text += "\nCrystal Dist: " + str(roundi(dist))
+
 	debug_label.text = state_text
 
-
 func get_debug_state() -> Dictionary:
+	var nearest_item: WorldItem = null
+
+	if blackboard != null:
+		nearest_item = blackboard.get_nearest_visible_item(&"crystal")
+
 	return {
 		"type": "worker",
+
 		"state": str(get_worker_state()),
 		"need": str(need_system.current_need) if need_system != null else "none",
 		"goal": str(goal_selector.current_goal) if goal_selector != null else "none",
-		"action": str(goap_brain.current_action.action_id) if goap_brain != null and goap_brain.current_action != null else "none",
+		"action": str(goap_brain.current_action.action_id)
+			if goap_brain != null
+			and goap_brain.current_action != null
+			else "none",
+
 		"health": stats.health if stats != null else 0,
 		"energy": stats.energy if stats != null else 0,
 		"stamina": stats.stamina if stats != null else 0,
+
 		"carry_weight": stats.carry_weight if stats != null else 0,
 		"max_carry_weight": stats.max_carry_weight if stats != null else 0,
+
 		"has_assignment": has_assignment,
 		"has_crystal_cargo": has_crystal_cargo,
-		"interrupt": state_machine.reason_for_interrupt if state_machine != null else "",
-		"fail": state_machine.last_failure_reason if state_machine != null else "",
-		"blackboard": blackboard.get_debug_state() if blackboard != null else {},
-		"goap": goap_brain.get_debug_state() if goap_brain != null else {}
+
+		"visible_item": blackboard.has_visible_haulable_item()
+			if blackboard != null
+			else false,
+
+		"visible_crystal": blackboard.has_visible_item_type(&"crystal")
+			if blackboard != null
+			else false,
+
+		"nearest_crystal": nearest_item != null,
+
+		"interrupt": state_machine.reason_for_interrupt
+			if state_machine != null
+			else "",
+
+		"fail": state_machine.last_failure_reason
+			if state_machine != null
+			else "",
+
+		"blackboard": blackboard.get_debug_state()
+			if blackboard != null
+			else {},
+
+		"goap": goap_brain.get_debug_state()
+			if goap_brain != null
+			else {}
 	}
