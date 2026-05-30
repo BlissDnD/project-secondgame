@@ -277,8 +277,18 @@ script = ExtResource("54_0ncpa")
 player_body = NodePath("..")
 interaction_area = NodePath("../FlipContainer/InteractionArea")
 hold_point = NodePath("../HoldPoint")
+drop_offset = null
+hold_offset = null
+player_base_weight = null
+lift_strength = 46.51
+carry_strength = 58.059999999999995
+throw_strength = 43.41
+base_throw_impulse = null
 minimum_throw_power = 0.1
 base_full_charge_time = 1.0
+heavy_item_charge_penalty = null
+mouse_distance_for_max_power = null
+mouse_distance_dead_zone = null
 metadata/_custom_type_script = "uid://ct0l8tix2e53"
 
 [node name="ThrowTrajectoryPreview" type="Line2D" parent="." unique_id=54783806 node_paths=PackedStringArray("player", "carry_controller")]

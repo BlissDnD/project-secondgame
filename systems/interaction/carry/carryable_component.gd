@@ -11,13 +11,17 @@ signal placed(carrier: Node2D, placed_node: Node)
 
 @export var carry_profile: CarryProfile
 
+@export_group("Carry Mode")
+@export var use_physical_carry: bool = true
+@export var physical_carry_strength: float = 45.0
+@export var physical_carry_damping: float = 10.0
+@export var ignore_carrier_collision_while_carried: bool = true
+
 @export_group("Placement")
 @export var supports_grid_placement: bool = false
-
-@export var disable_body_collision_while_carried: bool = true
+@export var disable_body_collision_while_carried: bool = false
 @export var enable_body_collision_when_dropped: bool = true
 @export var enable_body_collision_when_placed: bool = true
-
 @export var ground_anchor: Node2D
 
 @export_group("External Motion")
@@ -38,6 +42,8 @@ var original_parent: Node = null
 var _default_modulate: Color = Color.WHITE
 var _is_highlighted: bool = false
 var _original_global_scale: Vector2 = Vector2.ONE
+var _physical_hold_parent: Node2D = null
+var _ignored_carrier_body: PhysicsBody2D = null
 
 
 func _ready() -> void:
@@ -135,15 +141,14 @@ func get_carried_root() -> Node2D:
 	return root_node
 
 
-func get_collision_shapes_for_proxy() -> Array[CollisionShape2D]:
-	var result: Array[CollisionShape2D] = []
-
+func get_physical_body() -> PhysicalItemBody:
 	if root_node == null:
-		return result
+		return null
 
-	_collect_collision_shapes(root_node, result)
+	if root_node is PhysicalItemBody:
+		return root_node as PhysicalItemBody
 
-	return result
+	return _find_physical_body_recursive(root_node)
 
 
 func pickup(
@@ -157,7 +162,6 @@ func pickup(
 		return false
 
 	_notify_external_motion_begin_carried()
-
 	_release_placement_occupancy_if_needed()
 
 	original_parent = root_node.get_parent()
@@ -165,22 +169,33 @@ func pickup(
 
 	carrier = new_carrier
 	is_carried = true
+	_physical_hold_parent = hold_parent
 
 	set_highlighted(false)
-	_set_physics_carried_state(true)
 	_reset_rotation_for_carry()
+	_set_physics_carried_state(true)
 
-	if hold_parent != null:
-		root_node.reparent(hold_parent, false)
-		root_node.position = Vector2.ZERO
-		root_node.global_scale = _original_global_scale
-		root_node.rotation = 0.0
-	else:
-		root_node.global_position = (
-			carrier.global_position + hold_offset
+	var physical_body := get_physical_body()
+
+	if use_physical_carry and physical_body != null and hold_parent != null:
+		physical_body.set_physical_carry_target(
+			hold_parent,
+			hold_offset,
+			physical_carry_strength,
+			physical_carry_damping
 		)
 
-		root_node.global_scale = _original_global_scale
+		_apply_carrier_collision_exception(physical_body, new_carrier)
+	else:
+		if hold_parent != null:
+			root_node.reparent(hold_parent, false)
+			root_node.position = hold_offset
+			root_node.global_scale = _original_global_scale
+			root_node.rotation = 0.0
+		else:
+			root_node.global_position = new_carrier.global_position + hold_offset
+			root_node.global_scale = _original_global_scale
+			root_node.rotation = 0.0
 
 	if root_node.has_method("on_picked_up"):
 		root_node.on_picked_up()
@@ -198,6 +213,18 @@ func drop(
 		print("DROP BLOCKED: carried item cannot drop freely")
 		return
 
+	_drop_internal(
+		drop_position,
+		inherited_velocity,
+		true,
+		true
+	)
+
+
+func force_drop(
+	drop_position: Vector2,
+	inherited_velocity: Vector2 = Vector2.ZERO
+) -> void:
 	_drop_internal(
 		drop_position,
 		inherited_velocity,
@@ -225,9 +252,14 @@ func throw_with_velocity(
 
 	_notify_external_motion_start_throw(throw_velocity)
 
-	var physical_body := root_node as PhysicalItemBody
+	var physical_body := get_physical_body()
 
 	if physical_body != null:
+		physical_body.temporarily_ignore_body(
+			ignored_body,
+			physical_body.get_thrower_collision_grace_time()
+		)
+
 		physical_body.linear_velocity = throw_velocity
 		physical_body.angular_velocity = 0.0
 
@@ -258,7 +290,7 @@ func finish_after_successful_place() -> void:
 
 
 func get_motion_profile() -> PhysicalMotionProfile:
-	var physical_body := root_node as PhysicalItemBody
+	var physical_body := get_physical_body()
 
 	if physical_body != null:
 		return physical_body.get_motion_profile()
@@ -304,6 +336,7 @@ func get_max_throw_speed() -> float:
 
 	return fallback_max_throw_speed
 
+
 func apply_motion_damping(
 	velocity: Vector2,
 	delta: float
@@ -318,21 +351,8 @@ func apply_motion_damping(
 		delta
 	)
 
-func force_drop(
-	drop_position: Vector2,
-	inherited_velocity: Vector2 = Vector2.ZERO
-) -> void:
-	_drop_internal(
-		drop_position,
-		inherited_velocity,
-		true,
-		true
-	)
 
-
-func get_carry_speed_multiplier(
-	carry_strength: float
-) -> float:
+func get_carry_speed_multiplier(carry_strength: float) -> float:
 	if carry_profile == null:
 		return 1.0
 
@@ -341,10 +361,7 @@ func get_carry_speed_multiplier(
 	if weight <= carry_profile.comfortable_weight_limit:
 		return 1.0
 
-	var overload := (
-		weight - carry_profile.comfortable_weight_limit
-	)
-
+	var overload := weight - carry_profile.comfortable_weight_limit
 	var penalty := overload / maxf(carry_strength, 0.01)
 
 	return clampf(
@@ -354,9 +371,7 @@ func get_carry_speed_multiplier(
 	)
 
 
-func get_throw_multiplier(
-	throw_strength: float
-) -> float:
+func get_throw_multiplier(throw_strength: float) -> float:
 	if carry_profile == null:
 		return 0.0
 
@@ -364,15 +379,8 @@ func get_throw_multiplier(
 		return 0.0
 
 	var weight := get_weight()
-
-	var strength_base := maxf(
-		throw_strength,
-		0.01
-	)
-
-	var mass_factor := (
-		strength_base / (strength_base + weight)
-	)
+	var strength_base := maxf(throw_strength, 0.01)
+	var mass_factor := strength_base / (strength_base + weight)
 
 	return clampf(
 		mass_factor * carry_profile.throw_efficiency,
@@ -409,29 +417,40 @@ func _drop_internal(
 	if root_node == null:
 		return
 
-	if original_parent != null:
+	var old_carrier := carrier
+	var physical_body := get_physical_body()
+
+	if physical_body != null:
+		physical_body.clear_physical_carry_target()
+
+	_clear_carrier_collision_exception(physical_body)
+
+	if not (use_physical_carry and physical_body != null):
 		var previous_global := root_node.global_position
 
 		if root_node.get_parent() != null:
 			root_node.get_parent().remove_child(root_node)
 
-		original_parent.add_child(root_node)
+		if original_parent != null:
+			original_parent.add_child(root_node)
+		else:
+			get_tree().current_scene.add_child(root_node)
 
 		root_node.global_position = previous_global
 		root_node.global_scale = _original_global_scale
-
-	root_node.global_position = drop_position
-
-	var old_carrier := carrier
+		root_node.global_position = drop_position
+		root_node.rotation = 0.0
+	else:
+		physical_body.global_position = drop_position
 
 	carrier = null
 	is_carried = false
+	_physical_hold_parent = null
 
-	_notify_external_motion_end_carried()
+	if end_external_carried_state:
+		_notify_external_motion_end_carried()
 
 	_set_physics_carried_state(false)
-
-	var physical_body := root_node as PhysicalItemBody
 
 	if physical_body != null:
 		physical_body.linear_velocity = inherited_velocity
@@ -450,12 +469,18 @@ func _finish_carried_without_world_drop() -> void:
 		return
 
 	var old_carrier := carrier
+	var physical_body := get_physical_body()
+
+	if physical_body != null:
+		physical_body.clear_physical_carry_target()
+
+	_clear_carrier_collision_exception(physical_body)
 
 	carrier = null
 	is_carried = false
+	_physical_hold_parent = null
 
 	_notify_external_motion_end_carried()
-
 	_set_physics_carried_state(false)
 
 	dropped.emit(old_carrier)
@@ -474,21 +499,20 @@ func _release_placement_occupancy_if_needed() -> void:
 
 
 func _set_physics_carried_state(value: bool) -> void:
-	var physical_body := root_node as PhysicalItemBody
+	var physical_body := get_physical_body()
 
 	if physical_body != null:
 		physical_body.set_carried_state(value)
 
-		if disable_body_collision_while_carried:
+		if value:
 			physical_body.set_body_collision_enabled(
-				not value
+				not disable_body_collision_while_carried
 			)
-
-		if not value and enable_body_collision_when_dropped:
-			physical_body.set_body_collision_enabled(true)
-
-		if not value and enable_body_collision_when_placed:
-			physical_body.set_body_collision_enabled(true)
+		else:
+			if enable_body_collision_when_dropped:
+				physical_body.set_body_collision_enabled(true)
+			elif enable_body_collision_when_placed:
+				physical_body.set_body_collision_enabled(true)
 
 		return
 
@@ -509,21 +533,53 @@ func _reset_rotation_for_carry() -> void:
 	root_node.rotation = 0.0
 
 
-func _collect_collision_shapes(
-	node: Node,
-	result: Array[CollisionShape2D]
+func _apply_carrier_collision_exception(
+	physical_body: PhysicalItemBody,
+	new_carrier: Node2D
 ) -> void:
-	if node is Area2D:
+	if not ignore_carrier_collision_while_carried:
 		return
 
+	if physical_body == null:
+		return
+
+	var carrier_body := new_carrier as PhysicsBody2D
+
+	if carrier_body == null:
+		return
+
+	_ignored_carrier_body = carrier_body
+	physical_body.add_collision_exception_with(carrier_body)
+
+
+func _clear_carrier_collision_exception(
+	physical_body: PhysicalItemBody
+) -> void:
+	if physical_body == null:
+		_ignored_carrier_body = null
+		return
+
+	if _ignored_carrier_body != null and is_instance_valid(_ignored_carrier_body):
+		physical_body.remove_collision_exception_with(_ignored_carrier_body)
+
+	_ignored_carrier_body = null
+
+
+func _find_physical_body_recursive(node: Node) -> PhysicalItemBody:
+	if node == null:
+		return null
+
+	if node is PhysicalItemBody:
+		return node as PhysicalItemBody
+
 	for child in node.get_children():
-		if child == self:
-			continue
+		var found := _find_physical_body_recursive(child)
 
-		if child is CollisionShape2D:
-			result.append(child as CollisionShape2D)
+		if found != null:
+			return found
 
-		_collect_collision_shapes(child, result)
+	return null
+
 
 func _find_first_canvas_item(node: Node) -> CanvasItem:
 	if node == null:

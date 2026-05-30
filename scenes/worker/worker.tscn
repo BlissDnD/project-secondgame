@@ -179,6 +179,7 @@ collision_mask = 0
 script = ExtResource("7_4pgqf")
 root_node = NodePath("..")
 carry_profile = ExtResource("7_5oyiq")
+physical_carry_strength = 20.0
 external_motion_component = NodePath("../WorkerPhysicsModeComponent")
 highlight_target = NodePath("../WorkerSprite")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.627451)

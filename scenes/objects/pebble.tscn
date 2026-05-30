@@ -12,7 +12,7 @@ friction = 0.8
 bounce = 0.5
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_778ep"]
-radius = 26.323256
+radius = 26.306633
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fxtap"]
 radius = 1.8630875
@@ -22,7 +22,7 @@ height = 3.8326375
 scale = Vector2(0.36, 0.36)
 
 [node name="PhysicalItemBody" type="RigidBody2D" parent="." unique_id=596505902]
-mass = 0.7
+mass = 32.35
 physics_material_override = SubResource("PhysicsMaterial_778ep")
 continuous_cd = 2
 contact_monitor = true
@@ -31,6 +31,7 @@ linear_damp = 0.3
 angular_damp = 2.5
 script = ExtResource("1_2yx05")
 motion_profile = ExtResource("2_778ep")
+physical_carry_max_speed = null
 metadata/_custom_type_script = "uid://duk2mru75qcx6"
 
 [node name="Sprite2D" type="Sprite2D" parent="PhysicalItemBody" unique_id=1547501359]
@@ -42,7 +43,7 @@ region_enabled = true
 region_rect = Rect2(80, 70, 37, 35)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PhysicalItemBody" unique_id=530655403]
-position = Vector2(0, -13.000001)
+position = Vector2(0, -13.888888)
 scale = Vector2(0.5806744, 0.50727284)
 shape = SubResource("CircleShape2D_778ep")
 
