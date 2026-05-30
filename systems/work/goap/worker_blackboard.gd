@@ -196,16 +196,24 @@ func is_at_target(distance: float = 18.0) -> bool:
 	return worker.global_position.distance_to(get_target_position()) <= distance
 
 
-func is_at_work_target(distance: float = 24.0) -> bool:
-	var work_target := get_work_target()
-
-	if work_target == null:
+func is_at_work_target(distance: float = 32.0) -> bool:
+	if worker == null:
 		return false
 
-	return worker != null \
-		and worker.global_position.distance_to(work_target.global_position) <= distance
+	if not has_work_target():
+		return false
 
+	var target_position := get_work_target_position()
 
+	var x_distance := absf(
+		worker.global_position.x - target_position.x
+	)
+
+	var y_distance := absf(
+		worker.global_position.y - target_position.y
+	)
+
+	return x_distance <= distance and y_distance <= 96.0
 func is_at_deposit_target(distance: float = 64.0) -> bool:
 	if worker == null:
 		return false
@@ -336,17 +344,15 @@ func clear_cargo_and_free_item() -> void:
 
 	clear_cargo_reference()
 
-
 func finish_deposit() -> void:
 	clear_cargo_reference()
 	clear_mined_crystal()
-	clear_target()
 
-	world_state.set_fact(&"at_deposit", false)
-	world_state.set_fact(&"at_target", false)
 	world_state.set_fact(&"has_cargo", false)
 	world_state.set_fact(&"has_item", false)
 	world_state.set_fact(&"has_mined_crystal", false)
+	world_state.set_fact(&"at_deposit", false)
+	world_state.set_fact(&"at_target", false)
 
 	if stats != null:
 		stats.clear_carry_weight()
@@ -357,10 +363,24 @@ func finish_deposit() -> void:
 		if worker.crystal_cargo_visual != null:
 			worker.crystal_cargo_visual.visible = false
 
+	var work_target := get_work_target()
+
+	if work_target != null:
+		set_target(work_target)
+	else:
+		clear_target()
+
 	update_world_state()
 
-
 # Backward-compatible name.
+	if adapter != null:
+		adapter.stop_movement()
+
+	if movement != null:
+		movement.reset_movement()
+
+	if worker != null and worker.has_method("request_goap_replan"):
+		worker.request_goap_replan("deposit_complete")
 func clear_cargo() -> void:
 	clear_cargo_reference()
 

@@ -93,6 +93,11 @@ func set_target(position: Vector2) -> void:
 	movement_mode = MovementMode.TARGET
 	_reset_obstacle_memory()
 
+func reset_movement() -> void:
+	clear_target()
+	_reset_obstacle_memory()
+	set_physics_process(true)
+	set_process(true)
 
 func clear_target() -> void:
 	has_target = false

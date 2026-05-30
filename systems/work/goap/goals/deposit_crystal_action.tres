@@ -13,6 +13,7 @@ preconditions = Dictionary[StringName, Variant]({
 effects = Dictionary[StringName, Variant]({
 &"at_deposit": false,
 &"has_cargo": false,
-&"has_item": false
+&"has_item": false,
+&"has_mined_crystal": false
 })
 metadata/_custom_type_script = "uid://cboauot0nwho5"
