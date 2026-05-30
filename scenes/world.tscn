@@ -286,11 +286,13 @@ metadata/_custom_type_script = "uid://cjfpel04g0fbq"
 [sub_resource type="Resource" id="Resource_ctatt"]
 script = ExtResource("10_oo54l")
 scene = ExtResource("11_kpybi")
+spawn_chance = 0.1
 metadata/_custom_type_script = "uid://b2ipxvu3m6o8s"
 
 [sub_resource type="Resource" id="Resource_navra"]
 script = ExtResource("10_oo54l")
 scene = ExtResource("12_0nbtd")
+spawn_chance = 0.1
 metadata/_custom_type_script = "uid://b2ipxvu3m6o8s"
 
 [node name="World" type="Node2D" unique_id=1212785255 groups=["placement_controller", "world"]]
@@ -338,8 +340,8 @@ spawn_origin = NodePath("../Player")
 terrain_provider = NodePath("../WorldTerrainGenerator")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
 object_layer = NodePath("../ObjectLayer")
-spawn_offset_tiles = 5
-object_spacing_tiles = 20
+spawn_offset_tiles = 20
+object_spacing_tiles = 30
 metadata/_custom_type_script = "uid://padt2g1f7e1y"
 
 [node name="PlacementValidator" type="Node" parent="." unique_id=1821523767 node_paths=PackedStringArray("terrain_tilemap") groups=["placement_preview", "placement_validator", "player", "terrain_layer"]]

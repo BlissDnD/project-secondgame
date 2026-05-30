@@ -2,7 +2,8 @@ extends GOAPAction
 class_name GOAPGoToVisibleItemAction
 
 @export var item_type: StringName = &"crystal"
-@export var arrive_distance: float = 28.0
+@export var arrive_distance: float = 48.0
+@export var arrive_y_tolerance: float = 96.0
 
 
 func _init() -> void:
@@ -37,15 +38,18 @@ func enter(blackboard: WorkerBlackboard) -> void:
 
 	var item := blackboard.get_nearest_visible_item(item_type)
 
-	if item == null:
+	if item == null or not is_instance_valid(item):
 		status = ActionStatus.FAILED
 		last_failure_reason = "missing_visible_item"
 		return
 
-	blackboard.set_target(item)
+	blackboard.current_item = item
+	blackboard.set_target_position(item.get_world_position())
+	blackboard.set_fact(&"has_item_target", true)
+	blackboard.set_fact(&"at_visible_item", false)
 
 	if blackboard.adapter != null:
-		blackboard.adapter.move_to_position(item.global_position)
+		blackboard.adapter.move_to_position(item.get_world_position())
 
 
 func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
@@ -58,22 +62,42 @@ func tick(blackboard: WorkerBlackboard, delta: float) -> ActionStatus:
 	if blackboard.adapter == null:
 		return fail("missing_adapter")
 
-	var item := blackboard.get_nearest_visible_item(item_type)
+	var item := blackboard.current_item as WorldItem
 
-	if item == null:
-		return fail("lost_visible_item")
+	if item == null or not is_instance_valid(item):
+		item = blackboard.get_nearest_visible_item(item_type)
 
-	blackboard.set_target(item)
+	if item == null or not is_instance_valid(item):
+		_clear_item_target(blackboard)
 
-	var target_position := item.global_position
+		if blackboard.state_machine != null:
+			blackboard.state_machine.set_state(
+				WorkerStateMachine.IDLE,
+				"lost_visible_item"
+			)
 
+		status = ActionStatus.SUCCEEDED
+		return status
+
+	blackboard.current_item = item
+
+	var target_position := item.get_world_position()
+
+	blackboard.set_target_position(target_position)
 	blackboard.adapter.move_to_position(target_position)
 
 	if blackboard.movement != null and blackboard.movement.has_method("physics_update"):
 		blackboard.movement.physics_update(delta)
 
-	if blackboard.worker.global_position.distance_to(target_position) <= arrive_distance:
-		blackboard.current_item = item
+	var x_distance := absf(
+		blackboard.worker.global_position.x - target_position.x
+	)
+
+	var y_distance := absf(
+		blackboard.worker.global_position.y - target_position.y
+	)
+
+	if x_distance <= arrive_distance and y_distance <= arrive_y_tolerance:
 		blackboard.set_fact(&"at_visible_item", true)
 		status = ActionStatus.SUCCEEDED
 		return status
@@ -87,3 +111,15 @@ func exit(blackboard: WorkerBlackboard) -> void:
 		blackboard.adapter.stop_movement()
 
 	super.exit(blackboard)
+
+
+func _clear_item_target(blackboard: WorkerBlackboard) -> void:
+	if blackboard == null:
+		return
+
+	blackboard.current_item = null
+	blackboard.clear_target()
+	blackboard.set_fact(&"has_item_target", false)
+	blackboard.set_fact(&"at_visible_item", false)
+	blackboard.is_wandering = false
+	blackboard.set_fact(&"is_wandering", false)

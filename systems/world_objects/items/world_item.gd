@@ -12,7 +12,13 @@ var reserved_by: Node = null
 func get_item_type() -> StringName:
 	return item_type
 
+func get_world_position() -> Vector2:
+	var body := get_physical_body()
 
+	if body != null:
+		return body.global_position
+
+	return global_position
 func get_amount() -> int:
 	return amount
 

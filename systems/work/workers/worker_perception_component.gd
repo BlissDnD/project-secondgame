@@ -82,7 +82,7 @@ func get_nearest_visible_item(item_type: StringName = &"") -> WorldItem:
 		if item_type != &"" and item.get_item_type() != item_type:
 			continue
 
-		var distance := worker.global_position.distance_to(item.global_position)
+		var distance := worker.global_position.distance_to(item.get_world_position())
 
 		if distance < best_distance:
 			best_distance = distance
@@ -108,7 +108,14 @@ func _is_valid_visible_item(item: WorldItem) -> bool:
 	if not is_instance_valid(item):
 		return false
 
-	if _is_inside_any_main_crystal_storage(item.global_position):
+	if worker != null:
+		var blackboard := worker.get_node_or_null("WorkerBlackboard") as WorkerBlackboard
+
+		if blackboard != null:
+			if blackboard.carried_item == item:
+				return false
+
+	if _is_inside_any_main_crystal_storage(item.get_world_position()):
 		return false
 
 	if not item.is_haulable:

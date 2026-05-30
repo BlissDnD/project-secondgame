@@ -18,7 +18,7 @@ func get_deposit_position() -> Vector2:
 
 	return global_position
 	
-func contains_world_position(position: Vector2) -> bool:
+func contains_world_position(world_position: Vector2) -> bool:
 	if storage_area == null:
 		return false
 
@@ -36,21 +36,18 @@ func contains_world_position(position: Vector2) -> bool:
 		if shape == null:
 			continue
 
-		var local_position := shape_node.to_local(position)
+		var local_position := shape_node.to_local(world_position)
 
 		if shape is RectangleShape2D:
 			var rect_shape := shape as RectangleShape2D
 			var half_size := rect_shape.size * 0.5
 
-			if absf(local_position.x) <= half_size.x \
-			and absf(local_position.y) <= half_size.y:
-				return true
+			return absf(local_position.x) <= half_size.x \
+				and absf(local_position.y) <= half_size.y
 
 		if shape is CircleShape2D:
 			var circle_shape := shape as CircleShape2D
-
-			if local_position.length() <= circle_shape.radius:
-				return true
+			return local_position.length() <= circle_shape.radius
 
 	return false
 func deposit_crystal_item(item: Node) -> bool:

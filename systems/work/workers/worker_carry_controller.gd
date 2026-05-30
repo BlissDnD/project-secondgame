@@ -63,9 +63,11 @@ func pickup_item(item: WorldItem) -> bool:
 	if blackboard != null:
 		blackboard.set_carried_item(item)
 
-	if worker_body != null and worker_body.has_method("receive_crystal_cargo"):
-		if item.get_item_type() == &"crystal":
-			worker_body.receive_crystal_cargo()
+	if blackboard != null:
+		blackboard.set_carried_item(item)
+		blackboard.clear_assignment()
+		blackboard.set_fact(&"has_assignment", false)
+		blackboard.set_fact(&"has_work_target", false)
 
 	return true
 

@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://ekvktgh7xumo" path="res://systems/work/workers/worker.gd" id="1_nupkf"]
 [ext_resource type="Texture2D" uid="uid://mvxwy8btjimw" path="res://assets/images/BlueWizard/2BlueWizardIdle/Chara - BlueIdle00004.png" id="2_j82ov"]
 [ext_resource type="Script" uid="uid://b7n5yeu6ahi74" path="res://systems/work/workers/worker_state_machine.gd" id="2_md8yx"]
-[ext_resource type="Texture2D" uid="uid://db3w05vvlupcv" path="res://assets/images/Plant Animations/BlueFlower2/BluePlantClosed_00045.png" id="3_4pgqf"]
 [ext_resource type="Script" uid="uid://c1cycgosdi6gm" path="res://systems/work/workers/worker_movement_component.gd" id="4_4pgqf"]
 [ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="7_4pgqf"]
 [ext_resource type="Resource" uid="uid://cpdejhbwxdlqo" path="res://resources/data/physics_profiles/worker_carry_profile.tres" id="7_5oyiq"]
@@ -42,17 +41,6 @@ animations = [{
 "speed": 5.0
 }]
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_ydra3"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": ExtResource("3_4pgqf")
-}],
-"loop": true,
-"name": &"default",
-"speed": 5.0
-}]
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ydra3"]
 size = Vector2(50, 54)
 
@@ -66,10 +54,11 @@ size = Vector2(51, 54)
 [sub_resource type="CircleShape2D" id="CircleShape2D_17cts"]
 radius = 385.7674
 
-[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label", "cargo_hold_point")]
+[node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("carry_controller", "state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label", "cargo_hold_point")]
 collision_layer = 4
 floor_block_on_wall = false
 script = ExtResource("1_nupkf")
+carry_controller = NodePath("WorkerCarryController")
 state_machine = NodePath("WorkerStateMachine")
 stats = NodePath("WorkerStatsComponent")
 need_system = NodePath("WorkerNeedSystem")
@@ -78,7 +67,7 @@ movement = NodePath("WorkerMovementComponent")
 blackboard = NodePath("WorkerBlackboard")
 goap_brain = NodePath("GOAPBrain")
 goap_adapter = NodePath("WorkerGOAPAdapter")
-crystal_cargo_visual = NodePath("CrístalCargoVisual")
+crystal_cargo_visual = NodePath("")
 debug_label = NodePath("DebugLabel")
 cargo_hold_point = NodePath("CargoHoldPoint")
 
@@ -87,11 +76,6 @@ position = Vector2(4.7683716e-07, -35)
 rotation = -0.012237191
 scale = Vector2(0.24574064, 0.24574062)
 sprite_frames = SubResource("SpriteFrames_nupkf")
-
-[node name="CrístalCargoVisual" type="AnimatedSprite2D" parent="." unique_id=984995345]
-position = Vector2(-9, -73)
-scale = Vector2(0.038411465, 0.038411465)
-sprite_frames = SubResource("SpriteFrames_ydra3")
 
 [node name="WorkerBlackboard" type="Node" parent="." unique_id=952945571]
 script = ExtResource("7_ock52")
