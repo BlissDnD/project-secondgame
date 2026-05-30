@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="GOAPDepositCrystalAction" format=3 uid="uid://b2i0t1xy0o84l"]
 
-[ext_resource type="Script" uid="uid://cboauot0nwho5" path="res://systems/work/goap/goals/goap_deposit_crystal_action.gd" id="1_7yj7f"]
+[ext_resource type="Script" uid="uid://cboauot0nwho5" path="res://systems/work/goap/actions/goap_deposit_crystal_action.gd" id="1_7yj7f"]
 
 [resource]
 script = ExtResource("1_7yj7f")

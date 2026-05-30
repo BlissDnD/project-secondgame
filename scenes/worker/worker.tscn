@@ -13,22 +13,23 @@
 [ext_resource type="Script" uid="uid://bpl7loy70rpsy" path="res://systems/work/goap/goap_action.gd" id="13_4vlxc"]
 [ext_resource type="Resource" uid="uid://bi1dq2qpqt03b" path="res://systems/work/goap/actions/rest_action.tres" id="16_8255w"]
 [ext_resource type="Script" uid="uid://bwnkuuafp8tdv" path="res://systems/work/goap/worker_goap_adapter.gd" id="16_j82ov"]
-[ext_resource type="Resource" uid="uid://ctel7blfcx3k4" path="res://systems/work/goap/goals/go_to_crystal_action.tres" id="17_61yg6"]
-[ext_resource type="Resource" uid="uid://c4jwpsp74decl" path="res://systems/work/goap/goals/mine_crystal_action.tres" id="18_syodb"]
+[ext_resource type="Resource" uid="uid://ctel7blfcx3k4" path="res://systems/work/goap/actions/go_to_crystal_action.tres" id="17_61yg6"]
+[ext_resource type="Resource" uid="uid://c4jwpsp74decl" path="res://systems/work/goap/actions/mine_crystal_action.tres" id="18_syodb"]
 [ext_resource type="Script" uid="uid://ckasy4oc8n4pg" path="res://systems/work/workers/worker_stats_component.gd" id="19_ih8nm"]
-[ext_resource type="Resource" uid="uid://cpkb27jrf8gsn" path="res://systems/work/goap/goals/pickup_crystal_action.tres" id="19_k2aal"]
+[ext_resource type="Resource" uid="uid://cpkb27jrf8gsn" path="res://systems/work/goap/actions/pickup_crystal_action.tres" id="19_k2aal"]
 [ext_resource type="Resource" uid="uid://cfum8wq0eidmj" path="res://systems/work/goap/actions/side_wander_action.tres" id="19_u3vbd"]
 [ext_resource type="Script" uid="uid://bvwvim08l4vu4" path="res://systems/work/goap/goap_goal.gd" id="19_ynsbi"]
-[ext_resource type="Resource" uid="uid://cjp6k63qf1ybm" path="res://systems/work/goap/goals/carry_to_main_crystal_action.tres" id="20_17cts"]
+[ext_resource type="Resource" uid="uid://cjp6k63qf1ybm" path="res://systems/work/goap/actions/carry_to_main_crystal_action.tres" id="20_17cts"]
 [ext_resource type="Script" uid="uid://bvye302uglh6q" path="res://systems/work/worker_need_system.gd" id="20_8255w"]
 [ext_resource type="Resource" uid="uid://cm5o4c4knavu8" path="res://systems/work/goap/goals/idle_goal.tres" id="20_ir7vy"]
 [ext_resource type="Resource" uid="uid://ds13lisub11su" path="res://systems/work/goap/goals/rest_goal.tres" id="20_u3vbd"]
-[ext_resource type="Resource" uid="uid://b2i0t1xy0o84l" path="res://systems/work/goap/goals/deposit_crystal_action.tres" id="21_utf6g"]
+[ext_resource type="Resource" uid="uid://b2i0t1xy0o84l" path="res://systems/work/goap/actions/deposit_crystal_action.tres" id="21_utf6g"]
 [ext_resource type="Script" uid="uid://bwgyqrosfntql" path="res://systems/work/utility_goal_selector.gd" id="21_ynsbi"]
 [ext_resource type="Resource" uid="uid://bl6i7rp52y8di" path="res://systems/work/goap/goals/work_goal.tres" id="24_r3q7o"]
 [ext_resource type="Resource" uid="uid://b0waduod5oi50" path="res://systems/work/goap/goals/delivery_item_goal.tres" id="24_syodb"]
 [ext_resource type="Script" uid="uid://d14n6wwwcafrr" path="res://systems/work/workers/worker_physics_node_component.gd" id="27_61yg6"]
 [ext_resource type="PackedScene" uid="uid://bxieh5isie7ol" path="res://scenes/worker/worker_physics_proxy.tscn" id="28_syodb"]
+[ext_resource type="Script" uid="uid://dnbiu5wp5c1yv" path="res://systems/work/workers/worker_perception_component.gd" id="30_k2aal"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_nupkf"]
 animations = [{
@@ -61,6 +62,9 @@ height = 58.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lf01n"]
 size = Vector2(51, 54)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_17cts"]
+radius = 385.7674
 
 [node name="Worker" type="CharacterBody2D" unique_id=591280423 node_paths=PackedStringArray("state_machine", "stats", "need_system", "goal_selector", "movement", "blackboard", "goap_brain", "goap_adapter", "crystal_cargo_visual", "debug_label", "cargo_hold_point")]
 collision_layer = 4
@@ -184,6 +188,7 @@ metadata/_custom_type_script = "uid://c0acc3v16fne0"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CarryableComponent" unique_id=767862528]
 position = Vector2(-2, -27)
 shape = SubResource("RectangleShape2D_ydra3")
+debug_color = Color(0.7882353, 0.43137255, 0, 0.28627452)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1787094264]
 position = Vector2(0, -29)
@@ -205,3 +210,17 @@ metadata/_custom_type_script = "uid://d14n6wwwcafrr"
 
 [node name="CargoHoldPoint" type="Marker2D" parent="." unique_id=411674892]
 position = Vector2(0, -24)
+
+[node name="VisionArea" type="Area2D" parent="." unique_id=43931316]
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea" unique_id=2048791129]
+position = Vector2(14, -77)
+scale = Vector2(1.6696259, 0.71412945)
+shape = SubResource("CircleShape2D_17cts")
+debug_color = Color(0.67749184, 0.3023558, 1, 0.11372549)
+
+[node name="WorkerPerceptionComponent" type="Node" parent="." unique_id=86109237 node_paths=PackedStringArray("vision_area")]
+script = ExtResource("30_k2aal")
+vision_area = NodePath("../VisionArea")
+metadata/_custom_type_script = "uid://dnbiu5wp5c1yv"

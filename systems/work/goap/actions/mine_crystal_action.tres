@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="GOAPMineCrystalAction" format=3 uid="uid://c4jwpsp74decl"]
 
-[ext_resource type="Script" uid="uid://u1cre0ao0trs" path="res://systems/work/goap/goals/goap_mine_crystal_action.gd" id="1_4w87p"]
+[ext_resource type="Script" uid="uid://u1cre0ao0trs" path="res://systems/work/goap/actions/goap_mine_crystal_action.gd" id="1_4w87p"]
 [ext_resource type="PackedScene" uid="uid://qu2432d8mkav" path="res://scenes/objects/crystal_item.tscn" id="1_d8j8n"]
 
 [resource]

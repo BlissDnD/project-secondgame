@@ -6,6 +6,7 @@ class_name WorkerBlackboard
 @export var movement_path: NodePath = NodePath("../WorkerMovementComponent")
 @export var state_machine_path: NodePath = NodePath("../WorkerStateMachine")
 @export var adapter_path: NodePath = NodePath("../WorkerGOAPAdapter")
+@export var perception_path: NodePath = NodePath("../WorkerPerceptionComponent")
 
 var world_state: GOAPWorldState = GOAPWorldState.new()
 
@@ -14,16 +15,16 @@ var stats: WorkerStatsComponent
 var movement: WorkerMovementComponent
 var state_machine: WorkerStateMachine
 var adapter: WorkerGOAPAdapter
+var perception: WorkerPerceptionComponent
 
 var current_target: Node2D = null
 var current_target_position: Vector2 = Vector2.ZERO
 var has_target_position: bool = false
 
-var current_item: Node = null
-var current_job: Node = null
 var current_assignment: Node = null
-
+var current_item: Node = null
 var carried_item: Node = null
+
 var has_mined_crystal: bool = false
 var is_wandering: bool = false
 
@@ -47,26 +48,8 @@ func refresh_references() -> void:
 	movement = get_node_or_null(movement_path) as WorkerMovementComponent
 	state_machine = get_node_or_null(state_machine_path) as WorkerStateMachine
 	adapter = get_node_or_null(adapter_path) as WorkerGOAPAdapter
+	perception = get_node_or_null(perception_path) as WorkerPerceptionComponent
 
-	if worker == null:
-		push_error("WorkerBlackboard missing worker reference.")
-
-	if stats == null:
-		push_error("WorkerBlackboard missing stats reference.")
-
-	if movement == null:
-		push_error("WorkerBlackboard missing movement reference.")
-
-	if state_machine == null:
-		push_error("WorkerBlackboard missing state_machine reference.")
-
-	if adapter == null:
-		push_error("WorkerBlackboard missing adapter reference.")
-
-
-# =========================================================
-# WORLD STATE
-# =========================================================
 
 func update_world_state() -> void:
 	world_state.set_fact(&"has_assignment", has_assignment())
@@ -88,6 +71,9 @@ func update_world_state() -> void:
 	world_state.set_fact(&"at_deposit", is_at_deposit_target())
 
 	world_state.set_fact(&"is_wandering", is_wandering)
+
+	world_state.set_fact(&"has_visible_haulable_item", has_visible_haulable_item())
+	world_state.set_fact(&"has_visible_crystal", has_visible_item_type(&"crystal"))
 
 	if worker != null:
 		world_state.set_fact(&"worker_has_assignment", worker.has_assignment)
@@ -180,10 +166,7 @@ func get_target_position() -> Vector2:
 
 
 func has_valid_target() -> bool:
-	if current_target != null and is_instance_valid(current_target):
-		return true
-
-	return has_target_position
+	return (current_target != null and is_instance_valid(current_target)) or has_target_position
 
 
 func is_at_target(distance: float = 18.0) -> bool:
@@ -196,6 +179,7 @@ func is_at_target(distance: float = 18.0) -> bool:
 	return worker.global_position.distance_to(get_target_position()) <= distance
 
 
+# Platformer-safe: X számít, Y kap nagyobb toleranciát.
 func is_at_work_target(distance: float = 32.0) -> bool:
 	if worker == null:
 		return false
@@ -204,26 +188,23 @@ func is_at_work_target(distance: float = 32.0) -> bool:
 		return false
 
 	var target_position := get_work_target_position()
-
-	var x_distance := absf(
-		worker.global_position.x - target_position.x
-	)
-
-	var y_distance := absf(
-		worker.global_position.y - target_position.y
-	)
+	var x_distance := absf(worker.global_position.x - target_position.x)
+	var y_distance := absf(worker.global_position.y - target_position.y)
 
 	return x_distance <= distance and y_distance <= 96.0
+
+
 func is_at_deposit_target(distance: float = 64.0) -> bool:
 	if worker == null:
 		return false
 
-	if current_target != null \
-	and is_instance_valid(current_target) \
-	and current_target.is_in_group("main_crystal"):
-		return worker.global_position.distance_to(get_target_position()) <= distance
+	if current_target == null or not is_instance_valid(current_target):
+		return false
 
-	return false
+	if not current_target.is_in_group("main_crystal"):
+		return false
+
+	return worker.global_position.distance_to(get_target_position()) <= distance
 
 
 # =========================================================
@@ -232,13 +213,11 @@ func is_at_deposit_target(distance: float = 64.0) -> bool:
 
 func set_assignment(target: Node) -> void:
 	current_assignment = target
-	current_job = target
 	update_world_state()
 
 
 func clear_assignment() -> void:
 	current_assignment = null
-	current_job = null
 	update_world_state()
 
 
@@ -248,9 +227,6 @@ func clear_work_target() -> void:
 
 func has_assignment() -> bool:
 	if current_assignment != null and is_instance_valid(current_assignment):
-		return true
-
-	if current_job != null and is_instance_valid(current_job):
 		return true
 
 	return worker != null and worker.has_assignment
@@ -263,9 +239,6 @@ func has_work_target() -> bool:
 func get_work_target() -> Node2D:
 	if current_assignment != null and is_instance_valid(current_assignment):
 		return current_assignment as Node2D
-
-	if current_job != null and is_instance_valid(current_job):
-		return current_job as Node2D
 
 	if worker != null and "assigned_work_target" in worker:
 		var assigned = worker.get("assigned_work_target")
@@ -280,6 +253,9 @@ func get_work_target_position() -> Vector2:
 	var target := get_work_target()
 
 	if target != null:
+		if target.has_method("get_worker_work_position"):
+			return target.get_worker_work_position()
+
 		return target.global_position
 
 	return current_target_position
@@ -299,6 +275,25 @@ func has_recovered_stamina() -> bool:
 
 func can_work() -> bool:
 	return stats != null and stats.can_work()
+
+
+# =========================================================
+# PERCEPTION
+# =========================================================
+
+func has_visible_haulable_item() -> bool:
+	return perception != null and perception.has_visible_item()
+
+
+func has_visible_item_type(item_type: StringName) -> bool:
+	return perception != null and perception.has_visible_item_type(item_type)
+
+
+func get_nearest_visible_item(item_type: StringName = &"") -> WorldItem:
+	if perception == null:
+		return null
+
+	return perception.get_nearest_visible_item(item_type)
 
 
 # =========================================================
@@ -344,15 +339,21 @@ func clear_cargo_and_free_item() -> void:
 
 	clear_cargo_reference()
 
+
+func clear_cargo() -> void:
+	clear_cargo_reference()
+
+
 func finish_deposit() -> void:
 	clear_cargo_reference()
 	clear_mined_crystal()
+	clear_target()
 
+	world_state.set_fact(&"at_deposit", false)
+	world_state.set_fact(&"at_target", false)
 	world_state.set_fact(&"has_cargo", false)
 	world_state.set_fact(&"has_item", false)
 	world_state.set_fact(&"has_mined_crystal", false)
-	world_state.set_fact(&"at_deposit", false)
-	world_state.set_fact(&"at_target", false)
 
 	if stats != null:
 		stats.clear_carry_weight()
@@ -363,30 +364,11 @@ func finish_deposit() -> void:
 		if worker.crystal_cargo_visual != null:
 			worker.crystal_cargo_visual.visible = false
 
-	var work_target := get_work_target()
-
-	if work_target != null:
-		set_target(work_target)
-	else:
-		clear_target()
-
 	update_world_state()
-
-# Backward-compatible name.
-	if adapter != null:
-		adapter.stop_movement()
-
-	if movement != null:
-		movement.reset_movement()
-
-	if worker != null and worker.has_method("request_goap_replan"):
-		worker.request_goap_replan("deposit_complete")
-func clear_cargo() -> void:
-	clear_cargo_reference()
 
 
 # =========================================================
-# ACTION RESULT DEBUG
+# ACTION DEBUG
 # =========================================================
 
 func set_action_result(action_id: StringName, status_value: StringName, reason: String = "") -> void:
@@ -402,11 +384,13 @@ func get_debug_state() -> Dictionary:
 		"target": str(current_target),
 		"target_position": current_target_position,
 		"has_target_position": has_target_position,
+		"assignment": str(current_assignment),
 		"current_item": str(current_item),
-		"current_job": str(current_job),
-		"current_assignment": str(current_assignment),
 		"carried_item": str(carried_item),
 		"has_mined_crystal": has_mined_crystal,
+		"has_visible_haulable_item": has_visible_haulable_item(),
+		"has_visible_crystal": has_visible_item_type(&"crystal"),
+		"nearest_visible_item": str(get_nearest_visible_item()),
 		"is_wandering": is_wandering,
 		"last_action_id": str(last_action_id),
 		"last_action_status": str(last_action_status),

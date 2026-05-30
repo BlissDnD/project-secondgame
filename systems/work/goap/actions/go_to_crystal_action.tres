@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="GOAPGoToCrystalAction" format=3 uid="uid://ctel7blfcx3k4"]
 
-[ext_resource type="Script" uid="uid://lvj0ojydis0y" path="res://systems/work/goap/goals/goap_go_to_crystal_action.gd" id="1_n1e4a"]
+[ext_resource type="Script" uid="uid://lvj0ojydis0y" path="res://systems/work/goap/actions/goap_go_to_crystal_action.gd" id="1_n1e4a"]
 
 [resource]
 script = ExtResource("1_n1e4a")
+debug_enabled = false
 action_id = &"go_to_crystal"
 display_name = "Go To Crystal"
 base_cost = 0.1

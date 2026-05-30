@@ -1,19 +1,64 @@
 [gd_scene format=3 uid="uid://qu2432d8mkav"]
 
-[ext_resource type="Script" uid="uid://csn5a3igc0n77" path="res://scenes/objects/crystal_item.gd" id="1_r5028"]
+[ext_resource type="Script" uid="uid://duk2mru75qcx6" path="res://systems/physics/physical_item_body.gd" id="2_78hi0"]
 [ext_resource type="Texture2D" uid="uid://bvftfgiroejw4" path="res://assets/images/Items/apple.png" id="2_qu0ud"]
+[ext_resource type="Resource" uid="uid://mgtnfp0tlsow" path="res://resources/data/physics_profiles/pebble_motion_profile.tres" id="3_n0xex"]
+[ext_resource type="Script" uid="uid://c0acc3v16fne0" path="res://systems/interaction/carry/carryable_component.gd" id="5_e851j"]
+[ext_resource type="Script" uid="uid://0dvivduhknqa" path="res://systems/interaction/carry/carry_profile.gd" id="6_j8tmb"]
+[ext_resource type="Script" uid="uid://dw74ttpxnxuy" path="res://systems/physics/physics_force_receiver.gd" id="7_fkun3"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_guaaj"]
-size = Vector2(41, 47)
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_78hi0"]
+friction = 0.8
+bounce = 0.5
 
-[node name="CrystalItem" type="Node2D" unique_id=415081740]
-script = ExtResource("1_r5028")
+[sub_resource type="CircleShape2D" id="CircleShape2D_yw653"]
+radius = 26.323256
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=676309751]
-position = Vector2(-1, -23)
-shape = SubResource("RectangleShape2D_guaaj")
+[sub_resource type="Resource" id="Resource_t88x3"]
+script = ExtResource("6_j8tmb")
+metadata/_custom_type_script = "uid://0dvivduhknqa"
 
-[node name="Apple" type="Sprite2D" parent="." unique_id=1694801127]
+[sub_resource type="CircleShape2D" id="CircleShape2D_74rfr"]
+radius = 44.911022
+
+[node name="CrystalItem" type="Node2D" unique_id=866889814]
+
+[node name="PhysicalItemBody" type="RigidBody2D" parent="." unique_id=1771332509]
+mass = 0.7
+physics_material_override = SubResource("PhysicsMaterial_78hi0")
+continuous_cd = 2
+contact_monitor = true
+max_contacts_reported = 4
+linear_damp = 0.3
+angular_damp = 2.5
+script = ExtResource("2_78hi0")
+motion_profile = ExtResource("3_n0xex")
+metadata/_custom_type_script = "uid://duk2mru75qcx6"
+
+[node name="Sprite2D" type="Sprite2D" parent="PhysicalItemBody" unique_id=1694801127]
 position = Vector2(-1.0000019, -23)
 scale = Vector2(0.6328125, 0.6328125)
 texture = ExtResource("2_qu0ud")
+region_enabled = true
+region_rect = Rect2(30, 25, 68, 74)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PhysicalItemBody" unique_id=2142744938]
+position = Vector2(0, -13.000001)
+scale = Vector2(0.5806744, 0.50727284)
+shape = SubResource("CircleShape2D_yw653")
+
+[node name="CarryableComponent" type="Area2D" parent="PhysicalItemBody" unique_id=1156799429 node_paths=PackedStringArray("root_node")]
+script = ExtResource("5_e851j")
+root_node = NodePath("../..")
+carry_profile = SubResource("Resource_t88x3")
+metadata/_custom_type_script = "uid://c0acc3v16fne0"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PhysicalItemBody/CarryableComponent" unique_id=533047916]
+light_mask = 512
+position = Vector2(-1, -22)
+shape = SubResource("CircleShape2D_74rfr")
+
+[node name="PhysicsForceReceiver" type="Node" parent="PhysicalItemBody" unique_id=927431614 node_paths=PackedStringArray("physical_body")]
+script = ExtResource("7_fkun3")
+physical_body = NodePath("..")
+metadata/_custom_type_script = "uid://dw74ttpxnxuy"

@@ -40,6 +40,12 @@ window/size/viewport_height=1080
 
 enabled=PackedStringArray("res://addons/GitGodot/plugin.cfg", "res://addons/better-terrain/plugin.cfg", "res://addons/fancy_folder_colors/plugin.cfg")
 
+[file_customization]
+
+folder_colors={
+"res://systems/world_objects/items/": "yellow"
+}
+
 [global_group]
 
 terrain_layer=""

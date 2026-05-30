@@ -513,6 +513,9 @@ func _collect_collision_shapes(
 	node: Node,
 	result: Array[CollisionShape2D]
 ) -> void:
+	if node is Area2D:
+		return
+
 	for child in node.get_children():
 		if child == self:
 			continue
@@ -521,7 +524,6 @@ func _collect_collision_shapes(
 			result.append(child as CollisionShape2D)
 
 		_collect_collision_shapes(child, result)
-
 
 func _find_first_canvas_item(node: Node) -> CanvasItem:
 	if node == null:

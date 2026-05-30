@@ -20,7 +20,7 @@
 [ext_resource type="PackedScene" uid="uid://brnv2uy6xj3yi" path="res://ui/bark_bubble.tscn" id="19_pm21f"]
 [ext_resource type="PackedScene" uid="uid://ci1g3qojtqeg4" path="res://scenes/worker/main_crystal.tscn" id="20_kpybi"]
 [ext_resource type="PackedScene" uid="uid://qwwdf1ck5o3" path="res://scenes/worker/crystal_node.tscn" id="21_ctatt"]
-[ext_resource type="PackedScene" uid="uid://d3gxd0nmiyvk8" path="res://scenes/worker/crystal_node_station.tscn" id="22_xgqkh"]
+[ext_resource type="PackedScene" uid="uid://dli7oqkf00no1" path="res://scenes/objects/crystal.tscn" id="23_luhhm"]
 [ext_resource type="PackedScene" uid="uid://c8h8edlxc3fjv" path="res://scenes/worker/worker.tscn" id="23_munwf"]
 [ext_resource type="Script" uid="uid://padt2g1f7e1y" path="res://systems/world_generation/world_debug_spawn_service.gd" id="24_ctatt"]
 [ext_resource type="Script" uid="uid://b7nov50mcnb4l" path="res://systems/interaction/placement/placement_validator.gd" id="25_munwf"]
@@ -333,7 +333,7 @@ script = ExtResource("24_ctatt")
 main_crystal_scene = ExtResource("20_kpybi")
 crystal_node_scene = ExtResource("21_ctatt")
 worker_scene = ExtResource("23_munwf")
-crystal_station_scene = ExtResource("22_xgqkh")
+crystal_station_scene = ExtResource("23_luhhm")
 spawn_origin = NodePath("../Player")
 terrain_provider = NodePath("../WorldTerrainGenerator")
 tile_map_layer = NodePath("../TerrainTileMapLayer")
@@ -350,7 +350,6 @@ metadata/_custom_type_script = "uid://b7nov50mcnb4l"
 [node name="PlacementPreview" type="Node2D" parent="." unique_id=1813751484 groups=["placement_preview", "placement_validator", "player", "terrain_layer"]]
 z_index = 999
 script = ExtResource("26_ts3gi")
-cell_size = Vector2(0, 0)
 metadata/_custom_type_script = "uid://csb1wyobgijs0"
 
 [node name="DebugCanvasLayer" type="CanvasLayer" parent="." unique_id=1570227695]
