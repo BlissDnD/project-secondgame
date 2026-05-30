@@ -1,4 +1,5 @@
-extends Node2D
+@tool
+extends PhysicalItemBody
 class_name WorldItem
 var stored_in_main_crystal: bool = false
 @export var item_type: StringName = &"item"
@@ -13,16 +14,8 @@ func get_item_type() -> StringName:
 	return item_type
 
 func get_world_position() -> Vector2:
-	var body := get_physical_body()
-
-	if body != null:
-		return body.global_position
-
 	return global_position
-func get_amount() -> int:
-	return amount
-
-
+	
 func get_weight() -> float:
 	var body := get_physical_body()
 
@@ -67,11 +60,7 @@ func is_reserved() -> bool:
 
 
 func get_physical_body() -> PhysicalItemBody:
-	for child in get_children():
-		if child is PhysicalItemBody:
-			return child as PhysicalItemBody
-
-	return null
+	return self
 
 
 func get_carryable_component() -> CarryableComponent:
