@@ -15,7 +15,9 @@ func _init() -> void:
 	}
 
 	effects = {
-		&"has_cargo": false
+		&"has_cargo": false,
+		&"has_item": false,
+		&"at_deposit": false
 	}
 
 
@@ -39,10 +41,10 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if blackboard.worker == null:
 		return fail("missing_worker")
 
-	if not blackboard.has_cargo():
-		return fail("missing_cargo")
+	if blackboard.carry_controller == null:
+		return fail("missing_worker_carry_controller")
 
-	var item := blackboard.carried_item as Node2D
+	var item := blackboard.carried_item as WorldItem
 
 	if item == null or not is_instance_valid(item):
 		return fail("missing_carried_item")
@@ -52,30 +54,36 @@ func tick(blackboard: WorkerBlackboard, _delta: float) -> ActionStatus:
 	if main_crystal == null:
 		return fail("missing_main_crystal")
 
-	var world := blackboard.worker.get_tree().current_scene
+	var deposit_position := main_crystal.get_deposit_position()
 
-	if world == null:
-		return fail("missing_world")
-
-	item.reparent(world, false)
-	item.global_position = main_crystal.get_deposit_position()
-	item.rotation = 0.0
+	if not blackboard.carry_controller.drop_item(deposit_position):
+		return fail("deposit_drop_failed")
 
 	main_crystal.deposit_crystal_item(item)
 
-	blackboard.carried_item = null
-	blackboard.current_item = null
-	blackboard.set_fact(&"has_cargo", false)
-	blackboard.set_fact(&"has_item", false)
-	blackboard.clear_mined_crystal()
+	blackboard.finish_deposit()
 
-	blackboard.worker.has_crystal_cargo = false
+	if blackboard.worker != null:
+		blackboard.worker.clear_assignment()
 
-	if blackboard.worker.crystal_cargo_visual != null:
-		blackboard.worker.crystal_cargo_visual.visible = false
+	blackboard.clear_assignment()
+	blackboard.set_fact(&"has_assignment", false)
+	blackboard.set_fact(&"has_work_target", false)
 
-	if blackboard.stats != null:
-		blackboard.stats.clear_carry_weight()
+	blackboard.is_wandering = false
+	blackboard.set_fact(&"is_wandering", false)
+
+	if blackboard.adapter != null:
+		blackboard.adapter.stop_movement()
+
+	if blackboard.movement != null:
+		blackboard.movement.reset_movement()
+
+	if blackboard.state_machine != null:
+		blackboard.state_machine.set_state(
+			WorkerStateMachine.IDLE,
+			"deposit_complete"
+		)
 
 	status = ActionStatus.SUCCEEDED
 	return status

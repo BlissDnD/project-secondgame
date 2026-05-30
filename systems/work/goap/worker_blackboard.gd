@@ -7,7 +7,8 @@ class_name WorkerBlackboard
 @export var state_machine_path: NodePath = NodePath("../WorkerStateMachine")
 @export var adapter_path: NodePath = NodePath("../WorkerGOAPAdapter")
 @export var perception_path: NodePath = NodePath("../WorkerPerceptionComponent")
-
+@export var carry_controller_path: NodePath = NodePath("../WorkerCarryController")
+var carry_controller: WorkerCarryController
 var world_state: GOAPWorldState = GOAPWorldState.new()
 
 var worker: Worker
@@ -49,6 +50,7 @@ func refresh_references() -> void:
 	state_machine = get_node_or_null(state_machine_path) as WorkerStateMachine
 	adapter = get_node_or_null(adapter_path) as WorkerGOAPAdapter
 	perception = get_node_or_null(perception_path) as WorkerPerceptionComponent
+	carry_controller = get_node_or_null(carry_controller_path) as WorkerCarryController
 
 
 func update_world_state() -> void:
@@ -88,7 +90,21 @@ func update_world_state() -> void:
 		world_state.set_fact(&"is_depositing", state_machine.current_state == WorkerStateMachine.DEPOSITING)
 		world_state.set_fact(&"is_recovering", state_machine.current_state == WorkerStateMachine.RECOVERING)
 		world_state.set_fact(&"is_failed", state_machine.current_state == WorkerStateMachine.FAILED)
+		var nearest_crystal := get_nearest_visible_item(&"crystal")
 
+		world_state.set_fact(
+			&"has_item_target",
+			nearest_crystal != null
+		)
+
+		world_state.set_fact(
+			&"at_visible_item",
+			nearest_crystal != null
+			and worker != null
+			and worker.global_position.distance_to(
+				nearest_crystal.global_position
+			) <= 28.0
+		)
 
 func get_world_state() -> GOAPWorldState:
 	update_world_state()
@@ -317,14 +333,18 @@ func set_carried_item(item: Node) -> void:
 	carried_item = item
 	current_item = item
 
-	world_state.set_fact(&"has_cargo", carried_item != null)
-	world_state.set_fact(&"has_item", carried_item != null)
-
-
+	world_state.set_fact(&"has_cargo", item != null)
+	world_state.set_fact(&"has_item", item != null)
+	
 func has_cargo() -> bool:
-	return carried_item != null and is_instance_valid(carried_item)
+	if carried_item != null and is_instance_valid(carried_item):
+		return true
 
+	if carry_controller != null and carry_controller.has_item():
+		return true
 
+	return false
+	
 func clear_cargo_reference() -> void:
 	carried_item = null
 	current_item = null
@@ -363,7 +383,8 @@ func finish_deposit() -> void:
 
 		if worker.crystal_cargo_visual != null:
 			worker.crystal_cargo_visual.visible = false
-
+	is_wandering = false
+	world_state.set_fact(&"is_wandering", false)
 	update_world_state()
 
 
@@ -395,5 +416,8 @@ func get_debug_state() -> Dictionary:
 		"last_action_id": str(last_action_id),
 		"last_action_status": str(last_action_status),
 		"last_failure_reason": last_failure_reason,
-		"world_state": world_state.facts.duplicate(true)
+		"world_state": world_state.facts.duplicate(true),
+		"has_item_target": get_fact(&"has_item_target", false),
+		"at_visible_item": get_fact(&"at_visible_item", false)
+		
 	}

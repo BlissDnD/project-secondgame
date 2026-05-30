@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="GOAPGoToVisibleItemAction" format=3 uid="uid://dwtkxprf3w785"]
+
+[ext_resource type="Script" uid="uid://chawn6rax84nf" path="res://systems/work/goap/actions/goap_go_to_visible_item_action.gd" id="1_qdyam"]
+
+[resource]
+script = ExtResource("1_qdyam")
+action_id = &"go_to_visible_item"
+display_name = "Go To Visible Item"
+preconditions = Dictionary[StringName, Variant]({
+&"has_assignment": false,
+&"has_cargo": false,
+&"has_visible_crystal": true
+})
+effects = Dictionary[StringName, Variant]({
+&"at_visible_item": true
+})
+metadata/_custom_type_script = "uid://chawn6rax84nf"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="DeliverCarriedItemGoal" format=3 uid="uid://bihjeekxcrm7"]
+
+[ext_resource type="Script" uid="uid://dq0p477k3csis" path="res://systems/work/goap/goals/goap_deliver_carried_item_goal.gd" id="1_y1xmx"]
+
+[resource]
+script = ExtResource("1_y1xmx")
+goal_id = &"deliver_carried_item_goal"
+display_name = "Deliver Carried Item Goal"
+desired_state = Dictionary[StringName, Variant]({
+&"has_cargo": false
+})
+base_priority = 10.0
+metadata/_custom_type_script = "uid://dq0p477k3csis"

@@ -7,7 +7,6 @@ script = ExtResource("1_mybts")
 action_id = &"side_wander"
 display_name = "Side Wander"
 preconditions = Dictionary[StringName, Variant]({
-&"has_assignment": false,
 &"stamina_low": false
 })
 effects = Dictionary[StringName, Variant]({

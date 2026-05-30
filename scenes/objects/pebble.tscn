@@ -22,7 +22,7 @@ height = 3.8326375
 scale = Vector2(0.36, 0.36)
 
 [node name="PhysicalItemBody" type="RigidBody2D" parent="." unique_id=596505902]
-mass = 32.35
+mass = 0.7
 physics_material_override = SubResource("PhysicsMaterial_778ep")
 continuous_cd = 2
 contact_monitor = true
@@ -52,6 +52,8 @@ position = Vector2(0, -13)
 script = ExtResource("5_v8mqs")
 root_node = NodePath("..")
 carry_profile = ExtResource("5_778ep")
+physical_carry_strength = 10.0
+physical_carry_damping = 50.0
 highlight_target = NodePath("../Sprite2D")
 highlight_color = Color(1.3500061, 1.3500061, 1.3500061, 0.7764706)
 metadata/_custom_type_script = "uid://c0acc3v16fne0"

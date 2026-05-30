@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="HaulVisibleCrystalGoal" format=3 uid="uid://djom2dqe4gr0f"]
+
+[ext_resource type="Script" uid="uid://cqqqqm0sq8tf4" path="res://systems/work/goap/goals/goap_haul_visible_crystal_goal.gd" id="1_y83rm"]
+
+[resource]
+script = ExtResource("1_y83rm")
+goal_id = &"haul_visible_crystal"
+display_name = "Haul Visible Crystal"
+desired_state = Dictionary[StringName, Variant]({
+&"has_cargo": true
+})
+base_priority = 3.0
+metadata/_custom_type_script = "uid://cqqqqm0sq8tf4"

@@ -17,9 +17,15 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_b5bu4"]
 size = Vector2(81, 94)
 
-[node name="MainCrystal" type="Node2D" unique_id=1643437430 node_paths=PackedStringArray("deposit_point")]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hyv5x"]
+size = Vector2(255, 98)
+
+[node name="MainCrystal" type="Node2D" unique_id=1643437430 node_paths=PackedStringArray("deposit_point", "storage_area")]
+position = Vector2(2, -8)
 script = ExtResource("1_hyv5x")
 deposit_point = NodePath("DepositPoint")
+hide_stored_items = false
+storage_area = NodePath("StorageArea")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1225371543]
 position = Vector2(-63, -79)
@@ -31,3 +37,10 @@ position = Vector2(-16, -40)
 shape = SubResource("RectangleShape2D_b5bu4")
 
 [node name="DepositPoint" type="Marker2D" parent="." unique_id=1148181587]
+
+[node name="StorageArea" type="Area2D" parent="." unique_id=833331739]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StorageArea" unique_id=1203561621]
+position = Vector2(-29.5, -39)
+shape = SubResource("RectangleShape2D_hyv5x")
+debug_color = Color(0.74509805, 0.21176471, 1, 0.23137255)

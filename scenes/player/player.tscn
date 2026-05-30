@@ -49,7 +49,6 @@
 [ext_resource type="Texture2D" uid="uid://cb2chihftwnrp" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00017.png" id="46_hf5gj"]
 [ext_resource type="Texture2D" uid="uid://wd3ynxb5q7ce" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00018.png" id="47_avmva"]
 [ext_resource type="Texture2D" uid="uid://ddan8i786ebqn" path="res://assets/images/BlueWizard/2BlueWizardWalk/Chara_BlueWalk00019.png" id="48_0ioy2"]
-[ext_resource type="AudioStream" uid="uid://ceyoi2alpc3tr" path="res://assets/sounds/mp3/Jump_1.mp3" id="50_2t3bg"]
 [ext_resource type="Script" uid="uid://c5xau3t32s6a" path="res://player/interaction_manager.gd" id="51_jrbya"]
 [ext_resource type="PackedScene" uid="uid://bola86d3f8con" path="res://scenes/debug_overlay.tscn" id="52_ahqnk"]
 [ext_resource type="Script" uid="uid://ct0l8tix2e53" path="res://systems/interaction/carry/player_carry_controller.gd" id="54_0ncpa"]
@@ -237,10 +236,6 @@ position = Vector2(2.8888888, 12.000008)
 scale = Vector2(1.0000001, 1.0000001)
 shape = SubResource("CapsuleShape2D_0ncpa")
 
-[node name="JumpSound" type="AudioStreamPlayer2D" parent="." unique_id=947266257]
-stream = ExtResource("50_2t3bg")
-volume_db = -19.114
-
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1547749065]
 zoom = Vector2(0.82, 0.82)
 position_smoothing_enabled = true
@@ -277,18 +272,11 @@ script = ExtResource("54_0ncpa")
 player_body = NodePath("..")
 interaction_area = NodePath("../FlipContainer/InteractionArea")
 hold_point = NodePath("../HoldPoint")
-drop_offset = null
-hold_offset = null
-player_base_weight = null
 lift_strength = 46.51
 carry_strength = 58.059999999999995
 throw_strength = 43.41
-base_throw_impulse = null
 minimum_throw_power = 0.1
 base_full_charge_time = 1.0
-heavy_item_charge_penalty = null
-mouse_distance_for_max_power = null
-mouse_distance_dead_zone = null
 metadata/_custom_type_script = "uid://ct0l8tix2e53"
 
 [node name="ThrowTrajectoryPreview" type="Line2D" parent="." unique_id=54783806 node_paths=PackedStringArray("player", "carry_controller")]

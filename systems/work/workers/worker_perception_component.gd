@@ -15,7 +15,7 @@ func _ready() -> void:
 	worker = get_node_or_null(worker_path) as Node2D
 
 	if vision_area == null:
-		vision_area = find_child("VisionArea", true, false) as Area2D
+		vision_area = get_node_or_null("../VisionArea") as Area2D
 
 	if vision_area == null:
 		push_warning("WorkerPerceptionComponent: missing VisionArea.")
@@ -40,13 +40,7 @@ func refresh_perception() -> void:
 	for body in vision_area.get_overlapping_bodies():
 		var item := _find_world_item_from_node(body)
 
-		if item == null:
-			continue
-
-		if not item.is_haulable:
-			continue
-
-		if not item.can_be_hauled_by(worker):
+		if not _is_valid_visible_item(item):
 			continue
 
 		if visible_items.has(item):
@@ -57,13 +51,7 @@ func refresh_perception() -> void:
 	for area in vision_area.get_overlapping_areas():
 		var item := _find_world_item_from_node(area)
 
-		if item == null:
-			continue
-
-		if not item.is_haulable:
-			continue
-
-		if not item.can_be_hauled_by(worker):
+		if not _is_valid_visible_item(item):
 			continue
 
 		if visible_items.has(item):
@@ -88,7 +76,7 @@ func get_nearest_visible_item(item_type: StringName = &"") -> WorldItem:
 	var best_distance := INF
 
 	for item in visible_items:
-		if item == null or not is_instance_valid(item):
+		if not _is_valid_visible_item(item):
 			continue
 
 		if item_type != &"" and item.get_item_type() != item_type:
@@ -102,11 +90,34 @@ func get_nearest_visible_item(item_type: StringName = &"") -> WorldItem:
 
 	return best_item
 
+func _is_inside_any_main_crystal_storage(position: Vector2) -> bool:
+	for node in get_tree().get_nodes_in_group("main_crystal"):
+		if node.has_method("contains_world_position"):
+			if node.contains_world_position(position):
+				return true
 
+	return false
 func has_visible_item_type(item_type: StringName) -> bool:
 	return get_nearest_visible_item(item_type) != null
 
 
+func _is_valid_visible_item(item: WorldItem) -> bool:
+	if item == null:
+		return false
+
+	if not is_instance_valid(item):
+		return false
+
+	if _is_inside_any_main_crystal_storage(item.global_position):
+		return false
+
+	if not item.is_haulable:
+		return false
+
+	if worker != null and not item.can_be_hauled_by(worker):
+		return false
+
+	return true
 func _find_world_item_from_node(node: Node) -> WorldItem:
 	var current := node
 

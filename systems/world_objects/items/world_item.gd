@@ -1,6 +1,6 @@
 extends Node2D
 class_name WorldItem
-
+var stored_in_main_crystal: bool = false
 @export var item_type: StringName = &"item"
 @export var display_name: String = "Item"
 @export var amount: int = 1

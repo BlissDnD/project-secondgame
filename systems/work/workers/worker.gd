@@ -1,6 +1,6 @@
 extends CharacterBody2D
 class_name Worker
-
+@export var carry_controller: WorkerCarryController
 @export var state_machine: WorkerStateMachine
 @export var stats: WorkerStatsComponent
 @export var need_system: WorkerNeedSystem

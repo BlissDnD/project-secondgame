@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="GOAPPickupVisibleItemAction" format=3 uid="uid://b2vr18fjkat8f"]
+
+[ext_resource type="Script" uid="uid://61hwcpjb3ay4" path="res://systems/work/goap/actions/goap_pickup_visible_item_action.gd" id="1_uld28"]
+
+[resource]
+script = ExtResource("1_uld28")
+action_id = &"pickup_visible_item"
+display_name = "Pickup Visible Item"
+preconditions = Dictionary[StringName, Variant]({
+&"at_visible_item": true,
+&"has_assignment": false,
+&"has_cargo": false
+})
+effects = Dictionary[StringName, Variant]({
+&"at_visible_item": false,
+&"has_cargo": true
+})
+metadata/_custom_type_script = "uid://61hwcpjb3ay4"

@@ -128,7 +128,7 @@ func handle_normal_movement(delta: float) -> void:
 
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
-		jump_sound.play()
+
 
 	var direction := Input.get_axis("ui_left", "ui_right")
 

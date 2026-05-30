@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_gvo8g")
-weight = 32.35
+weight = 0.7
 linear_damping = 0.3
 angular_damping = 2.5
 bounce = 0.5
